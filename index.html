@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Penutur — Narator AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:#eceff2;--surface:#ffffff;--surface2:#e2e7ec;--ink:#17202a;--muted:#586473;--line:#cbd3db;
+  --accent:#16606a;--accent-ink:#ffffff;--warn:#a3432c;
+  --serif:'Literata',Georgia,'Times New Roman',serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --fs:18px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0d1218;--surface:#151c25;--surface2:#1e2833;--ink:#e5e9ed;--muted:#94a1af;--line:#2a3643;--accent:#6fc2c0;--accent-ink:#08181a;--warn:#e28b70}
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+small{color:var(--muted);font-size:12.5px}
+
+.view{height:100dvh;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:6px;padding:8px 10px;padding-top:calc(8px + env(safe-area-inset-top));background:var(--surface);border-bottom:1px solid var(--line)}
+.bar .ttl{flex:1;min-width:0}
+.bar h1{margin:0;font:600 16px/1.2 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{width:42px;height:42px;border:0;background:transparent;border-radius:10px;display:grid;place-items:center;font-size:24px;line-height:1}
+.ib:hover{background:var(--surface2)}
+.scroll{flex:1;overflow-y:auto;padding:18px 16px 40px}
+.wrap{max-width:40rem;margin:0 auto;width:100%}
+
+h2{font:600 22px/1.25 var(--serif);margin:0 0 4px}
+h3{font:600 15px/1.3 var(--sans);margin:22px 0 8px}
+.sub{color:var(--muted);margin:0 0 18px}
+.hint{color:var(--muted);font-size:13.5px;margin:6px 0 12px}
+.empty{color:var(--muted);text-align:center;padding:36px 10px}
+.banner{background:var(--surface2);border-left:3px solid var(--warn);padding:10px 12px;border-radius:6px;margin:0 0 14px}
+
+.btn{border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:10px;font-weight:500}
+.btn:hover{background:var(--surface2)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.warn{color:var(--warn);border-color:var(--warn);background:transparent}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+
+label{display:block;font-weight:500;font-size:13.5px;margin:12px 0 0}
+label>input,label>textarea,label>select{display:block;width:100%;margin-top:4px;font-weight:400}
+input,textarea,select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+textarea{resize:vertical;line-height:1.5}
+label.chk{display:flex;gap:8px;align-items:center;font-weight:400}
+label.chk input{width:auto;margin:0}
+input[type=checkbox]{width:18px;height:18px}
+
+.story{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:0 0 8px;padding:4px 6px 4px 4px}
+.story .open,.story .grow{flex:1;min-width:0;text-align:left;background:none;border:0;padding:8px 10px}
+.story b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--accent);background:transparent;color:var(--accent);padding:7px 13px;border-radius:999px;font-size:14px;line-height:1.3}
+.chip.on{background:var(--accent);color:var(--accent-ink)}
+.chip.warn{border-color:var(--warn);color:var(--warn)}
+
+/* Pembaca */
+#log{flex:1;overflow-y:auto;padding:22px 18px 28px;scroll-behavior:smooth}
+#log>*{max-width:38rem;margin-left:auto;margin-right:auto}
+.nr{font:400 var(--fs)/1.8 var(--serif)}
+.nr p{margin:0 0 1.15em}
+.nr.live .typing{color:var(--muted)}
+.pl{margin:1.6em auto;padding:2px 0 2px 14px;border-left:3px solid var(--accent);font:italic 400 calc(var(--fs) - 1px)/1.6 var(--serif);color:var(--muted)}
+.pl .md{font:500 12px var(--sans);font-style:normal;margin-right:8px;color:var(--accent)}
+.tools{display:flex;gap:14px;margin-top:6px}
+.tools button{background:none;border:0;color:var(--muted);padding:6px 0;font-size:13px;text-decoration:underline}
+
+#dock{background:var(--surface);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+#sugg{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}
+#sugg .chip{white-space:nowrap;flex:none}
+#sugg::-webkit-scrollbar{display:none}
+.modes{display:flex;gap:6px;margin-bottom:6px}
+.modes button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:3px 11px;font-size:13px;color:var(--muted)}
+.modes button.on{background:var(--surface2);color:var(--ink);border-color:var(--accent)}
+.inrow{display:flex;gap:8px;align-items:flex-end}
+.inrow textarea{flex:1;max-height:140px;min-height:44px;resize:none}
+.inrow .btn{height:44px}
+
+/* Drawer */
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+#scrim.on{opacity:1;pointer-events:auto}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(94vw,27rem);background:var(--bg);border-left:1px solid var(--line);transform:translateX(102%);transition:transform .25s ease;z-index:21;display:flex;flex-direction:column;visibility:hidden}
+#drawer.on{transform:none;visibility:visible}
+@media (prefers-reduced-motion:reduce){#drawer,#scrim{transition:none}#log{scroll-behavior:auto}}
+.dh{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.tabs{flex:1;display:flex;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;background:none;border:0;border-bottom:2px solid transparent;padding:13px 12px;color:var(--muted);font-weight:500}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+#dbody{flex:1;overflow-y:auto;padding:4px 16px 40px}
+
+details.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:0 0 8px;padding:0 12px}
+details.card>summary{padding:10px 0;cursor:pointer;font-weight:600;list-style-position:inside}
+details.card>summary small{display:block;font-weight:400;margin-left:18px}
+details.card[open]{padding-bottom:12px}
+.field{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.field>b{display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:6px}
+.irow{display:grid;grid-template-columns:1fr 54px 1fr 32px;gap:6px;margin-bottom:6px}
+.mrow{display:grid;grid-template-columns:1fr 80px 32px;gap:6px;margin-bottom:6px}
+.irow input,.mrow input{padding:7px 8px}
+.x{border:0;background:none;color:var(--warn);font-size:18px}
+.tag{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.tag small{display:block;margin:2px 0 6px}
+
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:92vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:40;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- BERANDA -->
+<section id="v-home" class="view">
+  <div class="bar">
+    <div class="ttl"><h1>Penutur</h1><small>Narator AI untuk ceritamu</small></div>
+    <button class="ib" data-act="menu" aria-label="Menu">&#9776;</button>
+  </div>
+  <div class="scroll"><div class="wrap">
+    <div id="keyWarn" class="banner" hidden>API Key Gemini belum diisi. Buka menu di kanan atas, lalu Pengaturan.</div>
+    <h2>Ceritamu</h2>
+    <p class="sub">Semua data tersimpan di browser ini. Unggah ke Google Drive agar bisa dilanjutkan di perangkat lain.</p>
+    <div id="homeList"></div>
+    <div class="row">
+      <button class="btn pri" data-act="new">Buat dunia baru</button>
+      <button class="btn" data-act="import">Impor file</button>
+    </div>
+    <h3>Checkpoint di Google Drive</h3>
+    <div id="homeRemote"></div>
+    <div class="row">
+      <button class="btn" data-act="drive-connect">Sambungkan Drive</button>
+      <button class="btn" data-act="drive-refresh">Segarkan daftar</button>
+    </div>
+  </div></div>
+</section>
+
+<!-- PEMBUAT DUNIA -->
+<section id="v-new" class="view" hidden>
+  <div class="bar">
+    <button class="ib" data-act="new-cancel" aria-label="Kembali">&#8249;</button>
+    <div class="ttl"><h1>Dunia baru</h1></div>
+    <button class="ib" data-act="menu" aria-label="Menu">&#9776;</button>
+  </div>
+  <div class="scroll"><div class="wrap">
+    <label>Judul cerita<input id="nfTitle" placeholder="mis. Pewaris Menara Kelabu"></label>
+    <label>Nama tokoh utama<input id="nfMc" placeholder="Nama yang kamu mainkan"></label>
+    <h3>Genre</h3><div class="chips" id="chipsGenre"></div>
+    <h3>Gaya bahasa</h3><div class="chips" id="chipsStyle"></div>
+    <h3>Aturan dan penekanan</h3><div class="chips" id="chipsRule"></div>
+    <p class="hint">Tag bisa dibuat dan diubah di menu Pustaka.</p>
+    <label>Aturan tambahan (opsional)<textarea id="nfRules" rows="3" placeholder="Cara kerja dunia, hal yang perlu ditekankan, hal yang dilarang…"></textarea></label>
+    <label>Dunia dan latar<textarea id="nfWorld" rows="9" placeholder="Ceritakan dunia, tempat, tokoh penting, konflik, kondisi awal tokoh utama…"></textarea></label>
+    <label>Model narator<input id="nfMain" list="models"></label>
+    <label>Model analis (ringan)<input id="nfAnalyzer" list="models"></label>
+    <div class="row"><button class="btn pri" id="btnCreate" data-act="create">Bangun dunia</button></div>
+    <p class="hint" id="createMsg"></p>
+  </div></div>
+</section>
+
+<!-- PEMBACA -->
+<section id="v-read" class="view" hidden>
+  <div class="bar">
+    <button class="ib" data-act="back" aria-label="Kembali ke beranda">&#8249;</button>
+    <div class="ttl"><h1 id="rTitle"></h1><small id="rStat"></small></div>
+    <button class="ib" data-act="menu" aria-label="Buka menu">&#9776;</button>
+  </div>
+  <main id="log" aria-live="polite"></main>
+  <footer id="dock">
+    <div id="sugg" hidden></div>
+    <div class="modes" role="group" aria-label="Jenis input">
+      <button data-act="mode" data-mode="aksi" class="on">Aksi</button>
+      <button data-act="mode" data-mode="ucap">Ucap</button>
+      <button data-act="mode" data-mode="alur">Arahkan alur</button>
+    </div>
+    <div class="inrow">
+      <textarea id="inp" rows="1" placeholder="Apa yang dilakukan tokoh utama?" aria-label="Input tindakan"></textarea>
+      <button class="btn pri" id="btnSend" data-act="send">Kirim</button>
+    </div>
+  </footer>
+</section>
+
+<div id="scrim" data-act="close"></div>
+<aside id="drawer" aria-label="Menu">
+  <div class="dh"><div class="tabs" id="tabs"></div><button class="ib" data-act="close" aria-label="Tutup">&#10005;</button></div>
+  <div id="dbody"></div>
+</aside>
+<div id="toast" role="status"></div>
+<input type="file" id="fileIn" accept=".json,application/json" hidden>
+<datalist id="models">
+  <option value="gemini-flash-latest"></option>
+  <option value="gemini-flash-lite-latest"></option>
+  <option value="gemini-3.8-flash"></option>
+  <option value="gemini-3.6-flash"></option>
+  <option value="gemini-3.5-flash-lite"></option>
+  <option value="gemini-3-flash"></option>
+  <option value="gemini-3.1-flash-lite"></option>
+  <option value="gemini-2.5-flash"></option>
+  <option value="gemini-2.5-flash-lite"></option>
+  <option value="gemini-3-flash-preview"></option>
+</datalist>
+
+<script>
+'use strict';
+/* =====================================================================
+   PENUTUR — game cerita teks dengan narator AI (Gemini)
+   Semua data disimpan di browser (localStorage) + checkpoint opsional ke Google Drive.
+   ===================================================================== */
+
+/* ---------- utilitas ---------- */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const num=(v,d=0)=>{const n=Number(v);return Number.isFinite(n)?n:d};
+const ago=t=>new Date(t).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});
+
+let warnedStore=false;
+const mem={};
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return k in mem?mem[k]:d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){mem[k]=v;return false}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}delete mem[k]}
+};
+
+/* ---------- pengaturan & pustaka tag ---------- */
+const DEF={apiKey:'',analyzerModel:'gemini-flash-lite-latest',mainModel:'gemini-flash-latest',
+  minWords:250,temperature:1,compressEvery:30,maxCards:10,recentChars:1800,scanLast:true,tapSend:false,
+  fontSize:18,driveClientId:'',driveMinutes:5};
+let S={...DEF,...store.get('penutur:settings',{})};
+const saveSettings=()=>store.set('penutur:settings',S);
+
+const SEED=[
+ {type:'genre',name:'Fantasi RPG',text:'Fantasi petualangan bergaya RPG: sihir, monster, guild, level, perlengkapan, dan skill. Kemajuan harus diperoleh lewat usaha; kekuatan punya batas dan harga.'},
+ {type:'genre',name:'Drama Romansa',text:'Drama hubungan antar tokoh: perasaan tumbuh perlahan, salah paham, pilihan sulit, dan konsekuensi emosional. Kedekatan antar tokoh berubah sesuai tindakan pemain.'},
+ {type:'genre',name:'Misteri Detektif',text:'Misteri penyelidikan: petunjuk tersebar adil, saksi punya kepentingan sendiri, kebenaran terungkap bertahap. Jangan membocorkan jawaban sebelum pemain menemukannya.'},
+ {type:'genre',name:'Sci-Fi',text:'Fiksi ilmiah: teknologi dan masyarakat masa depan yang konsisten, dilema etis, penjelajahan dan sistem yang punya aturan sendiri.'},
+ {type:'genre',name:'Horor Psikologis',text:'Horor yang membangun ketegangan lewat suasana, hal yang tidak terlihat, dan keraguan atas kenyataan. Teror datang pelan, bukan sekadar kejutan.'},
+ {type:'genre',name:'Slice of Life',text:'Kehidupan sehari-hari yang hangat: rutinitas, pertemanan, pekerjaan, kejadian kecil yang bermakna. Konflik ringan dan manusiawi.'},
+ {type:'style',name:'Sastrawi deskriptif',text:'Prosa sastrawi kaya detail indrawi (bunyi, bau, cahaya), kalimat bervariasi, tempo tenang; tunjukkan emosi lewat gestur dan suasana.'},
+ {type:'style',name:'Dinamis ringkas',text:'Kalimat pendek dan bertenaga, tempo cepat, fokus pada aksi dan akibatnya, minim basa-basi.'},
+ {type:'style',name:'Dialog dominan',text:'Banyak dialog natural dengan ciri bicara khas tiap tokoh; narasi hanya menjembatani antar dialog.'},
+ {type:'rule',name:'Pemain pegang tokoh utama',text:'Jangan menulis keputusan, ucapan baru, atau pikiran tokoh utama kecuali diberikan pemain.'},
+ {type:'rule',name:'Dunia hidup',text:'NPC punya tujuan sendiri dan bertindak meski tidak dilihat pemain; dunia terus bergerak dan bereaksi.'},
+ {type:'rule',name:'Konsekuensi nyata',text:'Tindakan berisiko bisa gagal. Jangan menyelamatkan pemain dari akibat keputusannya.'}
+];
+let lib=store.get('penutur:lib',null);
+if(!lib){lib={tags:SEED.map(t=>({id:uid(),...t}))};store.set('penutur:lib',lib)}
+const saveLib=()=>store.set('penutur:lib',lib);
+
+/* ---------- status aplikasi ---------- */
+let cur=null,busy=false,undo=null,cloudDirty=false,lastCloudTry=0,mode='aksi',
+    view='v-home',newSel=new Set(),tab='',editTag=null,remote=[],saveT=0;
+const MODE={aksi:'Aksi',ucap:'Ucap',alur:'Alur'};
+const MODEPROMPT={aksi:'Tokoh utama melakukan: ',ucap:'Tokoh utama berkata: ',alur:'Arahan alur (kejadian yang harus terjadi berikutnya): '};
+const M=st=>({main:(st.models&&st.models.main)||S.mainModel,analyzer:(st.models&&st.models.analyzer)||S.analyzerModel});
+
+/* ---------- UI dasar ---------- */
+let toastT=0;
+function toast(msg,ms=3200){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms)}
+function err(e,prefix){console.error(e);toast((prefix?prefix+' ':'')+(e&&e.message?e.message:e),7000)}
+function show(id){view=id;$$('.view').forEach(v=>v.hidden=v.id!==id)}
+function setStatus(t){
+  const el=$('#rStat');if(!el||!cur)return;
+  if(t){el.textContent=t;return}
+  el.textContent=S.driveClientId?(cloudDirty?'Belum diunggah ke Drive':'Tersinkron dengan Drive'):'Tersimpan di perangkat';
+}
+function applyFont(){document.documentElement.style.setProperty('--fs',S.fontSize+'px')}
+applyFont();
+
+/* ---------- penyimpanan lokal ---------- */
+function listStories(){return store.get('penutur:index',[])}
+function loadStory(id){return store.get('penutur:story:'+id,null)}
+function flushSave(){
+  if(!cur)return;clearTimeout(saveT);
+  const ok=store.set('penutur:story:'+cur.id,cur);
+  const idx=listStories().filter(x=>x.id!==cur.id);
+  idx.push({id:cur.id,title:cur.title,updated:cur.updated,turn:cur.turn,cloudAt:cur.cloudAt||0});
+  store.set('penutur:index',idx);
+  if(!ok&&!warnedStore){warnedStore=true;toast('Penyimpanan browser ditolak atau penuh. Segera ekspor atau unggah ke Drive.',8000)}
+}
+function touch(){if(!cur)return;cur.updated=Date.now();cloudDirty=true;clearTimeout(saveT);saveT=setTimeout(flushSave,400);setStatus()}
+window.addEventListener('pagehide',flushSave);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flushSave()});
+
+/* ---------- Gemini API ---------- */
+function extract(j){
+  const c=j.candidates&&j.candidates[0];
+  if(!c||!c.content||!c.content.parts)return{text:'',reason:(j.promptFeedback&&j.promptFeedback.blockReason)||(c&&c.finishReason)||'kosong'};
+  return{text:c.content.parts.filter(p=>!p.thought).map(p=>p.text||'').join(''),reason:c.finishReason||''};
+}
+async function gemini({model,system,prompt,json=false,temperature=1,stream=false,onChunk}){
+  if(!S.apiKey)throw new Error('API Key belum diisi (menu, Pengaturan).');
+  const body={
+    contents:[{role:'user',parts:[{text:prompt}]}],
+    generationConfig:{temperature},
+    safetySettings:['HARASSMENT','HATE_SPEECH','SEXUALLY_EXPLICIT','DANGEROUS_CONTENT'].map(c=>({category:'HARM_CATEGORY_'+c,threshold:'BLOCK_ONLY_HIGH'}))
+  };
+  if(system)body.systemInstruction={parts:[{text:system}]};
+  if(json)body.generationConfig.responseMimeType='application/json';
+  const m=String(model).replace(/^models\//,'');
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:${stream?'streamGenerateContent?alt=sse':'generateContent'}`;
+  for(let a=0;a<3;a++){
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.apiKey},body:JSON.stringify(body)});
+    if(!res.ok){
+      if([429,500,503].includes(res.status)&&a<2){setStatus('Menunggu kuota/server, mencoba lagi…');await sleep(res.status===429?6000*(a+1):2500*(a+1));continue}
+      const t=await res.text();let msg=t;try{msg=JSON.parse(t).error.message}catch(e){}
+      throw new Error(`Gemini ${res.status}: ${msg}`);
+    }
+    if(!stream){
+      const x=extract(await res.json());
+      if(!x.text)throw new Error('Respons kosong atau diblokir ('+x.reason+').');
+      return x.text;
+    }
+    const rd=res.body.getReader(),dec=new TextDecoder();let buf='',full='',reason='';
+    for(;;){
+      const {done,value}=await rd.read();if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      let i;
+      while((i=buf.search(/\r?\n\r?\n/))>=0){
+        const ev=buf.slice(0,i);buf=buf.slice(i).replace(/^\r?\n\r?\n/,'');
+        const line=ev.split(/\r?\n/).filter(l=>l.startsWith('data:')).map(l=>l.slice(5).trim()).join('');
+        if(!line)continue;
+        try{const x=extract(JSON.parse(line));full+=x.text;if(x.reason)reason=x.reason;onChunk&&onChunk(full)}catch(e){}
+      }
+    }
+    if(!full.trim())throw new Error('Respons kosong atau diblokir ('+(reason||'tanpa alasan')+').');
+    return full;
+  }
+}
+function parseJSON(t){
+  t=String(t).trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+  try{return JSON.parse(t)}catch(e){const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));throw new Error('Analis tidak mengembalikan JSON valid.')}
+}
+
+/* ---------- Card Memory (pohon pengetahuan) ---------- */
+const kws=s=>String(s||'').toLowerCase().split(',').map(x=>x.trim()).filter(Boolean);
+const mainKw=c=>String(c.keyword).split(',')[0].trim();
+const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function clip3(t){const m=String(t||'').trim().match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];return m.slice(0,3).join(' ').trim()}
+function findCard(st,kw){const k=kws(kw)[0];if(!k)return null;return Object.values(st.cards).find(c=>kws(c.keyword).includes(k))||null}
+function wouldCycle(st,childId,parentId){let p=parentId,g=0;while(p&&g++<30){if(p===childId)return true;p=st.cards[p]&&st.cards[p].parent}return false}
+function addCards(st,list){
+  if(!Array.isArray(list))return;
+  const made=[];
+  for(const c of list){
+    if(!c||!c.keyword||!c.text)continue;
+    const kw=String(c.keyword).trim();
+    const ex=findCard(st,kw);
+    if(ex){ex.text=clip3(c.text);const have=ex.keyword.toLowerCase();kw.split(',').map(s=>s.trim()).forEach(a=>{if(a&&!have.includes(a.toLowerCase()))ex.keyword+=', '+a});made.push([ex,c.parent]);continue}
+    const n={id:uid(),keyword:kw,text:clip3(c.text),parent:null,pin:!!c.pin};
+    st.cards[n.id]=n;made.push([n,c.parent]);
+  }
+  for(const [card,p] of made){
+    if(!p)continue;const par=findCard(st,p);
+    if(par&&par.id!==card.id&&!wouldCycle(st,card.id,par.id))card.parent=par.id;
+  }
+}
+function updateCards(st,list){
+  if(!Array.isArray(list))return;
+  for(const c of list){if(!c||!c.keyword||!c.text)continue;const ex=findCard(st,c.keyword);if(ex)ex.text=clip3(c.text);else addCards(st,[c])}
+}
+function relevantCards(st,text){
+  const t=' '+text.toLowerCase();const hits=[];
+  for(const c of Object.values(st.cards)){
+    let score=0;
+    for(const k of kws(c.keyword)){
+      if(k.length<2)continue;
+      if(new RegExp('(^|[^\\p{L}\\p{N}])'+escRe(k),'u').test(t))score+=1+Math.min(k.length,12)/12;
+    }
+    if(score>0||c.pin)hits.push({c,score:c.pin?99:score});
+  }
+  hits.sort((a,b)=>b.score-a.score);
+  const out=new Map();
+  for(const {c} of hits.slice(0,Math.max(1,S.maxCards))){
+    const chain=[];let p=c,g=0;
+    while(p.parent&&st.cards[p.parent]&&g++<6){p=st.cards[p.parent];chain.unshift(p)}
+    chain.forEach(x=>out.set(x.id,x));out.set(c.id,c);
+  }
+  return [...out.values()];
+}
+function cardLine(st,c,included){
+  const par=c.parent&&st.cards[c.parent];
+  const kids=Object.values(st.cards).filter(k=>k.parent===c.id&&!included.has(k.id)).map(mainKw);
+  return `• ${mainKw(c)}${par?` (bagian dari ${mainKw(par)})`:''}: ${c.text}${kids.length?` [sub-kartu: ${kids.slice(0,8).join(', ')}]`:''}`;
+}
+const cardIndex=st=>Object.values(st.cards).map(c=>mainKw(c)+(c.parent&&st.cards[c.parent]?` (induk: ${mainKw(st.cards[c.parent])})`:'')).join('; ')||'(belum ada)';
+
+/* ---------- Dynamic Inventory ---------- */
+function normField(f){
+  if(!f||!f.key)return null;
+  const key=String(f.key).trim().toLowerCase().replace(/[^a-z0-9_]+/g,'_').replace(/^_+|_+$/g,'');
+  if(!key)return null;
+  const type=['number','text','list','map'].includes(f.type)?f.type:'text';
+  return{key,label:String(f.label||key),type,max:(f.max==null||f.max==='')?null:num(f.max,null),value:f.value};
+}
+const normItem=i=>typeof i==='string'?{name:i,qty:1,note:''}:{name:String((i&&i.name)||''),qty:num(i&&i.qty,1),note:String((i&&i.note)||'')};
+function initValue(f){
+  const v=f.value;
+  if(f.type==='number')return num(v,0);
+  if(f.type==='text')return v==null?'':String(v);
+  if(f.type==='list')return Array.isArray(v)?v.map(normItem).filter(i=>i.name):[];
+  const o={};if(v&&typeof v==='object'&&!Array.isArray(v))for(const k in v)o[k]=num(v[k]);return o;
+}
+function addFields(st,arr){
+  if(!Array.isArray(arr))return;
+  for(const raw of arr){
+    const f=normField(raw);if(!f||st.inv.schema.some(x=>x.key===f.key))continue;
+    st.inv.schema.push({key:f.key,label:f.label,type:f.type,max:f.max});
+    st.inv.data[f.key]=initValue(f);
+  }
+}
+const clampN=(v,f)=>f.max!=null?Math.min(v,f.max):v;
+const mapKey=(m,name)=>Object.keys(m).find(k=>k.toLowerCase()===name.toLowerCase())||name;
+function applyOps(st,ops){
+  if(!Array.isArray(ops))return;
+  const d=st.inv.data;
+  for(const o of ops){
+    try{
+      const f=st.inv.schema.find(x=>x.key===o.key);if(!f)continue;
+      const k=f.key,nm=String(o.name||'').trim(),low=nm.toLowerCase();
+      const item=()=>d[k].find(x=>x.name.toLowerCase()===low);
+      switch(o.op){
+        case 'set':if(f.type==='number')d[k]=clampN(num(o.value,d[k]),f);else if(f.type==='text')d[k]=String(o.value==null?'':o.value);break;
+        case 'add':if(f.type==='number')d[k]=clampN(num(d[k])+num(o.amount),f);break;
+        case 'add_item':if(f.type==='list'&&nm){const it=item();const q=num(o.qty,1);if(it){it.qty+=q;if(o.note!=null)it.note=String(o.note)}else d[k].push({name:nm,qty:q,note:String(o.note||'')})}break;
+        case 'remove_item':if(f.type==='list'&&nm){const i=d[k].findIndex(x=>x.name.toLowerCase()===low);if(i>=0){const q=o.qty==null?Infinity:num(o.qty,1);d[k][i].qty-=q;if(d[k][i].qty<=0)d[k].splice(i,1)}}break;
+        case 'update_item':if(f.type==='list'&&nm){const it=item();if(it){if(o.qty!=null)it.qty=num(o.qty,it.qty);if(o.note!=null)it.note=String(o.note)}}break;
+        case 'set_map':if(f.type==='map'&&nm)d[k][mapKey(d[k],nm)]=num(o.value);break;
+        case 'add_map':if(f.type==='map'&&nm){const mk=mapKey(d[k],nm);d[k][mk]=num(d[k][mk])+num(o.amount)}break;
+        case 'remove_map':if(f.type==='map'&&nm)delete d[k][mapKey(d[k],nm)];break;
+      }
+    }catch(e){console.warn('Operasi status gagal',o,e)}
+  }
+}
+function invCompact(st){
+  return st.inv.schema.map(f=>{
+    const v=st.inv.data[f.key];
+    if(f.type==='number')return `${f.label}: ${v}${f.max!=null?'/'+f.max:''}`;
+    if(f.type==='text')return `${f.label}: ${v||'-'}`;
+    if(f.type==='list')return `${f.label}: ${v.length?v.map(i=>i.name+(i.qty>1?' x'+i.qty:'')+(i.note?' ('+i.note+')':'')).join('; '):'-'}`;
+    const e=Object.entries(v);return `${f.label}: ${e.length?e.map(([a,b])=>a+' '+b).join(', '):'-'}`;
+  }).join('\n');
+}
+const invSchemaText=st=>st.inv.schema.map(f=>`${f.key} (${f.type}${f.max!=null?', maks '+f.max:''}) = "${f.label}"`).join('\n')||'(belum ada)';
+
+/* ---------- Ringkasan ---------- */
+const summaryText=st=>[st.summary.base,...st.summary.entries.map(e=>e.text)].filter(Boolean).join('\n');
+const lastAI=st=>{for(let i=st.log.length-1;i>=0;i--)if(st.log[i].role==='ai')return st.log[i].text;return''};
+function recentScene(st){
+  let out='';
+  for(let i=st.log.length-1;i>=0&&out.length<S.recentChars;i--){const e=st.log[i];out=(e.role==='user'?'[Pemain] ':'')+e.text+'\n\n'+out}
+  out=out.trim();if(out.length>S.recentChars)out='…'+out.slice(-S.recentChars);
+  return out;
+}
+
+/* ---------- Prompt: Analis (model ringan) ---------- */
+const ANALYZER_SYS='Kamu adalah mesin analis memori untuk game cerita teks. Jawab HANYA dengan JSON valid sesuai skema, tanpa markdown, dalam bahasa Indonesia yang ringkas dan akurat. Jangan mengarang fakta yang tidak ada di teks.';
+const CARD_RULES=`Aturan kartu: "keyword" = nama utama diikuti alias dipisah koma (contoh "Rina, Nona Rina"). "text" = fakta penting, MAKSIMAL 3 kalimat. "parent" = keyword utama kartu induk (yang sudah ada atau dibuat di respons yang sama) atau null. Pecah entitas turunan (tempat di dalam kerajaan, anggota organisasi, skill milik tokoh) menjadi sub-kartu dengan parent. Jangan duplikasi kartu yang sudah ada: perbarui lewat update_cards.`;
+const FIELD_RULES=`Tipe field: number (angka, "max" opsional, "value" angka awal), text (teks pendek), list (benda/skill/pet; "value" array {name,qty,note}; note dipakai untuk durasi/cooldown/kondisi), map (nama -> angka, untuk afinitas/reputasi; "value" objek).`;
+const OPS_RULES=`"inventory_ops" = daftar perubahan status akibat narasi baru ([] bila tidak ada). Bentuk operasi:
+{"op":"set","key":"lokasi","value":"Hutan Kelam"} (number/text)
+{"op":"add","key":"gold","amount":-50} (number, boleh negatif)
+{"op":"add_item","key":"item","name":"Ramuan","qty":2,"note":""} (list)
+{"op":"remove_item","key":"item","name":"Ramuan","qty":1}
+{"op":"update_item","key":"skill","name":"Api Kecil","note":"cooldown 3 giliran"}
+{"op":"set_map","key":"afinitas","name":"Rina","value":20} (map)
+{"op":"add_map","key":"afinitas","name":"Rina","amount":5}
+{"op":"remove_map","key":"afinitas","name":"Rina"}
+Catat hanya perubahan yang JELAS terjadi di narasi. Pakai "key" persis seperti pada SKEMA STATUS.`;
+
+async function analyzeWorld(st){
+  const w=st.world;
+  const prompt=`TUGAS: Analisa dunia cerita ini dan buat memori awal.
+
+[TOKOH UTAMA] ${w.mc||'(tanpa nama)'}
+[GENRE] ${w.genreNames.join(', ')||'-'}
+${w.genre}
+[GAYA BAHASA] ${w.style||'-'}
+[ATURAN DUNIA] ${w.rules||'-'}
+[DUNIA DAN LATAR]
+${w.text}
+
+Keluarkan JSON:
+{"summary":"rangkuman awal 1-5 kalimat",
+ "cards":[{"keyword":"...","text":"maks 3 kalimat","parent":null,"pin":false}],
+ "inventory_schema":[{"key":"snake_case","label":"Nama tampil","type":"number|text|list|map","max":null,"value":0}],
+ "suggestions":["aksi pembuka singkat (maks 8 kata)", "..."]}
+
+${CARD_RULES}
+"pin":true hanya untuk 1-3 kartu yang HARUS selalu diingat (tokoh utama, aturan inti dunia).
+Buat kartu untuk tokoh, tempat, organisasi, aturan dunia, dan konflik penting; gunakan sub-kartu untuk turunannya.
+
+SKEMA STATUS (inventory_schema): ${FIELD_RULES}
+Sesuaikan 5-10 field dengan genre: RPG/aksi -> level, hp, mp, gold, perlengkapan(list), item(list), skill(list, note=durasi/cooldown), pet(list), status(text). Drama/romansa -> afinitas(map), uang(number), hubungan(text), reputasi(map). Misteri -> petunjuk(list), kecurigaan(map). Genre campuran -> gabungkan yang relevan. SELALU sertakan "lokasi" (text) dan "waktu" (text). Isi "value" awal sesuai dunia.
+Buat 3-4 "suggestions" awal yang beragam.`;
+  const r=parseJSON(await gemini({model:M(st).analyzer,system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
+  st.summary.base=String(r.summary||'').trim();
+  addFields(st,r.inventory_schema);
+  addCards(st,r.cards);
+  st.suggestions=(Array.isArray(r.suggestions)?r.suggestions:[]).map(String).slice(0,4);
+}
+
+async function analyzeTurn(st,p,narr){
+  const prompt=`TUGAS: Analisa satu giliran cerita dan perbarui memori.
+
+[TOKOH UTAMA] ${st.world.mc||'-'}
+[RINGKASAN SAAT INI]
+${summaryText(st)||'(kosong)'}
+[KARTU YANG SUDAH ADA]
+${cardIndex(st)}
+[SKEMA STATUS]
+${invSchemaText(st)}
+[STATUS SAAT INI]
+${invCompact(st)||'(kosong)'}
+[INPUT PEMAIN (${MODE[p.mode]})]
+${p.input}
+[NARASI BARU]
+${narr}
+
+Keluarkan JSON:
+{"summary":"1-5 kalimat: HANYA perubahan/perkembangan penting dari narasi baru (dunia, tokoh, hubungan, janji, rahasia)",
+ "new_cards":[{"keyword":"...","text":"maks 3 kalimat","parent":null}],
+ "update_cards":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru maks 3 kalimat"}],
+ "new_fields":[],
+ "inventory_ops":[],
+ "suggestions":["3-4 saran langkah berikutnya, masing-masing maks 8 kata, beragam: aman, berisiko, sosial, eksplorasi"]}
+
+${CARD_RULES}
+Buat kartu baru hanya untuk entitas/fakta penting yang BARU muncul dan perlu diingat jangka panjang.
+${OPS_RULES}
+"new_fields" = tambahan field status baru bila narasi memperkenalkan mekanik baru yang belum ada di SKEMA ([] bila tidak perlu). ${FIELD_RULES}`;
+  return parseJSON(await gemini({model:M(st).analyzer,system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
+}
+function applyAnalysis(st,r,turn){
+  if(r.summary&&String(r.summary).trim())st.summary.entries.push({turn,text:String(r.summary).trim()});
+  addCards(st,r.new_cards);updateCards(st,r.update_cards);
+  addFields(st,r.new_fields);applyOps(st,r.inventory_ops);
+  if(Array.isArray(r.suggestions))st.suggestions=r.suggestions.map(String).filter(Boolean).slice(0,4);
+}
+async function compress(st){
+  const s=st.summary;
+  const prompt=`TUGAS: Padatkan memori cerita yang sudah panjang.
+
+[RINGKASAN INTI]
+${s.base||'(kosong)'}
+[CATATAN PER-GILIRAN]
+${s.entries.map(e=>`(${e.turn}) ${e.text}`).join('\n')}
+[KARTU YANG SUDAH ADA]
+${cardIndex(st)}
+
+Gabungkan menjadi SATU ringkasan kronologis maksimal 8 kalimat yang menjaga alur utama dan kondisi terkini. Pindahkan fakta detail (tokoh, tempat, aturan, hubungan, janji, utang) ke kartu memori baru atau perbarui kartu lama.
+Keluarkan JSON: {"summary":"...","new_cards":[{"keyword":"...","text":"maks 3 kalimat","parent":null}],"update_cards":[{"keyword":"...","text":"..."}]}
+${CARD_RULES}`;
+  const r=parseJSON(await gemini({model:M(st).analyzer,system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
+  if(!r.summary||!String(r.summary).trim())throw new Error('Hasil pemadatan kosong.');
+  addCards(st,r.new_cards);updateCards(st,r.update_cards);
+  st.summary={base:String(r.summary).trim(),entries:[]};
+}
+
+/* ---------- Prompt: Narator (model utama) ---------- */
+function buildNarration(st,text,m){
+  const w=st.world;
+  const system=`Kamu adalah NARATOR dan pembangun dunia untuk game cerita teks interaktif. Pemain mengendalikan tokoh utama "${w.mc||'tokoh utama'}".
+
+ATURAN MUTLAK:
+- Tulis HANYA teks narasi lanjutan (prosa murni). Tanpa pembuka/penutup, tanpa komentar meta, tanpa judul, tanpa daftar pilihan, tanpa angka/status game, tanpa markdown.
+- Kamu hanya menarasikan hasil tindakan, reaksi dunia, dan tokoh lain. Jangan membuat keputusan atau ucapan baru untuk tokoh utama di luar input pemain; kembangkan input pemain secara wajar.
+- Patuhi fakta pada RINGKASAN, KARTU MEMORI, dan STATUS. Jangan kontradiktif. Konsekuensi harus sesuai STATUS (tidak memakai benda yang tidak dimiliki, tidak melampaui kemampuan).
+- Bangun dunia yang hidup: tokoh lain punya agenda, lingkungan bereaksi, ada kejadian tak terduga yang masuk akal.
+- Panjang minimal ${S.minWords} kata. Bahasa Indonesia.
+
+GENRE:
+${w.genre||'-'}
+
+GAYA BAHASA:
+${w.style||'-'}
+
+ATURAN DUNIA DAN PENEKANAN:
+${w.rules||'-'}`;
+  const cards=relevantCards(st,text+(S.scanLast?'\n'+lastAI(st):''));
+  const inc=new Set(cards.map(c=>c.id));
+  const parts=[];
+  parts.push('[RINGKASAN CERITA SEJAUH INI]\n'+(summaryText(st)||'(cerita belum dimulai)'));
+  if(cards.length)parts.push('[KARTU MEMORI RELEVAN]\n'+cards.map(c=>cardLine(st,c,inc)).join('\n'));
+  const inv=invCompact(st);if(inv)parts.push('[STATUS SAAT INI]\n'+inv);
+  const rs=recentScene(st);if(rs)parts.push('[ADEGAN TERAKHIR]\n'+rs);
+  parts.push('[INPUT PEMAIN]\n'+MODEPROMPT[m]+text);
+  parts.push(st.log.length?`Lanjutkan ceritanya. Minimal ${S.minWords} kata.`:`Ini adegan pembuka cerita: perkenalkan tokoh utama dan dunia secara hidup. Minimal ${S.minWords} kata.`);
+  return{system,prompt:parts.join('\n\n')};
+}
+
+/* ---------- Alur giliran ---------- */
+const paras=t=>String(t).split(/\n{2,}/).filter(p=>p.trim()).map(p=>'<p>'+esc(p.trim()).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>')+'</p>').join('');
+const nearBottom=()=>{const l=$('#log');return l.scrollHeight-l.scrollTop-l.clientHeight<140};
+const toBottom=()=>{const l=$('#log');l.scrollTop=l.scrollHeight};
+function snap(st){return{logLen:st.log.length,data:JSON.stringify({summary:st.summary,cards:st.cards,inv:st.inv,suggestions:st.suggestions,turn:st.turn,pending:st.pending})}}
+
+function renderLog(){
+  const st=cur,el=$('#log');
+  if(!st.log.length){
+    el.innerHTML=`<div class="empty"><p>Dunia sudah siap. Mulai dengan adegan pembuka, atau tulis tindakan pertama tokoh utamamu di bawah.</p><button class="btn pri" data-act="start">Mulai cerita</button></div>`;
+    return;
+  }
+  el.innerHTML=st.log.map(e=>e.role==='user'?`<div class="pl"><span class="md">${MODE[e.mode]||'Aksi'}</span>${esc(e.text)}</div>`:`<article class="nr">${paras(e.text)}</article>`).join('')
+    +((undo&&!busy)?`<div class="tools"><button data-act="regen">Ulangi giliran</button><button data-act="undo">Urungkan</button></div>`:'');
+  toBottom();
+}
+function renderSuggest(){
+  const st=cur,el=$('#sugg');if(!st)return;
+  let h='';
+  if(!busy){
+    if(st.pending)h+=`<button class="chip warn" data-act="reanalyze">Analisa ulang</button>`;
+    h+=st.suggestions.map((s,i)=>`<button class="chip" data-sug="${i}">${esc(s)}</button>`).join('');
+  }
+  el.innerHTML=h;el.hidden=!h;
+}
+function setBusy(b){busy=b;$('#btnSend').disabled=b;$('#inp').disabled=b;if(!b)setStatus()}
+function appendTemp(text,m){
+  const log=$('#log');const e=log.querySelector('.empty');if(e)e.remove();
+  log.insertAdjacentHTML('beforeend',`<div class="pl"><span class="md">${MODE[m]}</span>${esc(text)}</div><article class="nr live" id="live"><p class="typing">…</p></article>`);
+  toBottom();
+}
+function updateLive(t){const el=$('#live');if(!el)return;const nb=nearBottom();el.innerHTML=paras(t);if(nb)toBottom()}
+
+async function sendTurn(text,m){
+  const st=cur;text=(text||'').trim();
+  if(busy||!text)return;
+  if(!S.apiKey){toast('Isi API Key di Pengaturan dulu.');openDrawer('set');return}
+  setBusy(true);renderSuggest();
+  const snapshot=snap(st);
+  const {system,prompt}=buildNarration(st,text,m);
+  $('#inp').value='';resizeInp();
+  appendTemp(text,m);
+  try{
+    setStatus('Narator menulis…');
+    const narr=(await gemini({model:M(st).main,system,prompt,temperature:S.temperature,stream:true,onChunk:updateLive})).trim();
+    undo=snapshot;
+    st.turn++;
+    st.log.push({role:'user',text,mode:m,turn:st.turn},{role:'ai',text:narr,turn:st.turn});
+    st.pending={turn:st.turn,input:text,mode:m};
+    st.suggestions=[];
+    touch();renderLog();
+    await runAnalysis(st);
+  }catch(e){
+    renderLog();$('#inp').value=text;resizeInp();err(e);
+  }finally{setBusy(false);renderSuggest();renderLog()}
+}
+async function runAnalysis(st){
+  const p=st.pending;if(!p)return;
+  setStatus('Menganalisa memori…');
+  try{
+    const r=await analyzeTurn(st,p,lastAI(st));
+    applyAnalysis(st,r,p.turn);st.pending=null;touch();
+  }catch(e){err(e,'Analisa gagal, narasi tetap tersimpan. Ketuk "Analisa ulang".');return}
+  if(st.summary.entries.length>=S.compressEvery){
+    try{setStatus('Memadatkan ringkasan…');await compress(st);touch()}catch(e){err(e,'Pemadatan ringkasan gagal.')}
+  }
+}
+function undoLast(){
+  if(!undo||busy)return false;
+  const s=JSON.parse(undo.data);Object.assign(cur,s);cur.log.length=undo.logLen;undo=null;
+  touch();renderLog();renderSuggest();return true;
+}
+
+/* ---------- Pembuat dunia ---------- */
+function renderChips(){
+  for(const [t,id] of [['genre','Genre'],['style','Style'],['rule','Rule']]){
+    const items=lib.tags.filter(x=>x.type===t);
+    $('#chips'+id).innerHTML=items.length?items.map(x=>`<button class="chip ${newSel.has(x.id)?'on':''}" data-tag="${x.id}" aria-pressed="${newSel.has(x.id)}">${esc(x.name)}</button>`).join(''):'<small>Belum ada tag. Tambahkan di Pustaka.</small>';
+  }
+}
+function openNew(){
+  newSel=new Set();renderChips();
+  $('#nfMain').value=S.mainModel;$('#nfAnalyzer').value=S.analyzerModel;$('#createMsg').textContent='';
+  show('v-new');
+}
+async function createWorld(){
+  const title=$('#nfTitle').value.trim(),world=$('#nfWorld').value.trim();
+  if(!title||!world){toast('Isi judul dan deskripsi dunia.');return}
+  if(!S.apiKey){toast('Isi API Key di Pengaturan dulu.');openDrawer('set');return}
+  const pick=t=>lib.tags.filter(x=>x.type===t&&newSel.has(x.id));
+  const st={
+    v:1,id:uid(),title,created:Date.now(),updated:Date.now(),cloudAt:0,
+    world:{mc:$('#nfMc').value.trim(),text:world,genreNames:pick('genre').map(x=>x.name),
+      genre:pick('genre').map(x=>x.text).join('\n'),style:pick('style').map(x=>x.text).join('\n'),
+      rules:[...pick('rule').map(x=>x.text),$('#nfRules').value.trim()].filter(Boolean).join('\n')},
+    models:{main:$('#nfMain').value.trim()||S.mainModel,analyzer:$('#nfAnalyzer').value.trim()||S.analyzerModel},
+    summary:{base:'',entries:[]},cards:{},inv:{schema:[],data:{}},log:[],suggestions:[],turn:0,pending:null
+  };
+  const b=$('#btnCreate');b.disabled=true;$('#createMsg').textContent='Menganalisa dunia (membuat ringkasan, kartu memori, dan status)…';
+  try{
+    await analyzeWorld(st);
+    cur=st;cloudDirty=true;flushSave();
+    openStory(st.id);
+  }catch(e){err(e);$('#createMsg').textContent='Gagal: '+e.message}
+  finally{b.disabled=false}
+}
+
+/* ---------- Beranda ---------- */
+function renderHome(){
+  const idx=listStories().sort((a,b)=>b.updated-a.updated);
+  $('#homeList').innerHTML=idx.length?idx.map(s=>`<div class="story"><button class="open" data-act="open" data-id="${s.id}"><b>${esc(s.title)}</b><small>${s.turn} giliran, diubah ${ago(s.updated)}</small></button><button class="btn warn sm" data-act="del-story" data-id="${s.id}">Hapus</button></div>`).join(''):'<p class="empty">Belum ada cerita. Susun dunia pertamamu.</p>';
+  $('#keyWarn').hidden=!!S.apiKey;
+  $('#homeRemote').innerHTML=remoteHtml();
+}
+function openStory(id){
+  cur=loadStory(id);if(!cur){toast('Cerita tidak ditemukan.');return}
+  cur.inv=cur.inv||{schema:[],data:{}};cur.cards=cur.cards||{};cur.suggestions=cur.suggestions||[];
+  undo=null;cloudDirty=cloudDirty||(cur.updated>(cur.cloudAt||0));
+  $('#rTitle').textContent=cur.title;
+  show('v-read');renderLog();renderSuggest();setStatus();
+}
+async function closeStory(){
+  flushSave();
+  if(cloudDirty&&Drive.valid()&&cur){try{await driveUpload(cur,true)}catch(e){}}
+  cur=null;renderHome();show('v-home');
+}
+
+/* ---------- Google Drive (checkpoint) ---------- */
+const Drive={token:null,exp:0,
+  valid(){return !!this.token&&Date.now()<this.exp},
+  loadGsi(){return new Promise((res,rej)=>{if(window.google&&google.accounts)return res();const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=res;s.onerror=()=>rej(new Error('Gagal memuat Google Sign-In. Periksa koneksi.'));document.head.appendChild(s)})},
+  async connect(){
+    if(!S.driveClientId)throw new Error('Isi Google OAuth Client ID di Pengaturan dulu.');
+    await this.loadGsi();
+    return new Promise((res,rej)=>{
+      const c=google.accounts.oauth2.initTokenClient({
+        client_id:S.driveClientId,scope:'https://www.googleapis.com/auth/drive.file',
+        callback:r=>{if(r.error)return rej(new Error('Drive: '+r.error));this.token=r.access_token;this.exp=Date.now()+(num(r.expires_in,3600)-90)*1000;store.set('penutur:driveLinked',true);res()},
+        error_callback:e=>rej(new Error('Drive: '+((e&&e.type)||'gagal tersambung')))
+      });
+      c.requestAccessToken({prompt:''});
+    });
+  },
+  async api(url,opt={}){
+    if(!this.valid())throw new Error('Drive belum tersambung atau token kedaluwarsa. Ketuk "Sambungkan Drive".');
+    const res=await fetch(url,{...opt,headers:{...(opt.headers||{}),Authorization:'Bearer '+this.token}});
+    if(!res.ok){let m=await res.text();try{m=JSON.parse(m).error.message}catch(e){}throw new Error('Drive '+res.status+': '+m)}
+    return res;
+  },
+  async list(){
+    const q=encodeURIComponent("appProperties has { key='app' and value='penutur' } and trashed=false");
+    const r=await this.api(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime,appProperties)&orderBy=modifiedTime desc&pageSize=50`);
+    return (await r.json()).files||[];
+  },
+  async find(storyId){
+    const q=encodeURIComponent(`appProperties has { key='storyId' and value='${storyId}' } and trashed=false`);
+    const r=await this.api(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
+    return ((await r.json()).files||[])[0]||null;
+  },
+  async upload(st,pkg){
+    const ex=await this.find(st.id);
+    const meta={name:`Penutur - ${st.title}.json`,mimeType:'application/json',appProperties:{app:'penutur',storyId:st.id}};
+    const b='penutur'+uid();
+    const body=`--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(pkg)}\r\n--${b}--`;
+    const url=ex?`https://www.googleapis.com/upload/drive/v3/files/${ex.id}?uploadType=multipart&fields=id,modifiedTime`:`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime`;
+    const r=await this.api(url,{method:ex?'PATCH':'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body});
+    return r.json();
+  },
+  async download(fid){return (await this.api(`https://www.googleapis.com/drive/v3/files/${fid}?alt=media`)).json()}
+};
+const pkgOf=st=>({app:'penutur',v:1,savedAt:Date.now(),story:st,library:lib});
+async function driveUpload(st,quiet){
+  setStatus('Mengunggah ke Drive…');
+  const r=await Drive.upload(st,pkgOf(st));
+  st.cloudAt=Date.parse(r.modifiedTime)||Date.now();
+  if(cur&&cur.id===st.id)cloudDirty=false;
+  flushSave();setStatus();
+  if(!quiet)toast('Checkpoint terunggah ke Drive.');
+}
+function importPackage(pkg){
+  if(!pkg||!pkg.story||!pkg.story.id||!pkg.story.world)throw new Error('File bukan checkpoint Penutur yang valid.');
+  if(pkg.library&&Array.isArray(pkg.library.tags)){
+    for(const t of pkg.library.tags)if(t&&t.id&&!lib.tags.some(x=>x.id===t.id))lib.tags.push(t);
+    saveLib();
+  }
+  const prev=cur;cur=pkg.story;flushSave();cur=prev;
+}
+function remoteHtml(){
+  if(!Drive.valid())return '<p class="hint">Drive belum tersambung. Isi Client ID di Pengaturan, lalu ketuk Sambungkan Drive.</p>';
+  if(!remote.length)return '<p class="hint">Belum ada checkpoint di Drive.</p>';
+  const local=listStories();
+  return remote.map(f=>{
+    const sid=f.appProperties&&f.appProperties.storyId,l=local.find(x=>x.id===sid),rt=Date.parse(f.modifiedTime);
+    let s='belum ada di perangkat ini';
+    if(l)s=rt>(l.cloudAt||0)+5000?'lebih baru di Drive':(l.updated>(l.cloudAt||0)+1000?'perangkat ini lebih baru':'sinkron');
+    return `<div class="story"><div class="grow"><b>${esc(f.name.replace(/^Penutur - /,'').replace(/\.json$/,''))}</b><small>${ago(rt)}, ${s}</small></div><button class="btn sm" data-act="drive-pull" data-fid="${f.id}" data-sid="${esc(sid||'')}" data-rt="${rt}">Ambil</button></div>`;
+  }).join('');
+}
+async function driveRefresh(){
+  try{
+    if(!Drive.valid())await Drive.connect();
+    remote=await Drive.list();
+  }catch(e){err(e)}
+  renderHome();if($('#drawer').classList.contains('on')&&tab==='save')renderTab();
+}
+setInterval(async()=>{
+  if(!cur||!cloudDirty||busy||!S.driveClientId||S.driveMinutes<=0)return;
+  if(Date.now()-lastCloudTry<S.driveMinutes*60000)return;
+  lastCloudTry=Date.now();
+  if(!Drive.valid()){setStatus('Drive perlu disambung ulang (ketuk menu, Simpan)');return}
+  try{await driveUpload(cur,true)}catch(e){console.warn(e)}
+},30000);
+
+/* ---------- Drawer ---------- */
+function tabsFor(){
+  return view==='v-read'
+    ?[['sum','Ringkasan'],['cards','Kartu'],['inv','Status'],['world','Dunia'],['lib','Pustaka'],['set','Pengaturan'],['save','Simpan']]
+    :[['lib','Pustaka'],['set','Pengaturan'],['save','Simpan']];
+}
+function openDrawer(t){
+  const ts=tabsFor();tab=ts.some(x=>x[0]===t)?t:ts[0][0];
+  $('#drawer').classList.add('on');$('#scrim').classList.add('on');renderTab();
+}
+function closeDrawer(){
+  if(document.activeElement)document.activeElement.blur();
+  $('#drawer').classList.remove('on');$('#scrim').classList.remove('on');
+  if(cur){flushSave();renderSuggest()}
+  if(view==='v-new')renderChips();
+  if(view==='v-home')renderHome();
+}
+function renderTab(){
+  $('#tabs').innerHTML=tabsFor().map(([k,n])=>`<button data-act="tab" data-tab="${k}" class="${k===tab?'on':''}">${n}</button>`).join('');
+  const fn={sum:tabSum,cards:tabCards,inv:tabInv,world:tabWorld,lib:tabLib,set:tabSet,save:tabSave}[tab];
+  const sc=$('#dbody').scrollTop;$('#dbody').innerHTML=fn();$('#dbody').scrollTop=sc;
+}
+
+function tabSum(){
+  const st=cur;
+  return `<p class="hint">Ringkasan ini dikirim ke narator setiap giliran. Catatan sejak pemadatan terakhir: ${st.summary.entries.length} dari ${S.compressEvery}.</p>
+  <textarea id="sumTa" rows="14">${esc(summaryText(st))}</textarea>
+  <div class="row"><button class="btn pri" data-act="sum-save">Simpan ringkasan</button><button class="btn" data-act="sum-compress">Padatkan sekarang</button></div>`;
+}
+function tabCards(){
+  const st=cur,cs=Object.values(st.cards);
+  const roots=cs.filter(c=>!c.parent||!st.cards[c.parent]);
+  const kids=id=>cs.filter(c=>c.parent===id);
+  const row=(c,d)=>{
+    const opts=['<option value="">(tidak ada, kartu utama)</option>'].concat(cs.filter(x=>x.id!==c.id&&!wouldCycle(st,c.id,x.id)).map(x=>`<option value="${x.id}" ${x.id===c.parent?'selected':''}>${esc(mainKw(x))}</option>`)).join('');
+    return `<details class="card" style="margin-left:${d*14}px"><summary>${esc(mainKw(c))}${c.pin?' (selalu disertakan)':''}<small>${esc(c.text.slice(0,80))}</small></summary>
+      <label>Kata kunci (pisahkan dengan koma)<input data-bind="card" data-id="${c.id}" data-f="keyword" value="${esc(c.keyword)}"></label>
+      <label>Isi (maksimal 3 kalimat)<textarea rows="3" data-bind="card" data-id="${c.id}" data-f="text">${esc(c.text)}</textarea></label>
+      <label>Induk<select data-bind="card" data-id="${c.id}" data-f="parent">${opts}</select></label>
+      <label class="chk"><input type="checkbox" data-bind="card" data-id="${c.id}" data-f="pin" ${c.pin?'checked':''}> Selalu sertakan di prompt</label>
+      <div class="row"><button class="btn warn sm" data-act="card-del" data-id="${c.id}">Hapus kartu</button></div></details>`+kids(c.id).map(k=>row(k,d+1)).join('');
+  };
+  return `<p class="hint">${cs.length} kartu. Kartu masuk ke prompt saat kata kuncinya muncul di inputmu. Sub-kartu ikut membawa induknya.</p>`
+    +(roots.map(c=>row(c,0)).join('')||'<p class="empty">Belum ada kartu.</p>')
+    +`<div class="row"><button class="btn" data-act="card-add">Tambah kartu</button></div>`;
+}
+function tabInv(){
+  const st=cur,d=st.inv.data;
+  const body=f=>{
+    const v=d[f.key],k=esc(f.key);
+    if(f.type==='number')return `<input type="number" data-bind="inv-num" data-key="${k}" value="${esc(v)}">${f.max!=null?`<small>maksimal ${f.max}</small>`:''}`;
+    if(f.type==='text')return `<input data-bind="inv-text" data-key="${k}" value="${esc(v)}">`;
+    if(f.type==='list')return v.map((it,i)=>`<div class="irow"><input data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="name" value="${esc(it.name)}" aria-label="Nama"><input type="number" data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="qty" value="${it.qty}" aria-label="Jumlah"><input data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="note" value="${esc(it.note)}" placeholder="catatan/durasi" aria-label="Catatan"><button class="x" data-act="inv-delitem" data-key="${k}" data-i="${i}" aria-label="Hapus">&#10005;</button></div>`).join('')+`<button class="btn sm" data-act="inv-additem" data-key="${k}">Tambah</button>`;
+    return Object.entries(v).map(([a,b])=>`<div class="mrow"><input data-bind="inv-mapk" data-key="${k}" data-old="${esc(a)}" value="${esc(a)}" aria-label="Nama"><input type="number" data-bind="inv-mapv" data-key="${k}" data-name="${esc(a)}" value="${b}" aria-label="Nilai"><button class="x" data-act="inv-delmap" data-key="${k}" data-name="${esc(a)}" aria-label="Hapus">&#10005;</button></div>`).join('')+`<button class="btn sm" data-act="inv-addmap" data-key="${k}">Tambah</button>`;
+  };
+  return `<p class="hint">Status diperbarui otomatis oleh analis setiap giliran. Kamu bisa mengoreksinya langsung di sini.</p>`
+    +(st.inv.schema.map(f=>`<div class="field"><b>${esc(f.label)}<button class="x" data-act="inv-delfield" data-key="${esc(f.key)}" aria-label="Hapus field">&#10005;</button></b>${body(f)}</div>`).join('')||'<p class="empty">Belum ada field status.</p>')
+    +`<h3>Tambah field</h3><div class="row"><input id="nfK" placeholder="Nama field, mis. Mana" style="flex:2"><select id="nfT" style="flex:1"><option value="number">Angka</option><option value="text">Teks</option><option value="list">Daftar</option><option value="map">Pasangan nama dan angka</option></select></div><button class="btn" data-act="inv-addfield">Tambah field</button>`;
+}
+function tabWorld(){
+  const st=cur,w=st.world;
+  const f=(l,k,v,rows)=>`<label>${l}<textarea rows="${rows}" data-bind="world" data-f="${k}">${esc(v)}</textarea></label>`;
+  return `<p class="hint">Perubahan di sini langsung dipakai mulai giliran berikutnya.</p>
+  <label>Judul<input data-bind="world" data-f="title" value="${esc(st.title)}"></label>
+  <label>Tokoh utama<input data-bind="world" data-f="mc" value="${esc(w.mc)}"></label>
+  ${f('Genre','genre',w.genre,3)}${f('Gaya bahasa','style',w.style,3)}${f('Aturan dan penekanan','rules',w.rules,4)}${f('Dunia dan latar','text',w.text,6)}
+  <label>Model narator<input list="models" data-bind="world" data-f="main" value="${esc(M(st).main)}"></label>
+  <label>Model analis<input list="models" data-bind="world" data-f="analyzer" value="${esc(M(st).analyzer)}"></label>`;
+}
+function tabLib(){
+  const e=editTag?lib.tags.find(x=>x.id===editTag):null;
+  const grp=(t,n)=>`<h3>${n}</h3>`+(lib.tags.filter(x=>x.type===t).map(x=>`<div class="tag"><b>${esc(x.name)}</b><small>${esc(x.text)}</small><button class="btn sm" data-act="tag-edit" data-id="${x.id}">Ubah</button> <button class="btn warn sm" data-act="tag-del" data-id="${x.id}">Hapus</button></div>`).join('')||'<small>Kosong.</small>');
+  return `<p class="hint">Tag adalah templat genre, gaya bahasa, atau aturan yang bisa dipasang ke dunia baru.</p>
+  ${grp('genre','Genre')}${grp('style','Gaya bahasa')}${grp('rule','Aturan')}
+  <h3>${e?'Ubah tag':'Tag baru'}</h3>
+  <label>Jenis<select id="tgType"><option value="genre">Genre</option><option value="style">Gaya bahasa</option><option value="rule">Aturan</option></select></label>
+  <label>Nama<input id="tgName" value="${esc(e?e.name:'')}"></label>
+  <label>Isi instruksi<textarea id="tgText" rows="4">${esc(e?e.text:'')}</textarea></label>
+  <div class="row"><button class="btn pri" data-act="tag-save">${e?'Simpan perubahan':'Tambah tag'}</button>${e?'<button class="btn" data-act="tag-cancel">Batal</button>':''}</div>`;
+}
+function tabSet(){
+  const n=(l,k,min,max,step=1)=>`<label>${l}<input type="number" min="${min}" max="${max}" step="${step}" data-set="${k}" value="${S[k]}"></label>`;
+  return `<label>API Key Gemini<input type="password" autocomplete="off" data-set="apiKey" value="${esc(S.apiKey)}" placeholder="AIza…"></label>
+  <p class="hint">Disimpan hanya di browser ini dan tidak ikut ke checkpoint Drive. Buat di Google AI Studio.</p>
+  <label>Model narator (default)<input list="models" data-set="mainModel" value="${esc(S.mainModel)}"></label>
+  <label>Model analis (default)<input list="models" data-set="analyzerModel" value="${esc(S.analyzerModel)}"></label>
+  <p class="hint">Isi ID model persis seperti di Google AI Studio. Model per cerita bisa diubah di tab Dunia.</p>
+  ${n('Panjang minimal narasi (kata)','minWords',20,1500,10)}
+  ${n('Kreativitas (temperature)','temperature',0,2,0.1)}
+  ${n('Padatkan ringkasan tiap (giliran)','compressEvery',5,100)}
+  ${n('Maksimal kartu per giliran','maxCards',1,40)}
+  ${n('Adegan terakhir yang dikirim (karakter)','recentChars',0,6000,100)}
+  ${n('Ukuran huruf cerita (px)','fontSize',14,28)}
+  <label class="chk"><input type="checkbox" data-set="scanLast" ${S.scanLast?'checked':''}> Cari kata kunci kartu juga di narasi terakhir</label>
+  <label class="chk"><input type="checkbox" data-set="tapSend" ${S.tapSend?'checked':''}> Ketuk saran langsung mengirim</label>
+  <h3>Google Drive</h3>
+  <label>OAuth Client ID<input data-set="driveClientId" value="${esc(S.driveClientId)}" placeholder="xxxx.apps.googleusercontent.com"></label>
+  ${n('Unggah otomatis tiap (menit, 0 = mati)','driveMinutes',0,120)}
+  <details class="card"><summary>Cara mendapatkan Client ID</summary><ol style="padding-left:18px">
+  <li>Buka console.cloud.google.com, buat project baru.</li>
+  <li>APIs &amp; Services, Library, aktifkan Google Drive API.</li>
+  <li>OAuth consent screen: tipe External, tambahkan emailmu sebagai Test user.</li>
+  <li>Credentials, Create credentials, OAuth client ID, tipe Web application.</li>
+  <li>Authorized JavaScript origins: isi alamat situsmu (mis. https://namamu.github.io).</li>
+  <li>Salin Client ID ke kolom di atas.</li></ol></details>`;
+}
+function tabSave(){
+  return `${cur?`<h3>Cerita ini</h3><div class="row"><button class="btn pri" data-act="drive-up">Selesai: unggah checkpoint ke Drive</button><button class="btn" data-act="export">Ekspor file</button></div>`:''}
+  <h3>Google Drive</h3>
+  <div class="row"><button class="btn" data-act="drive-connect">Sambungkan Drive</button><button class="btn" data-act="drive-refresh">Segarkan daftar</button></div>
+  ${remoteHtml()}
+  <h3>Dari file</h3><div class="row"><button class="btn" data-act="import">Impor file checkpoint</button></div>
+  <p class="hint">Token Drive berlaku sekitar 1 jam. Setelah kedaluwarsa, ketuk Sambungkan Drive lagi agar unggah otomatis berjalan.</p>`;
+}
+
+/* ---------- Event: klik ---------- */
+const acts={
+  menu:()=>openDrawer(view==='v-read'?'sum':'set'),
+  close:closeDrawer,
+  tab:el=>{tab=el.dataset.tab;renderTab()},
+  new:openNew,
+  'new-cancel':()=>{show('v-home');renderHome()},
+  create:createWorld,
+  open:el=>openStory(el.dataset.id),
+  'del-story':el=>{
+    if(!confirm('Hapus cerita ini dari perangkat? (checkpoint di Drive tidak ikut terhapus)'))return;
+    store.del('penutur:story:'+el.dataset.id);store.set('penutur:index',listStories().filter(x=>x.id!==el.dataset.id));renderHome();
+  },
+  back:closeStory,
+  mode:el=>{mode=el.dataset.mode;$$('.modes button').forEach(b=>b.classList.toggle('on',b===el));
+    $('#inp').placeholder={aksi:'Apa yang dilakukan tokoh utama?',ucap:'Apa yang dikatakan tokoh utama?',alur:'Apa yang harus terjadi selanjutnya?'}[mode]},
+  send:()=>sendTurn($('#inp').value,mode),
+  start:()=>sendTurn('Mulai cerita','alur'),
+  undo:()=>{undoLast()},
+  regen:()=>{
+    const u=cur.log.slice(-2)[0];if(!u||!undo)return;
+    const {text,mode:m}=u;if(undoLast())sendTurn(text,m);
+  },
+  reanalyze:async()=>{if(busy)return;setBusy(true);renderSuggest();try{await runAnalysis(cur)}finally{setBusy(false);renderSuggest()}},
+  'sum-save':()=>{cur.summary={base:$('#sumTa').value.trim(),entries:[]};touch();toast('Ringkasan disimpan.');renderTab()},
+  'sum-compress':async()=>{
+    if(busy)return;if(!S.apiKey){toast('Isi API Key dulu.');return}
+    setBusy(true);toast('Memadatkan ringkasan…');
+    try{
+      if(!cur.summary.entries.length){cur.summary.base=$('#sumTa').value.trim()}
+      await compress(cur);touch();toast('Ringkasan dipadatkan.');renderTab();
+    }catch(e){err(e)}finally{setBusy(false)}
+  },
+  'card-add':()=>{const id=uid();cur.cards[id]={id,keyword:'Kartu baru',text:'Isi kartu.',parent:null,pin:false};touch();renderTab()},
+  'card-del':el=>{
+    const c=cur.cards[el.dataset.id];if(!c)return;
+    Object.values(cur.cards).forEach(k=>{if(k.parent===c.id)k.parent=c.parent||null});
+    delete cur.cards[c.id];touch();renderTab();
+  },
+  'inv-additem':el=>{cur.inv.data[el.dataset.key].push({name:'Baru',qty:1,note:''});touch();renderTab()},
+  'inv-delitem':el=>{cur.inv.data[el.dataset.key].splice(+el.dataset.i,1);touch();renderTab()},
+  'inv-addmap':el=>{const m=cur.inv.data[el.dataset.key];let n='Baru',i=1;while(n in m)n='Baru '+(++i);m[n]=0;touch();renderTab()},
+  'inv-delmap':el=>{delete cur.inv.data[el.dataset.key][el.dataset.name];touch();renderTab()},
+  'inv-delfield':el=>{
+    if(!confirm('Hapus field status ini?'))return;
+    cur.inv.schema=cur.inv.schema.filter(f=>f.key!==el.dataset.key);delete cur.inv.data[el.dataset.key];touch();renderTab();
+  },
+  'inv-addfield':()=>{
+    const label=$('#nfK').value.trim();if(!label)return;
+    const key=label.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'field_'+uid().slice(0,3);
+    addFields(cur,[{key,label,type:$('#nfT').value}]);touch();renderTab();
+  },
+  'tag-edit':el=>{editTag=el.dataset.id;renderTab();const t=lib.tags.find(x=>x.id===editTag);if(t)$('#tgType').value=t.type},
+  'tag-cancel':()=>{editTag=null;renderTab()},
+  'tag-del':el=>{if(!confirm('Hapus tag ini?'))return;lib.tags=lib.tags.filter(x=>x.id!==el.dataset.id);newSel.delete(el.dataset.id);saveLib();renderTab()},
+  'tag-save':()=>{
+    const name=$('#tgName').value.trim(),text=$('#tgText').value.trim(),type=$('#tgType').value;
+    if(!name||!text){toast('Isi nama dan instruksi.');return}
+    if(editTag){const t=lib.tags.find(x=>x.id===editTag);Object.assign(t,{name,text,type})}else lib.tags.push({id:uid(),type,name,text});
+    editTag=null;saveLib();renderTab();toast('Tag tersimpan.');
+  },
+  export:()=>{
+    flushSave();
+    const blob=new Blob([JSON.stringify(pkgOf(cur))],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`penutur-${cur.title.replace(/[^\w]+/g,'_')}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  },
+  import:()=>$('#fileIn').click(),
+  'drive-connect':async()=>{try{await Drive.connect();toast('Drive tersambung.');await driveRefresh()}catch(e){err(e)}},
+  'drive-refresh':driveRefresh,
+  'drive-up':async()=>{try{if(!Drive.valid())await Drive.connect();await driveUpload(cur)}catch(e){err(e)}},
+  'drive-pull':async el=>{
+    const l=listStories().find(x=>x.id===el.dataset.sid);
+    if(l&&l.updated>(l.cloudAt||0)+1000&&!confirm('Ada perubahan di perangkat ini yang belum diunggah. Timpa dengan versi Drive?'))return;
+    try{
+      const pkg=await Drive.download(el.dataset.fid);
+      pkg.story.cloudAt=num(el.dataset.rt,Date.now());
+      importPackage(pkg);toast('Checkpoint diambil dari Drive.');
+      if(cur&&cur.id===pkg.story.id){openStory(cur.id)}
+      renderHome();if(tab==='save')renderTab();
+    }catch(e){err(e)}
+  }
+};
+document.addEventListener('click',e=>{
+  const s=e.target.closest('[data-sug]');
+  if(s&&cur){const t=cur.suggestions[+s.dataset.sug];if(!t)return;if(S.tapSend)sendTurn(t,'aksi');else{$('#inp').value=t;resizeInp();$('#inp').focus()}return}
+  const tg=e.target.closest('[data-tag]');
+  if(tg){const id=tg.dataset.tag;newSel.has(id)?newSel.delete(id):newSel.add(id);renderChips();return}
+  const a=e.target.closest('[data-act]');
+  if(a&&acts[a.dataset.act])acts[a.dataset.act](a,e);
+});
+
+/* ---------- Event: perubahan input di drawer ---------- */
+$('#dbody').addEventListener('change',e=>{
+  const el=e.target,D=el.dataset;
+  if(D.set){
+    const k=D.set;
+    S[k]=el.type==='checkbox'?el.checked:(typeof DEF[k]==='number'?num(el.value,DEF[k]):el.value.trim());
+    saveSettings();if(k==='fontSize')applyFont();return;
+  }
+  if(!D.bind||!cur)return;
+  const st=cur,d=st.inv.data,v=el.type==='checkbox'?el.checked:el.value;
+  switch(D.bind){
+    case 'card':{
+      const c=st.cards[D.id];if(!c)return;
+      if(D.f==='text')c.text=clip3(v)||v;
+      else if(D.f==='parent')c.parent=v&&!wouldCycle(st,c.id,v)?v:null;
+      else if(D.f==='pin')c.pin=v;
+      else c.keyword=String(v).trim()||c.keyword;
+      touch();if(D.f==='keyword'||D.f==='parent'||D.f==='pin')renderTab();break}
+    case 'inv-num':d[D.key]=clampN(num(v),st.inv.schema.find(f=>f.key===D.key));break;
+    case 'inv-text':d[D.key]=v;break;
+    case 'inv-item':{const it=d[D.key][+D.i];if(it){it[D.f]=D.f==='qty'?num(v,1):v}break}
+    case 'inv-mapv':d[D.key][D.name]=num(v);break;
+    case 'inv-mapk':{const nn=String(v).trim();if(nn&&nn!==D.old){d[D.key][nn]=d[D.key][D.old];delete d[D.key][D.old];renderTab()}break}
+    case 'world':
+      if(D.f==='title'){st.title=String(v).trim()||st.title;$('#rTitle').textContent=st.title}
+      else if(D.f==='main'||D.f==='analyzer'){st.models=st.models||{};st.models[D.f]=String(v).trim()}
+      else st.world[D.f]=D.f==='mc'?String(v).trim():v;
+      break;
+  }
+  touch();
+});
+
+/* ---------- Input, swipe, impor ---------- */
+function resizeInp(){const t=$('#inp');t.style.height='auto';t.style.height=Math.min(t.scrollHeight,140)+'px'}
+$('#inp').addEventListener('input',resizeInp);
+$('#inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();sendTurn($('#inp').value,mode)}});
+let tx=0,ty=0;
+$('#log').addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+$('#log').addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
+  if(dx<-80&&Math.abs(dy)<50&&!String(window.getSelection()).length)openDrawer('sum');
+},{passive:true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
+$('#fileIn').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{
+    const pkg=JSON.parse(await f.text());importPackage(pkg);toast('Cerita diimpor.');renderHome();
+  }catch(err2){err(err2)}
+});
+
+/* ---------- Mulai ---------- */
+renderHome();
+show('v-home');
+// Ambil daftar checkpoint saat dibuka bila Drive pernah tersambung (diam-diam; bila ditolak, cukup ketuk Sambungkan Drive).
+if(S.driveClientId&&store.get('penutur:driveLinked',false)){
+  Drive.connect().then(()=>Drive.list()).then(l=>{remote=l;renderHome()}).catch(()=>{});
+}
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){/* opsional: tambahkan service worker sendiri untuk mode offline */}
+</script>
+</body>
+</html>
