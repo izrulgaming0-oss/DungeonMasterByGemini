@@ -4,21 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#16606a">
 <title>Penutur — Narator AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&display=swap" rel="stylesheet">
 <style>
 :root{
   color-scheme:light dark;
   --bg:#eceff2;--surface:#ffffff;--surface2:#e2e7ec;--ink:#17202a;--muted:#586473;--line:#cbd3db;
-  --accent:#16606a;--accent-ink:#ffffff;--warn:#a3432c;
+  --accent:#16606a;--accent-ink:#ffffff;--warn:#a3432c;--ok:#2f7d4f;
   --serif:'Literata',Georgia,'Times New Roman',serif;
   --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --fs:18px;
 }
 @media (prefers-color-scheme:dark){
-  :root{--bg:#0d1218;--surface:#151c25;--surface2:#1e2833;--ink:#e5e9ed;--muted:#94a1af;--line:#2a3643;--accent:#6fc2c0;--accent-ink:#08181a;--warn:#e28b70}
+  :root{--bg:#0d1218;--surface:#151c25;--surface2:#1e2833;--ink:#e5e9ed;--muted:#94a1af;--line:#2a3643;--accent:#6fc2c0;--accent-ink:#08181a;--warn:#e28b70;--ok:#6fcf97}
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -26,6 +27,7 @@ body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-tex
 [hidden]{display:none!important}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
+a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 small{color:var(--muted);font-size:12.5px}
 
@@ -36,14 +38,14 @@ small{color:var(--muted);font-size:12.5px}
 .bar small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ib{width:42px;height:42px;border:0;background:transparent;border-radius:10px;display:grid;place-items:center;font-size:24px;line-height:1}
 .ib:hover{background:var(--surface2)}
-.scroll{flex:1;overflow-y:auto;padding:18px 16px 40px}
+.scroll{flex:1;overflow-y:auto;padding:18px 16px 60px}
 .wrap{max-width:40rem;margin:0 auto;width:100%}
 
 h2{font:600 22px/1.25 var(--serif);margin:0 0 4px}
 h3{font:600 15px/1.3 var(--sans);margin:22px 0 8px}
 .sub{color:var(--muted);margin:0 0 18px}
 .hint{color:var(--muted);font-size:13.5px;margin:6px 0 12px}
-.empty{color:var(--muted);text-align:center;padding:36px 10px}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
 .banner{background:var(--surface2);border-left:3px solid var(--warn);padding:10px 12px;border-radius:6px;margin:0 0 14px}
 
 .btn{border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:10px;font-weight:500}
@@ -54,6 +56,7 @@ h3{font:600 15px/1.3 var(--sans);margin:22px 0 8px}
 .btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.row>label{flex:1;min-width:120px;margin-top:0}
 
 label{display:block;font-weight:500;font-size:13.5px;margin:12px 0 0}
 label>input,label>textarea,label>select{display:block;width:100%;margin-top:4px;font-weight:400}
@@ -63,25 +66,83 @@ label.chk{display:flex;gap:8px;align-items:center;font-weight:400}
 label.chk input{width:auto;margin:0}
 input[type=checkbox]{width:18px;height:18px}
 
-.story{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:0 0 8px;padding:4px 6px 4px 4px}
-.story .open,.story .grow{flex:1;min-width:0;text-align:left;background:none;border:0;padding:8px 10px}
-.story b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--accent);background:transparent;color:var(--accent);padding:7px 13px;border-radius:999px;font-size:14px;line-height:1.3}
 .chip.on{background:var(--accent);color:var(--accent-ink)}
 .chip.warn{border-color:var(--warn);color:var(--warn)}
+.chip.soft{border-color:var(--line);color:var(--ink);background:var(--surface)}
+
+/* Beranda */
+.hero{padding:10px 0 6px}
+.brand{font:700 34px/1.1 var(--serif);margin:0 0 6px;letter-spacing:-.01em}
+.tag-line{color:var(--muted);margin:0 0 20px;max-width:30rem}
+.setup{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 16px 16px;margin-bottom:20px}
+.steps{padding-left:20px;margin:0}
+.steps li{margin:12px 0}
+.steps li small{display:block}
+.steps input{margin:6px 0}
+.sechead{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 10px}
+.sechead h2{font-size:18px;margin:0}
+.scard{display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:0 0 10px;overflow:hidden}
+.scard.latest{border-color:var(--accent)}
+.scard .open{flex:1;min-width:0;display:flex;gap:12px;text-align:left;background:none;border:0;padding:12px}
+.av{flex:none;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font:700 22px var(--serif);color:#fff;background:hsl(var(--h) 42% 38%)}
+.sb{min-width:0;display:block}
+.sb b{display:block;font:600 16px/1.3 var(--serif);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb .gs{display:block;margin:3px 0}
+.sb .gs i{font-style:normal;font-size:11.5px;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:0 7px;margin-right:4px}
+.sb .ex{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:italic 400 13.5px/1.45 var(--serif);color:var(--muted);margin:2px 0 4px}
+.scard .more{flex:none;align-self:flex-start;background:none;border:0;color:var(--muted);font-size:12.5px;padding:12px 12px 12px 0}
+.scard .more:hover{color:var(--warn)}
+.badge-last{font:500 11.5px var(--sans);color:var(--accent);margin-left:6px}
+.fab{width:100%;padding:14px;font-size:16px;border-radius:14px;margin-top:6px}
 
 /* Pembaca */
+#prog{height:3px;overflow:hidden;background:var(--surface2)}
+#prog i{display:block;height:100%;width:35%;background:var(--accent);animation:slide 1.25s ease-in-out infinite}
+@keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
+.quota{display:flex;gap:10px;align-items:center;flex-wrap:wrap;width:100%;text-align:left;background:var(--surface);border:0;border-bottom:1px solid var(--line);padding:5px 12px;font-size:11.5px;color:var(--muted)}
+.quota b{color:var(--ink);font-weight:600}
+.quota .fb{color:var(--warn)}
+.meter{display:inline-block;vertical-align:middle;width:42px;height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;margin:0 4px}
+.meter i{display:block;height:100%;background:var(--accent)}
+.meter.hi i{background:var(--warn)}
+#ctx{background:var(--surface2);border-bottom:1px solid var(--line);font-size:13px}
+#ctx>summary{padding:7px 14px;cursor:pointer;list-style:none;display:flex;gap:10px;align-items:baseline}
+#ctx>summary::-webkit-details-marker{display:none}
+#ctx>summary b{font-weight:600;white-space:nowrap}
+#ctx>summary span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+#ctx .cb{padding:2px 14px 10px;max-height:40vh;overflow-y:auto}
+#ctx .cb p{margin:6px 0}
+.kc{display:inline-block;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:3px 9px;margin:0 6px 6px 0;font-size:13px}
+.kc small{margin-right:5px}
+.kc.pin{border-color:var(--accent)}
+.badge.on{color:var(--accent);border-color:var(--accent)}
+.modes #btnDeep{margin-left:auto}
+.tok{margin:14px auto 0;font:12.5px var(--sans);color:var(--muted)}
+.tok summary{cursor:pointer}
+.tok summary b{color:var(--ink)}
+.tok table{width:100%;border-collapse:collapse;margin-top:6px}
+.tok th,.tok td{text-align:right;padding:3px 6px;border-bottom:1px solid var(--line);font-weight:400}
+.tok th:first-child,.tok td:first-child,.tok th:nth-child(2),.tok td:nth-child(2){text-align:left}
+.nr .chk{margin:-.4em 0 1.1em;padding-left:10px;border-left:2px solid var(--warn);font-family:var(--sans);line-height:1.45}
+.nr .chk small{color:var(--muted)}
 #log{flex:1;overflow-y:auto;padding:22px 18px 28px;scroll-behavior:smooth}
 #log>*{max-width:38rem;margin-left:auto;margin-right:auto}
 .nr{font:400 var(--fs)/1.8 var(--serif)}
 .nr p{margin:0 0 1.15em}
-.nr.live .typing{color:var(--muted)}
+.nr.live p:last-child::after{content:'';display:inline-block;width:7px;height:1.05em;background:var(--accent);margin-left:3px;vertical-align:-.15em;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
 .pl{margin:1.6em auto;padding:2px 0 2px 14px;border-left:3px solid var(--accent);font:italic 400 calc(var(--fs) - 1px)/1.6 var(--serif);color:var(--muted)}
 .pl .md{font:500 12px var(--sans);font-style:normal;margin-right:8px;color:var(--accent)}
 .tools{display:flex;gap:14px;margin-top:6px}
 .tools button{background:none;border:0;color:var(--muted);padding:6px 0;font-size:13px;text-decoration:underline}
+.wait{display:flex;align-items:center;gap:12px;color:var(--muted);font:italic 400 15px var(--serif);padding:8px 0}
+.wait small{margin-left:auto;font-style:normal;font-family:var(--sans)}
+.dots{display:inline-flex;gap:5px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:bounce 1.2s ease-in-out infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-6px);opacity:1}}
 
 #dock{background:var(--surface);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
 #sugg{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}
@@ -92,36 +153,62 @@ input[type=checkbox]{width:18px;height:18px}
 .modes button.on{background:var(--surface2);color:var(--ink);border-color:var(--accent)}
 .inrow{display:flex;gap:8px;align-items:flex-end}
 .inrow textarea{flex:1;max-height:140px;min-height:44px;resize:none}
-.inrow .btn{height:44px}
+.inrow .btn{height:44px;min-width:74px}
 
 /* Drawer */
 #scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
 #scrim.on{opacity:1;pointer-events:auto}
 #drawer{position:fixed;top:0;right:0;bottom:0;width:min(94vw,27rem);background:var(--bg);border-left:1px solid var(--line);transform:translateX(102%);transition:transform .25s ease;z-index:21;display:flex;flex-direction:column;visibility:hidden}
 #drawer.on{transform:none;visibility:visible}
-@media (prefers-reduced-motion:reduce){#drawer,#scrim{transition:none}#log{scroll-behavior:auto}}
 .dh{display:flex;align-items:center;background:var(--surface);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
 .tabs{flex:1;display:flex;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{flex:none;background:none;border:0;border-bottom:2px solid transparent;padding:13px 12px;color:var(--muted);font-weight:500}
 .tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
-#dbody{flex:1;overflow-y:auto;padding:4px 16px 40px}
+#dbody{flex:1;overflow-y:auto;padding:4px 16px 50px}
 
-details.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:0 0 8px;padding:0 12px}
-details.card>summary{padding:10px 0;cursor:pointer;font-weight:600;list-style-position:inside}
-details.card>summary small{display:block;font-weight:400;margin-left:18px}
+details.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:0 0 10px;padding:0 12px}
+details.card>summary{padding:11px 0;cursor:pointer;font-weight:600}
 details.card[open]{padding-bottom:12px}
 .field{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
-.field>b{display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:6px}
-.irow{display:grid;grid-template-columns:1fr 54px 1fr 32px;gap:6px;margin-bottom:6px}
-.mrow{display:grid;grid-template-columns:1fr 80px 32px;gap:6px;margin-bottom:6px}
-.irow input,.mrow input{padding:7px 8px}
+.field>b{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;margin-bottom:6px}
+.field>b small{font-weight:400}
+.irow{display:grid;grid-template-columns:1fr 50px 112px 28px;gap:6px;margin-bottom:8px}
+.irow .inote{grid-column:1/-1}
+.mrow{display:grid;grid-template-columns:1fr 80px 28px;gap:6px;margin-bottom:6px}
+.irow input,.mrow input,.irow select{padding:7px 8px}
 .x{border:0;background:none;color:var(--warn);font-size:18px}
 .tag{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
 .tag small{display:block;margin:2px 0 6px}
+.qrow{display:flex;align-items:center;gap:6px;font-size:13px;margin:4px 0}
+.qrow .meter{flex:1;width:auto;height:8px}
+.qrow span:last-child{min-width:64px;text-align:right}
+.wr{color:var(--warn)}
 
-#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:92vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:40;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+/* Kartu memori */
+.csearch{display:flex;gap:8px;margin:12px 0 8px}
+.csearch input{flex:1}
+.csearch select{width:auto;max-width:42%}
+.ctools{display:flex;gap:6px;align-items:center;margin:0 0 10px}
+.ctools small{flex:1}
+.crow{display:flex;align-items:stretch;gap:2px;margin:0 0 5px}
+.tg{width:30px;flex:none;border:0;background:none;color:var(--muted);font-size:16px;padding:0}
+.cmain{flex:1;min-width:0;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
+.cmain.on{border-color:var(--accent)}
+.cname{font-weight:600}
+.badge{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:0 7px;margin-left:6px;color:var(--muted);font-weight:400}
+.badge.me{border-color:var(--accent);color:var(--accent)}
+.cmain small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ced{margin:0 0 10px 32px;background:var(--surface2);border-radius:10px;padding:2px 12px 12px}
+
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:92vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:40;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.on{opacity:1}
+
+@media (prefers-reduced-motion:reduce){
+  #drawer,#scrim,#toast{transition:none}#log{scroll-behavior:auto}
+  #prog i,.dots i,.nr.live p:last-child::after{animation:none}
+  #prog i{width:100%;opacity:.5}
+}
 </style>
 </head>
 <body>
@@ -129,24 +216,27 @@ details.card[open]{padding-bottom:12px}
 <!-- BERANDA -->
 <section id="v-home" class="view">
   <div class="bar">
-    <div class="ttl"><h1>Penutur</h1><small>Narator AI untuk ceritamu</small></div>
-    <button class="ib" data-act="menu" aria-label="Menu">&#9776;</button>
+    <div class="ttl"><h1>Penutur</h1></div>
+    <button class="ib" data-act="menu" aria-label="Buka menu">&#9776;</button>
   </div>
   <div class="scroll"><div class="wrap">
-    <div id="keyWarn" class="banner" hidden>API Key Gemini belum diisi. Buka menu di kanan atas, lalu Pengaturan.</div>
-    <h2>Ceritamu</h2>
-    <p class="sub">Semua data tersimpan di browser ini. Unggah ke Google Drive agar bisa dilanjutkan di perangkat lain.</p>
-    <div id="homeList"></div>
-    <div class="row">
-      <button class="btn pri" data-act="new">Buat dunia baru</button>
-      <button class="btn" data-act="import">Impor file</button>
+    <div class="hero">
+      <p class="brand">Penutur</p>
+      <p class="tag-line">Ceritakan duniamu, lalu gerakkan tokoh utamanya. Narator AI yang menulis kelanjutannya dan mengingat semuanya.</p>
     </div>
-    <h3>Checkpoint di Google Drive</h3>
-    <div id="homeRemote"></div>
-    <div class="row">
-      <button class="btn" data-act="drive-connect">Sambungkan Drive</button>
-      <button class="btn" data-act="drive-refresh">Segarkan daftar</button>
-    </div>
+    <div id="setup" class="setup" hidden></div>
+    <div id="homeStories"></div>
+    <button class="btn pri fab" data-act="new">Buat dunia baru</button>
+    <div class="row"><button class="btn" data-act="import">Impor file cerita atau pustaka</button></div>
+    <details class="card" id="driveBox" style="margin-top:18px">
+      <summary>Checkpoint Google Drive (opsional)</summary>
+      <p class="hint">Simpan cerita ke Drive agar bisa dilanjutkan di perangkat lain.</p>
+      <div id="homeRemote"></div>
+      <div class="row">
+        <button class="btn" data-act="drive-connect">Sambungkan Drive</button>
+        <button class="btn" data-act="drive-refresh">Segarkan daftar</button>
+      </div>
+    </details>
   </div></div>
 </section>
 
@@ -155,19 +245,31 @@ details.card[open]{padding-bottom:12px}
   <div class="bar">
     <button class="ib" data-act="new-cancel" aria-label="Kembali">&#8249;</button>
     <div class="ttl"><h1>Dunia baru</h1></div>
-    <button class="ib" data-act="menu" aria-label="Menu">&#9776;</button>
+    <button class="ib" data-act="menu" aria-label="Buka menu">&#9776;</button>
   </div>
   <div class="scroll"><div class="wrap">
+    <h3 style="margin-top:0">Mulai cepat dari contoh</h3>
+    <div class="chips" id="presets"></div>
     <label>Judul cerita<input id="nfTitle" placeholder="mis. Pewaris Menara Kelabu"></label>
-    <label>Nama tokoh utama<input id="nfMc" placeholder="Nama yang kamu mainkan"></label>
+    <h3>Tokoh utama (kamu)</h3>
+    <label>Nama<input id="nfMc" placeholder="Nama tokoh yang kamu mainkan"></label>
+    <div class="row">
+      <label>Umur<input id="nfAge" placeholder="mis. 17"></label>
+      <label>Ras<input id="nfRace" placeholder="mis. Manusia, Elf"></label>
+      <label>Gender<select id="nfGender"><option value="">Tidak ditentukan</option><option>Laki-laki</option><option>Perempuan</option><option>Lainnya</option></select></label>
+    </div>
+    <label>Sifat dasar<textarea id="nfTrait" rows="2" placeholder="mis. Pemberani tapi ceroboh, suka menolong, takut ketinggian."></textarea></label>
+    <label>Penampilan fisik (opsional)<textarea id="nfLook" rows="2" placeholder="mis. Rambut hitam acak-acakan, mata cokelat, tinggi sedang, bekas luka di alis kiri, jubah kelabu usang."></textarea></label>
     <h3>Genre</h3><div class="chips" id="chipsGenre"></div>
     <h3>Gaya bahasa</h3><div class="chips" id="chipsStyle"></div>
     <h3>Aturan dan penekanan</h3><div class="chips" id="chipsRule"></div>
     <p class="hint">Tag bisa dibuat dan diubah di menu Pustaka.</p>
     <label>Aturan tambahan (opsional)<textarea id="nfRules" rows="3" placeholder="Cara kerja dunia, hal yang perlu ditekankan, hal yang dilarang…"></textarea></label>
-    <label>Dunia dan latar<textarea id="nfWorld" rows="9" placeholder="Ceritakan dunia, tempat, tokoh penting, konflik, kondisi awal tokoh utama…"></textarea></label>
-    <label>Model narator<input id="nfMain" list="models"></label>
-    <label>Model analis (ringan)<input id="nfAnalyzer" list="models"></label>
+    <label>Dunia dan latar<textarea id="nfWorld" rows="9" placeholder="Ceritakan dunia, tempat, tokoh penting, konflik, dan kondisi awal tokoh utama…"></textarea></label>
+    <details class="card" style="margin-top:16px"><summary>Pilihan model (opsional)</summary>
+      <label>Model narator<input id="nfMain" list="models"></label>
+      <label>Model analis (ringan)<input id="nfAnalyzer" list="models"></label>
+    </details>
     <div class="row"><button class="btn pri" id="btnCreate" data-act="create">Bangun dunia</button></div>
     <p class="hint" id="createMsg"></p>
   </div></div>
@@ -180,6 +282,9 @@ details.card[open]{padding-bottom:12px}
     <div class="ttl"><h1 id="rTitle"></h1><small id="rStat"></small></div>
     <button class="ib" data-act="menu" aria-label="Buka menu">&#9776;</button>
   </div>
+  <div id="prog" hidden><i></i></div>
+  <button id="quota" class="quota" data-act="quota" aria-label="Lihat kuota model"></button>
+  <details id="ctx" hidden><summary><b id="ctxN"></b><span id="ctxF"></span></summary><div class="cb" id="ctxB"></div></details>
   <main id="log" aria-live="polite"></main>
   <footer id="dock">
     <div id="sugg" hidden></div>
@@ -187,6 +292,7 @@ details.card[open]{padding-bottom:12px}
       <button data-act="mode" data-mode="aksi" class="on">Aksi</button>
       <button data-act="mode" data-mode="ucap">Ucap</button>
       <button data-act="mode" data-mode="alur">Arahkan alur</button>
+      <button id="btnDeep" data-act="deep" class="on" aria-pressed="true" title="Mode mendalam: analisis awal sebelum narasi. Matikan untuk menghemat token.">Mendalam</button>
     </div>
     <div class="inrow">
       <textarea id="inp" rows="1" placeholder="Apa yang dilakukan tokoh utama?" aria-label="Input tindakan"></textarea>
@@ -197,7 +303,7 @@ details.card[open]{padding-bottom:12px}
 
 <div id="scrim" data-act="close"></div>
 <aside id="drawer" aria-label="Menu">
-  <div class="dh"><div class="tabs" id="tabs"></div><button class="ib" data-act="close" aria-label="Tutup">&#10005;</button></div>
+  <div class="dh"><div class="tabs" id="tabs"></div><button class="ib" data-act="close" aria-label="Tutup menu">&#10005;</button></div>
   <div id="dbody"></div>
 </aside>
 <div id="toast" role="status"></div>
@@ -205,11 +311,6 @@ details.card[open]{padding-bottom:12px}
 <datalist id="models">
   <option value="gemini-flash-latest"></option>
   <option value="gemini-flash-lite-latest"></option>
-  <option value="gemini-3.8-flash"></option>
-  <option value="gemini-3.6-flash"></option>
-  <option value="gemini-3.5-flash-lite"></option>
-  <option value="gemini-3-flash"></option>
-  <option value="gemini-3.1-flash-lite"></option>
   <option value="gemini-2.5-flash"></option>
   <option value="gemini-2.5-flash-lite"></option>
   <option value="gemini-3-flash-preview"></option>
@@ -218,8 +319,8 @@ details.card[open]{padding-bottom:12px}
 <script>
 'use strict';
 /* =====================================================================
-   PENUTUR — game cerita teks dengan narator AI (Gemini)
-   Semua data disimpan di browser (localStorage) + checkpoint opsional ke Google Drive.
+   PENUTUR v2 — game cerita teks dengan narator AI (Gemini)
+   Data tersimpan di browser (localStorage); checkpoint opsional ke Google Drive.
    ===================================================================== */
 
 /* ---------- utilitas ---------- */
@@ -229,6 +330,9 @@ const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slic
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const num=(v,d=0)=>{const n=Number(v);return Number.isFinite(n)?n:d};
 const ago=t=>new Date(t).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});
+function rel(t){const s=(Date.now()-t)/1000;if(s<60)return'baru saja';if(s<3600)return Math.floor(s/60)+' menit lalu';if(s<86400)return Math.floor(s/3600)+' jam lalu';if(s<604800)return Math.floor(s/86400)+' hari lalu';return new Date(t).toLocaleDateString('id-ID',{dateStyle:'medium'})}
+const hue=id=>{let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))%360;return h};
+const slug=s=>String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 
 let warnedStore=false;
 const mem={};
@@ -240,9 +344,11 @@ const store={
 
 /* ---------- pengaturan & pustaka tag ---------- */
 const DEF={apiKey:'',analyzerModel:'gemini-flash-lite-latest',mainModel:'gemini-flash-latest',
-  minWords:250,temperature:1,compressEvery:30,maxCards:10,recentChars:1800,scanLast:true,tapSend:false,
+  autoFallback:true,fallback1:'gemini-2.5-flash',fallback2:'gemini-2.5-flash-lite',limits:{},
+  minWords:250,temperature:1,compressEvery:30,maxCards:10,recentChars:1800,contextTurns:4,consistency:'fix',deepMode:true,varyLength:true,scanLast:true,tapSend:false,
   fontSize:18,driveClientId:'',driveMinutes:5};
 let S={...DEF,...store.get('penutur:settings',{})};
+if(!S.limits||typeof S.limits!=='object')S.limits={};
 const saveSettings=()=>store.set('penutur:settings',S);
 
 const SEED=[
@@ -258,39 +364,149 @@ const SEED=[
  {type:'rule',name:'Pemain pegang tokoh utama',text:'Jangan menulis keputusan, ucapan baru, atau pikiran tokoh utama kecuali diberikan pemain.'},
  {type:'rule',name:'Dunia hidup',text:'NPC punya tujuan sendiri dan bertindak meski tidak dilihat pemain; dunia terus bergerak dan bereaksi.'},
  {type:'rule',name:'Konsekuensi nyata',text:'Tindakan berisiko bisa gagal. Jangan menyelamatkan pemain dari akibat keputusannya.'}
-];
+].map(t=>({id:'seed-'+t.type+'-'+slug(t.name),...t}));
+
+const tagKey=t=>t.type+'|'+String(t.name||'').trim().toLowerCase();
 let lib=store.get('penutur:lib',null);
-if(!lib){lib={tags:SEED.map(t=>({id:uid(),...t}))};store.set('penutur:lib',lib)}
+if(!lib||!Array.isArray(lib.tags)){lib={tags:SEED.map(t=>({...t}))}}
+function dedupeLib(){
+  const seen=new Map(),out=[];
+  for(const t of lib.tags){
+    const k=tagKey(t);
+    if(seen.has(k)){const f=seen.get(k);f.name=t.name;f.text=t.text}else{seen.set(k,t);out.push(t)}
+  }
+  lib.tags=out;
+}
+dedupeLib();
 const saveLib=()=>store.set('penutur:lib',lib);
+saveLib();
+/* Gabungkan tag: tag yang sama (id atau jenis+nama) DIGANTI dengan versi baru, bukan diduplikasi. */
+function mergeLib(tags){
+  let a=0,u=0;
+  for(const t of tags||[]){
+    if(!t||!t.name||!t.text||!['genre','style','rule'].includes(t.type))continue;
+    const ex=lib.tags.find(x=>t.id&&x.id===t.id)||lib.tags.find(x=>tagKey(x)===tagKey(t));
+    if(ex){ex.name=t.name;ex.text=t.text;ex.type=t.type;u++}
+    else{lib.tags.push({id:t.id||uid(),type:t.type,name:t.name,text:t.text});a++}
+  }
+  dedupeLib();saveLib();return{a,u};
+}
 
 /* ---------- status aplikasi ---------- */
-let cur=null,busy=false,undo=null,cloudDirty=false,lastCloudTry=0,mode='aksi',
-    view='v-home',newSel=new Set(),tab='',editTag=null,remote=[],saveT=0;
+let cur=null,busy=false,undo=null,cloudDirty=false,lastCloudTry=0,mode='aksi',lastModel='',abortCtl=null,
+    view='v-home',newSel=new Set(),tab='',editTag=null,remote=[],saveT=0,
+    cardQ='',cardType='',cardOpen=null,cardExp=new Set();
 const MODE={aksi:'Aksi',ucap:'Ucap',alur:'Alur'};
 const MODEPROMPT={aksi:'Tokoh utama melakukan: ',ucap:'Tokoh utama berkata: ',alur:'Arahan alur (kejadian yang harus terjadi berikutnya): '};
+const CT={tempat:'Tempat',karakter:'Karakter',mob:'Mob',item:'Item',perlengkapan:'Perlengkapan',skill:'Skill',pengetahuan:'Pengetahuan',janji:'Janji dan Rahasia'};
+const TYPE_HINT={tempat:'informasi tempat itu',karakter:'informasi dasar: peran dan latar singkat; fisik, kepribadian, dan hubungan ada di kolom terpisah',mob:'ciri tubuh fisik, informasi dasar, perilaku',item:'tampilan, kegunaan atau informasi dasar',perlengkapan:'jenis, tampilan, informasi dasar, bonus status/kemampuan bila ada',skill:'informasi kemampuan, syarat pengaktifan bila ada',pengetahuan:'informasi dasar pengetahuan ini',janji:'isi janji atau rahasia dan siapa yang terlibat'};
+const LEGACY_TYPE={organisasi:'pengetahuan',benda:'item',aturan:'pengetahuan',lainnya:'pengetahuan'};
+const normType=t=>{t=String(t||'').toLowerCase().trim();t=LEGACY_TYPE[t]||t;if(CT[t])return t;const f=Object.entries(CT).find(([k,v])=>v.toLowerCase()===t);return f?f[0]:'pengetahuan'};
 const M=st=>({main:(st.models&&st.models.main)||S.mainModel,analyzer:(st.models&&st.models.analyzer)||S.analyzerModel});
+const chainMain=st=>[M(st).main,S.fallback1,S.fallback2];
+const chainAn=st=>[M(st).analyzer,S.fallback2,S.fallback1];
 
 /* ---------- UI dasar ---------- */
 let toastT=0;
 function toast(msg,ms=3200){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms)}
-function err(e,prefix){console.error(e);toast((prefix?prefix+' ':'')+(e&&e.message?e.message:e),7000)}
+function friendly(e){
+  if(!e)return'Terjadi kesalahan.';
+  const s=e.status,m=String(e.message||e);
+  if(e instanceof TypeError||/Failed to fetch|NetworkError|Load failed/i.test(m))return'Tidak bisa terhubung ke server. Periksa koneksi internet.';
+  if(s===400&&/API key|API_KEY/i.test(m))return'API Key tidak valid. Periksa lagi di Pengaturan.';
+  if(s===403)return'Akses ditolak. Pastikan API Key benar dan masih aktif.';
+  if(s===404)return'Model tidak ditemukan. Periksa nama model di Pengaturan atau tab Dunia.';
+  if(s===429)return'Kuota semua model sedang habis. Tunggu beberapa saat atau coba besok.';
+  if(s>=500)return'Server Gemini sedang sibuk. Coba lagi sebentar lagi.';
+  return m;
+}
+function err(e,prefix){
+  if(e&&e.name==='AbortError'){toast('Dibatalkan.');return}
+  console.error(e);toast((prefix?prefix+' ':'')+friendly(e),7000);
+}
 function show(id){view=id;$$('.view').forEach(v=>v.hidden=v.id!==id)}
 function setStatus(t){
   const el=$('#rStat');if(!el||!cur)return;
-  if(t){el.textContent=t;return}
+  if(t){el.textContent=lab(t);return}
   el.textContent=S.driveClientId?(cloudDirty?'Belum diunggah ke Drive':'Tersinkron dengan Drive'):'Tersimpan di perangkat';
 }
 function applyFont(){document.documentElement.style.setProperty('--fs',S.fontSize+'px')}
 applyFont();
 
+/* ---------- Pemantau kuota model ---------- */
+const Usage={
+  d:store.get('penutur:usage',{}),
+  day(){return new Date().toLocaleDateString('en-CA',{timeZone:'America/Los_Angeles'})},
+  u(m){
+    const x=this.d[m]||(this.d[m]={t:[],day:'',n:0,full:'',cool:0});
+    const now=Date.now();x.t=x.t.filter(t=>now-t<60000);
+    const dy=this.day();if(x.day!==dy){x.day=dy;x.n=0}
+    return x;
+  },
+  lim(m){
+    const o=S.limits[m]||{},base=/lite/i.test(m)?{rpm:15,rpd:1000}:{rpm:10,rpd:250};
+    return{rpm:num(o.rpm,base.rpm),rpd:num(o.rpd,base.rpd)};
+  },
+  rec(m){const x=this.u(m);x.t.push(Date.now());x.n++;this.save()},
+  save(){store.set('penutur:usage',this.d)},
+  info(m){const x=this.u(m);return{rpm:x.t.length,rpd:x.n,l:this.lim(m),full:x.full===this.day(),cool:(x.cool||0)>Date.now()}},
+  blocked(m){const i=this.info(m);return i.full||i.cool||i.rpm>=i.l.rpm||i.rpd>=i.l.rpd},
+  coolDown(m,ms){this.u(m).cool=Date.now()+ms;this.save()},
+  markFull(m){this.u(m).full=this.day();this.save()},
+  reset(m){delete this.d[m];this.save()}
+};
+const shortModel=m=>String(m).replace(/^gemini-/,'');
+const meter=(used,max)=>{const p=Math.min(100,Math.round(used/Math.max(1,max)*100));return `<span class="meter ${p>=80?'hi':''}"><i style="width:${p}%"></i></span>`};
+function renderQuota(){
+  const el=$('#quota');if(!el||!cur)return;
+  const ch=chainMain(cur).filter(Boolean);
+  const m=ch.find(x=>!Usage.blocked(x))||ch[0],i=Usage.info(m);
+  el.innerHTML=`<span>Narator <b>${esc(shortModel(m))}</b></span><span>menit ${meter(i.rpm,i.l.rpm)}${i.rpm}/${i.l.rpm}</span><span>hari ${meter(i.rpd,i.l.rpd)}${i.rpd}/${i.l.rpd}</span>`
+    +(m!==ch[0]?'<span class="fb">memakai cadangan</span>':'')+(i.full?'<span class="fb">limit harian habis</span>':'');
+}
+setInterval(renderQuota,5000);
+
+/* ---------- Pencatat token per siklus ---------- */
+const Tok={stage:'',cur:null,
+  begin(){this.cur={calls:[]}},
+  add(m,u){
+    if(!this.cur||!u)return;
+    const i=num(u.promptTokenCount),o=num(u.candidatesTokenCount),t=num(u.thoughtsTokenCount);
+    this.cur.calls.push({stage:this.stage||'Model',model:m,in:i,out:o,think:t,total:num(u.totalTokenCount)||i+o+t});
+  },
+  finish(st){
+    const c=this.cur;this.cur=null;if(!c||!c.calls.length||!st)return false;
+    const sum=k=>c.calls.reduce((a,x)=>a+x[k],0);
+    st.lastUsage={t:Date.now(),calls:c.calls,in:sum('in'),out:sum('out'),think:sum('think'),total:sum('total')};
+    st.tokTotal=num(st.tokTotal)+st.lastUsage.total;return true;
+  }
+};
+/* Nomor tahap: bila Mode mendalam mati, tahap 1 hilang sehingga penomoran bergeser */
+function lab(t){return String(t).replace(/^([123])\/3 /,(m,d)=>S.deepMode?m:(d==='1'?'':(d-1)+'/2 '))}
+
+/* ---------- animasi menunggu ---------- */
+let waitTimer=0,waitStart=0,waitMsgs=[],waitI=0;
+const waitHtml=(t,id='waitBox')=>`<div class="wait" id="${id}"><span class="dots"><i></i><i></i><i></i></span><span id="waitTxt">${esc(lab(t))}</span><small id="waitSec">0 dtk</small></div>`;
+function startWait(msgs){
+  stopWait();waitStart=Date.now();waitMsgs=msgs.map(lab);waitI=0;
+  waitTimer=setInterval(()=>{
+    const s=Math.floor((Date.now()-waitStart)/1000);
+    const a=$('#waitSec');if(a)a.textContent=s+' dtk';
+    if(s>0&&s%4===0){waitI=(waitI+1)%waitMsgs.length;const t=$('#waitTxt');if(t)t.textContent=waitMsgs[waitI]}
+  },1000);
+}
+function stopWait(){clearInterval(waitTimer);waitTimer=0}
+
 /* ---------- penyimpanan lokal ---------- */
-function listStories(){return store.get('penutur:index',[])}
-function loadStory(id){return store.get('penutur:story:'+id,null)}
+const listStories=()=>store.get('penutur:index',[]);
+const loadStory=id=>store.get('penutur:story:'+id,null);
 function flushSave(){
   if(!cur)return;clearTimeout(saveT);
   const ok=store.set('penutur:story:'+cur.id,cur);
   const idx=listStories().filter(x=>x.id!==cur.id);
-  idx.push({id:cur.id,title:cur.title,updated:cur.updated,turn:cur.turn,cloudAt:cur.cloudAt||0});
+  const ex=lastAI(cur);
+  idx.push({id:cur.id,title:cur.title,updated:cur.updated,turn:cur.turn,cloudAt:cur.cloudAt||0,
+    genres:(cur.world&&cur.world.genreNames)||[],excerpt:ex?ex.replace(/\s+/g,' ').slice(0,140):''});
   store.set('penutur:index',idx);
   if(!ok&&!warnedStore){warnedStore=true;toast('Penyimpanan browser ditolak atau penuh. Segera ekspor atau unggah ke Drive.',8000)}
 }
@@ -298,36 +514,55 @@ function touch(){if(!cur)return;cur.updated=Date.now();cloudDirty=true;clearTime
 window.addEventListener('pagehide',flushSave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flushSave()});
 
-/* ---------- Gemini API ---------- */
+/* ---------- Gemini API dengan model cadangan otomatis ---------- */
 function extract(j){
   const c=j.candidates&&j.candidates[0];
   if(!c||!c.content||!c.content.parts)return{text:'',reason:(j.promptFeedback&&j.promptFeedback.blockReason)||(c&&c.finishReason)||'kosong'};
   return{text:c.content.parts.filter(p=>!p.thought).map(p=>p.text||'').join(''),reason:c.finishReason||''};
 }
-async function gemini({model,system,prompt,json=false,temperature=1,stream=false,onChunk}){
-  if(!S.apiKey)throw new Error('API Key belum diisi (menu, Pengaturan).');
+const parseRetry=t=>{const m=/"retryDelay":\s*"(\d+(?:\.\d+)?)s"/.exec(t);return m?Math.ceil(+m[1]):0};
+async function countdown(sec,label,signal){
+  for(let s=sec;s>0;s--){
+    if(signal&&signal.aborted){const e=new Error('abort');e.name='AbortError';throw e}
+    setStatus(`${label}, mencoba lagi dalam ${s} dtk`);await sleep(1000);
+  }
+}
+async function callModel(m,opt,hasNext){
   const body={
-    contents:[{role:'user',parts:[{text:prompt}]}],
-    generationConfig:{temperature},
+    contents:[{role:'user',parts:[{text:opt.prompt}]}],
+    generationConfig:{temperature:opt.temperature==null?1:opt.temperature},
     safetySettings:['HARASSMENT','HATE_SPEECH','SEXUALLY_EXPLICIT','DANGEROUS_CONTENT'].map(c=>({category:'HARM_CATEGORY_'+c,threshold:'BLOCK_ONLY_HIGH'}))
   };
-  if(system)body.systemInstruction={parts:[{text:system}]};
-  if(json)body.generationConfig.responseMimeType='application/json';
-  const m=String(model).replace(/^models\//,'');
-  const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:${stream?'streamGenerateContent?alt=sse':'generateContent'}`;
+  if(opt.system)body.systemInstruction={parts:[{text:opt.system}]};
+  if(opt.json)body.generationConfig.responseMimeType='application/json';
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:${opt.stream?'streamGenerateContent?alt=sse':'generateContent'}`;
   for(let a=0;a<3;a++){
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.apiKey},body:JSON.stringify(body)});
+    Usage.rec(m);renderQuota();
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.apiKey},body:JSON.stringify(body),signal:opt.signal});
     if(!res.ok){
-      if([429,500,503].includes(res.status)&&a<2){setStatus('Menunggu kuota/server, mencoba lagi…');await sleep(res.status===429?6000*(a+1):2500*(a+1));continue}
       const t=await res.text();let msg=t;try{msg=JSON.parse(t).error.message}catch(e){}
-      throw new Error(`Gemini ${res.status}: ${msg}`);
+      const er=new Error(msg);er.status=res.status;
+      if(res.status===429){
+        const daily=/PerDay|per day|daily/i.test(t);
+        if(daily)Usage.markFull(m);else Usage.coolDown(m,(parseRetry(t)||60)*1000);
+        renderQuota();
+        const wait=parseRetry(t)||20;
+        if(hasNext||daily||a>=2||wait>60){er.limit=true;throw er}
+        await countdown(wait,'Limit per menit tercapai',opt.signal);continue;
+      }
+      if(res.status===404){er.notFound=true;throw er}
+      if(res.status>=500){
+        if(hasNext){er.limit=true;throw er}
+        if(a<2){await sleep(2500*(a+1));continue}
+      }
+      throw er;
     }
-    if(!stream){
-      const x=extract(await res.json());
+    if(!opt.stream){
+      const j=await res.json();const x=extract(j);Tok.add(m,j.usageMetadata);
       if(!x.text)throw new Error('Respons kosong atau diblokir ('+x.reason+').');
       return x.text;
     }
-    const rd=res.body.getReader(),dec=new TextDecoder();let buf='',full='',reason='';
+    const rd=res.body.getReader(),dec=new TextDecoder();let buf='',full='',reason='',usage=null;
     for(;;){
       const {done,value}=await rd.read();if(done)break;
       buf+=dec.decode(value,{stream:true});
@@ -336,16 +571,39 @@ async function gemini({model,system,prompt,json=false,temperature=1,stream=false
         const ev=buf.slice(0,i);buf=buf.slice(i).replace(/^\r?\n\r?\n/,'');
         const line=ev.split(/\r?\n/).filter(l=>l.startsWith('data:')).map(l=>l.slice(5).trim()).join('');
         if(!line)continue;
-        try{const x=extract(JSON.parse(line));full+=x.text;if(x.reason)reason=x.reason;onChunk&&onChunk(full)}catch(e){}
+        try{const j=JSON.parse(line);if(j.usageMetadata)usage=j.usageMetadata;const x=extract(j);full+=x.text;if(x.reason)reason=x.reason;opt.onChunk&&opt.onChunk(full)}catch(e){}
       }
     }
     if(!full.trim())throw new Error('Respons kosong atau diblokir ('+(reason||'tanpa alasan')+').');
+    Tok.add(m,usage);
     return full;
   }
+  const e2=new Error('Kuota habis.');e2.status=429;e2.limit=true;throw e2;
+}
+async function gemini(opt){
+  if(!S.apiKey){const e=new Error('API Key belum diisi. Buka Pengaturan.');e.status=400;throw e}
+  let chain=[...new Set((opt.chain||[opt.model]).filter(Boolean).map(x=>String(x).trim().replace(/^models\//,'')))];
+  if(!S.autoFallback)chain=chain.slice(0,1);
+  const order=[...chain.filter(m=>!Usage.blocked(m)),...chain.filter(m=>Usage.blocked(m))];
+  let last;
+  for(let i=0;i<order.length;i++){
+    const m=order[i];
+    try{
+      if(m!==chain[0])setStatus('Memakai model cadangan: '+shortModel(m));
+      const out=await callModel(m,{...opt,signal:opt.signal||(abortCtl&&abortCtl.signal)},i<order.length-1);
+      if(m!==chain[0]&&lastModel!==m)toast(`Limit model utama tercapai. Beralih ke ${shortModel(m)}.`,4500);
+      lastModel=m;renderQuota();return out;
+    }catch(e){
+      if(e.name==='AbortError')throw e;
+      if(e.limit||e.notFound){last=e;continue}
+      throw e;
+    }
+  }
+  throw last||new Error('Tidak ada model yang tersedia.');
 }
 function parseJSON(t){
   t=String(t).trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
-  try{return JSON.parse(t)}catch(e){const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));throw new Error('Analis tidak mengembalikan JSON valid.')}
+  try{return JSON.parse(t)}catch(e){const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));throw new Error('Analis tidak mengembalikan JSON yang valid. Coba lagi.')}
 }
 
 /* ---------- Card Memory (pohon pengetahuan) ---------- */
@@ -353,17 +611,39 @@ const kws=s=>String(s||'').toLowerCase().split(',').map(x=>x.trim()).filter(Bool
 const mainKw=c=>String(c.keyword).split(',')[0].trim();
 const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function clip3(t){const m=String(t||'').trim().match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];return m.slice(0,3).join(' ').trim()}
+const cleanTxt=v=>{v=v==null?'':String(v).trim();return /^(null|-|tidak diketahui|unknown|n\/a)$/i.test(v)?'':v};
 function findCard(st,kw){const k=kws(kw)[0];if(!k)return null;return Object.values(st.cards).find(c=>kws(c.keyword).includes(k))||null}
 function wouldCycle(st,childId,parentId){let p=parentId,g=0;while(p&&g++<30){if(p===childId)return true;p=st.cards[p]&&st.cards[p].parent}return false}
+const PROF_LONG=['look','persona','rel'];
+const STATUSES=['terbuka','terpenuhi','dilanggar','rahasia','terbongkar'];
+const normStatus=v=>{v=String(v||'').toLowerCase().trim();return STATUSES.includes(v)?v:''};
+function clipN(t,n){const m=String(t||'').trim().match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];return m.slice(0,n).join(' ').trim()}
+/* Terapkan hanya field yang diisi; kolom karakter hanya untuk tipe karakter, status hanya untuk janji */
+function patchCard(ex,c){
+  if(c.text&&String(c.text).trim())ex.text=clip3(c.text)||ex.text;
+  if(ex.type==='karakter'){
+    for(const f of ['age','race','gender']){const v=cleanTxt(c[f]);if(v)ex[f]=v}
+    for(const f of PROF_LONG){const v=cleanTxt(c[f]);if(v)ex[f]=clipN(v,4)}
+  }
+  if(ex.type==='janji'){const st=normStatus(c.status);if(st)ex.status=st}
+}
 function addCards(st,list){
   if(!Array.isArray(list))return;
   const made=[];
   for(const c of list){
     if(!c||!c.keyword||!c.text)continue;
-    const kw=String(c.keyword).trim();
+    const kw=String(c.keyword).trim(),type=normType(c.type);
     const ex=findCard(st,kw);
-    if(ex){ex.text=clip3(c.text);const have=ex.keyword.toLowerCase();kw.split(',').map(s=>s.trim()).forEach(a=>{if(a&&!have.includes(a.toLowerCase()))ex.keyword+=', '+a});made.push([ex,c.parent]);continue}
-    const n={id:uid(),keyword:kw,text:clip3(c.text),parent:null,pin:!!c.pin};
+    if(ex){
+      ex.text=clip3(c.text);
+      const have=ex.keyword.toLowerCase();
+      kw.split(',').map(s=>s.trim()).forEach(a=>{if(a&&!have.includes(a.toLowerCase()))ex.keyword+=', '+a});
+      if((ex.type||'pengetahuan')==='pengetahuan'&&type!=='pengetahuan')ex.type=type;
+      patchCard(ex,c);
+      made.push([ex,c.parent]);continue;
+    }
+    const n={id:uid(),keyword:kw,type,age:'',race:'',gender:'',look:'',persona:'',rel:'',status:'',text:clip3(c.text),parent:null,pin:!!c.pin,isPlayer:false};
+    patchCard(n,c);if(type==='janji'&&!n.status)n.status='terbuka';
     st.cards[n.id]=n;made.push([n,c.parent]);
   }
   for(const [card,p] of made){
@@ -373,9 +653,12 @@ function addCards(st,list){
 }
 function updateCards(st,list){
   if(!Array.isArray(list))return;
-  for(const c of list){if(!c||!c.keyword||!c.text)continue;const ex=findCard(st,c.keyword);if(ex)ex.text=clip3(c.text);else addCards(st,[c])}
+  for(const c of list){
+    if(!c||!c.keyword)continue;const ex=findCard(st,c.keyword);
+    if(ex)patchCard(ex,c);else if(c.text)addCards(st,[c]);
+  }
 }
-function relevantCards(st,text){
+function matchCards(st,text){
   const t=' '+text.toLowerCase();const hits=[];
   for(const c of Object.values(st.cards)){
     let score=0;
@@ -385,21 +668,54 @@ function relevantCards(st,text){
     }
     if(score>0||c.pin)hits.push({c,score:c.pin?99:score});
   }
-  hits.sort((a,b)=>b.score-a.score);
+  return hits.sort((a,b)=>b.score-a.score);
+}
+/* Urutan id -> daftar kartu, induk selalu ikut (di depan anaknya) */
+function expandCards(st,ids){
   const out=new Map();
-  for(const {c} of hits.slice(0,Math.max(1,S.maxCards))){
+  for(const id of ids){
+    const c=st.cards[id];if(!c)continue;
     const chain=[];let p=c,g=0;
     while(p.parent&&st.cards[p.parent]&&g++<6){p=st.cards[p.parent];chain.unshift(p)}
     chain.forEach(x=>out.set(x.id,x));out.set(c.id,c);
   }
   return [...out.values()];
 }
-function cardLine(st,c,included){
+function profLine(c){
+  const t=c.type||'pengetahuan';
+  if(t==='karakter'){
+    const p=['karakter',c.age?(/^\d+$/.test(String(c.age))?c.age+' tahun':c.age):'',c.race,c.gender].filter(Boolean);
+    return ` [${p.join(', ')}]`;
+  }
+  if(t==='janji')return ` [janji/rahasia${c.status?', '+c.status:''}]`;
+  return ` [${(CT[t]||t).toLowerCase()}]`;
+}
+/* full=true: karakter ikut membawa penampilan, kepribadian (gaya bicara), dan hubungan */
+function cardLine(st,c,included,full){
   const par=c.parent&&st.cards[c.parent];
   const kids=Object.values(st.cards).filter(k=>k.parent===c.id&&!included.has(k.id)).map(mainKw);
-  return `• ${mainKw(c)}${par?` (bagian dari ${mainKw(par)})`:''}: ${c.text}${kids.length?` [sub-kartu: ${kids.slice(0,8).join(', ')}]`:''}`;
+  let s=`• ${mainKw(c)}${c.isPlayer?' (tokoh utama/pemain)':''}${profLine(c)}${par?` (bagian dari ${mainKw(par)})`:''}: ${c.text}${kids.length?` [sub-kartu: ${kids.slice(0,8).join(', ')}]`:''}`;
+  if(full&&c.type==='karakter'){
+    if(c.look)s+=`\n   Penampilan: ${c.look}`;
+    if(c.persona)s+=`\n   Kepribadian dan gaya bicara: ${c.persona}`;
+    if(c.rel)s+=`\n   Hubungan: ${c.rel}`;
+  }
+  return s;
 }
-const cardIndex=st=>Object.values(st.cards).map(c=>mainKw(c)+(c.parent&&st.cards[c.parent]?` (induk: ${mainKw(st.cards[c.parent])})`:'')).join('; ')||'(belum ada)';
+function openThreads(st){
+  return Object.values(st.cards).filter(c=>c.type==='janji'&&(!c.status||c.status==='terbuka'||c.status==='rahasia')).slice(0,8)
+    .map(c=>`- ${mainKw(c)} (${c.status||'terbuka'}): ${c.text}`).join('\n');
+}
+function directionText(d){
+  if(!d)return'';
+  const L=[];
+  if(d.tone||d.pace)L.push('Nada dan tempo: '+[d.tone,d.pace?'tempo '+d.pace:''].filter(Boolean).join(', '));
+  if(d.voices.length)L.push('Suasana hati dan cara bicara tokoh saat ini:\n'+d.voices.map(v=>`  - ${v.name}: ${v.note}`).join('\n'));
+  if(d.beats.length)L.push('Kejadian kecil yang wajar untuk dimunculkan (pilih yang cocok, boleh diabaikan; jangan menentukan tindakan tokoh utama):\n'+d.beats.map(b=>'  - '+b).join('\n'));
+  if(d.avoid.length)L.push('Hindari pengulangan dari adegan terakhir:\n'+d.avoid.map(b=>'  - '+b).join('\n'));
+  return L.join('\n');
+}
+const cardIndex=st=>Object.values(st.cards).map(c=>mainKw(c)+` <${c.type||'pengetahuan'}>`+(c.parent&&st.cards[c.parent]?` (induk: ${mainKw(st.cards[c.parent])})`:'')).join('; ')||'(belum ada)';
 
 /* ---------- Dynamic Inventory ---------- */
 function normField(f){
@@ -409,7 +725,7 @@ function normField(f){
   const type=['number','text','list','map'].includes(f.type)?f.type:'text';
   return{key,label:String(f.label||key),type,max:(f.max==null||f.max==='')?null:num(f.max,null),value:f.value};
 }
-const normItem=i=>typeof i==='string'?{name:i,qty:1,note:''}:{name:String((i&&i.name)||''),qty:num(i&&i.qty,1),note:String((i&&i.note)||'')};
+const normItem=i=>typeof i==='string'?{name:i,qty:1,note:'',kind:'tetap'}:{name:String((i&&i.name)||''),qty:num(i&&i.qty,1),note:String((i&&i.note)||''),kind:(i&&i.kind==='habis')?'habis':'tetap'};
 function initValue(f){
   const v=f.value;
   if(f.type==='number')return num(v,0);
@@ -425,21 +741,34 @@ function addFields(st,arr){
     st.inv.data[f.key]=initValue(f);
   }
 }
-const clampN=(v,f)=>f.max!=null?Math.min(v,f.max):v;
+const clampN=(v,f)=>(f&&f.max!=null)?Math.min(v,f.max):v;
 const mapKey=(m,name)=>Object.keys(m).find(k=>k.toLowerCase()===name.toLowerCase())||name;
-function applyOps(st,ops){
+/* Operasi status. Perbedaan penting:
+   - add_item kind "tetap"  : barang/perlengkapan yang disimpan dan dibawa
+   - add_item kind "habis"  : stok habis-pakai yang disimpan untuk nanti (ramuan, peluru, bekal)
+   - use_item               : memakai stok yang dimiliki (jumlah berkurang) + efek
+   - consume_now            : sesuatu yang langsung dikonsumsi di kejadian itu juga; TIDAK masuk inventaris, hanya efeknya */
+function applyOps(st,ops,nested){
   if(!Array.isArray(ops))return;
   const d=st.inv.data;
   for(const o of ops){
     try{
+      if(!o||typeof o!=='object')continue;
+      if(o.op==='consume_now'){if(!nested)applyOps(st,(o.effects||[]).filter(x=>x&&!x.effects),true);continue}
       const f=st.inv.schema.find(x=>x.key===o.key);if(!f)continue;
       const k=f.key,nm=String(o.name||'').trim(),low=nm.toLowerCase();
       const item=()=>d[k].find(x=>x.name.toLowerCase()===low);
+      const take=q=>{const i=d[k].findIndex(x=>x.name.toLowerCase()===low);if(i>=0){d[k][i].qty-=q;if(d[k][i].qty<=0)d[k].splice(i,1);return true}return false};
       switch(o.op){
         case 'set':if(f.type==='number')d[k]=clampN(num(o.value,d[k]),f);else if(f.type==='text')d[k]=String(o.value==null?'':o.value);break;
         case 'add':if(f.type==='number')d[k]=clampN(num(d[k])+num(o.amount),f);break;
-        case 'add_item':if(f.type==='list'&&nm){const it=item();const q=num(o.qty,1);if(it){it.qty+=q;if(o.note!=null)it.note=String(o.note)}else d[k].push({name:nm,qty:q,note:String(o.note||'')})}break;
-        case 'remove_item':if(f.type==='list'&&nm){const i=d[k].findIndex(x=>x.name.toLowerCase()===low);if(i>=0){const q=o.qty==null?Infinity:num(o.qty,1);d[k][i].qty-=q;if(d[k][i].qty<=0)d[k].splice(i,1)}}break;
+        case 'add_item':
+          if(f.type==='list'&&nm&&!o.instant&&o.kind!=='seketika'){
+            const it=item(),q=num(o.qty,1),kind=o.kind==='habis'?'habis':'tetap';
+            if(it){it.qty+=q;if(o.note!=null)it.note=String(o.note)}else d[k].push({name:nm,qty:q,note:String(o.note||''),kind});
+          }break;
+        case 'remove_item':if(f.type==='list'&&nm)take(o.qty==null?Infinity:num(o.qty,1));break;
+        case 'use_item':if(f.type==='list'&&nm){take(num(o.qty,1));if(!nested)applyOps(st,(o.effects||[]).filter(x=>x&&!x.effects),true)}break;
         case 'update_item':if(f.type==='list'&&nm){const it=item();if(it){if(o.qty!=null)it.qty=num(o.qty,it.qty);if(o.note!=null)it.note=String(o.note)}}break;
         case 'set_map':if(f.type==='map'&&nm)d[k][mapKey(d[k],nm)]=num(o.value);break;
         case 'add_map':if(f.type==='map'&&nm){const mk=mapKey(d[k],nm);d[k][mk]=num(d[k][mk])+num(o.amount)}break;
@@ -471,24 +800,38 @@ function recentScene(st){
 
 /* ---------- Prompt: Analis (model ringan) ---------- */
 const ANALYZER_SYS='Kamu adalah mesin analis memori untuk game cerita teks. Jawab HANYA dengan JSON valid sesuai skema, tanpa markdown, dalam bahasa Indonesia yang ringkas dan akurat. Jangan mengarang fakta yang tidak ada di teks.';
-const CARD_RULES=`Aturan kartu: "keyword" = nama utama diikuti alias dipisah koma (contoh "Rina, Nona Rina"). "text" = fakta penting, MAKSIMAL 3 kalimat. "parent" = keyword utama kartu induk (yang sudah ada atau dibuat di respons yang sama) atau null. Pecah entitas turunan (tempat di dalam kerajaan, anggota organisasi, skill milik tokoh) menjadi sub-kartu dengan parent. Jangan duplikasi kartu yang sudah ada: perbarui lewat update_cards.`;
-const FIELD_RULES=`Tipe field: number (angka, "max" opsional, "value" angka awal), text (teks pendek), list (benda/skill/pet; "value" array {name,qty,note}; note dipakai untuk durasi/cooldown/kondisi), map (nama -> angka, untuk afinitas/reputasi; "value" objek).`;
+const CARD_RULES=`Aturan kartu: "keyword" = nama utama diikuti alias dipisah koma (contoh "Rina, Nona Rina"). "type" = salah satu dari: tempat | karakter | mob | item | perlengkapan | skill | pengetahuan. "text" = fakta penting, MAKSIMAL 3 kalimat, isinya mengikuti tipe:
+- tempat: informasi tempat itu. Jadikan SUB-KARTU (isi "parent") bila tempat tersebut bagian dari wilayah/tempat yang sudah ada.
+- karakter: "text" = informasi dasar (peran dan latar singkat, maks 3 kalimat). Isi KOLOM TERPISAH: "age" (umur), "race" (ras/spesies, opsional), "gender" (null bila tidak diketahui, jangan menebak); "look" = penampilan fisik dari ujung kepala sampai ujung kaki (rambut, wajah, mata, kulit, tinggi dan bentuk tubuh, pakaian khas, bekas luka, ciri khusus), maks 4 kalimat; "persona" = kepribadian: sifat dasar, gaya bicara (nada, pilihan kata, kebiasaan ucap), pola perilaku dan reaksi khas, maks 4 kalimat; "rel" = hubungan dengan karakter lain (contoh "Rina: sahabat sejak kecil; Pak Joko: atasan yang tidak dipercaya"), maks 4 kalimat. Kolom yang belum diketahui dikosongkan (null), jangan menebak.
+- mob: ciri tubuh fisik, informasi dasar, perilaku.
+- item (termasuk item konsumsi): tampilan, kegunaan atau informasi dasar.
+- perlengkapan: jenis perlengkapan, tampilan, informasi dasar; tambahan status/kemampuan HANYA bila genre RPG atau sejenisnya.
+- skill: informasi kemampuan; syarat pengaktifan HANYA bila genre memiliki MP/level.
+- pengetahuan: informasi dasar pengetahuan itu (aturan dunia, sejarah, organisasi, dan sejenisnya).
+- janji: janji, kesepakatan, utang budi, ancaman, atau rahasia penting yang masih berpengaruh. Isi "status": terbuka | terpenuhi | dilanggar | rahasia | terbongkar.
+"parent" = keyword utama kartu induk (yang sudah ada atau dibuat di respons yang sama) atau null. Pecah entitas turunan (tempat di dalam wilayah, anggota organisasi, skill milik tokoh) menjadi sub-kartu dengan parent. Jangan duplikasi kartu yang sudah ada: perbarui lewat update_cards.`;
+const FIELD_RULES=`Tipe field: number (angka, "max" opsional, "value" angka awal), text (teks pendek), list (benda/skill/pet; "value" array {name,qty,note,kind}; kind = "tetap" untuk barang/perlengkapan/skill yang disimpan, "habis" untuk stok habis-pakai; note dipakai untuk durasi/cooldown/kondisi), map (nama -> angka, untuk afinitas/reputasi; "value" objek).`;
 const OPS_RULES=`"inventory_ops" = daftar perubahan status akibat narasi baru ([] bila tidak ada). Bentuk operasi:
 {"op":"set","key":"lokasi","value":"Hutan Kelam"} (number/text)
 {"op":"add","key":"gold","amount":-50} (number, boleh negatif)
-{"op":"add_item","key":"item","name":"Ramuan","qty":2,"note":""} (list)
-{"op":"remove_item","key":"item","name":"Ramuan","qty":1}
+{"op":"add_item","key":"item","name":"Pedang Baja","qty":1,"kind":"tetap","note":""} (barang/perlengkapan yang DISIMPAN atau dibawa)
+{"op":"add_item","key":"item","name":"Ramuan Kecil","qty":3,"kind":"habis"} (stok habis-pakai yang disimpan untuk dipakai nanti)
+{"op":"use_item","key":"item","name":"Ramuan Kecil","qty":1,"effects":[{"op":"add","key":"hp","amount":30}]} (memakai stok yang sudah dimiliki)
+{"op":"consume_now","name":"Roti bakar","effects":[{"op":"add","key":"stamina","amount":10}]} (dikonsumsi langsung saat kejadian itu, TIDAK pernah masuk inventaris)
+{"op":"remove_item","key":"item","name":"Pedang Baja","qty":1} (hilang, dijual, dirusak, diberikan)
 {"op":"update_item","key":"skill","name":"Api Kecil","note":"cooldown 3 giliran"}
 {"op":"set_map","key":"afinitas","name":"Rina","value":20} (map)
 {"op":"add_map","key":"afinitas","name":"Rina","amount":5}
 {"op":"remove_map","key":"afinitas","name":"Rina"}
+ATURAN ITEM (PENTING): add_item HANYA bila tokoh utama mengambil, menerima, membeli, membuat, atau menyimpan benda itu ke dalam kepemilikannya, baik tersurat maupun tersirat. Benda yang hanya dilihat, disentuh, dipegang sebentar, digunakan, atau dikonsumsi TIDAK boleh ditambahkan. Rincian: (1) Sesuatu yang dimakan, diminum, atau dihabiskan seketika di narasi yang sama (makanan di warung, ramuan yang langsung diminum, peluru yang langsung ditembakkan dari stok tak tercatat) JANGAN ditambahkan ke daftar; pakai consume_now beserta efeknya pada field angka/teks. (2) Bila yang dipakai adalah stok yang sudah tercatat, pakai use_item. (3) Barang yang dibawa pergi, dibeli untuk disimpan, ditemukan, atau dipakai/dikenakan secara permanen = add_item (kind "tetap" untuk barang dan perlengkapan, "habis" untuk stok habis-pakai). (4) Jangan membuat efek dari benda yang tidak disebut di narasi.
 Catat hanya perubahan yang JELAS terjadi di narasi. Pakai "key" persis seperti pada SKEMA STATUS.`;
 
 async function analyzeWorld(st){
-  const w=st.world;
+  const w=st.world,p=w.mcProfile||{};
   const prompt=`TUGAS: Analisa dunia cerita ini dan buat memori awal.
 
-[TOKOH UTAMA] ${w.mc||'(tanpa nama)'}
+[TOKOH UTAMA] ${w.mc||'(tanpa nama)'}; umur: ${p.age||'-'}; ras: ${p.race||'-'}; gender: ${p.gender||'-'}; sifat: ${p.trait||'-'}; penampilan: ${p.look||'-'}
+(Tokoh utama SUDAH punya kartu sendiri. JANGAN membuat kartu untuk tokoh utama.)
 [GENRE] ${w.genreNames.join(', ')||'-'}
 ${w.genre}
 [GAYA BAHASA] ${w.style||'-'}
@@ -498,30 +841,161 @@ ${w.text}
 
 Keluarkan JSON:
 {"summary":"rangkuman awal 1-5 kalimat",
- "cards":[{"keyword":"...","text":"maks 3 kalimat","parent":null,"pin":false}],
+ "cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"status":null,"text":"maks 3 kalimat","parent":null,"pin":false}],
  "inventory_schema":[{"key":"snake_case","label":"Nama tampil","type":"number|text|list|map","max":null,"value":0}],
  "suggestions":["aksi pembuka singkat (maks 8 kata)", "..."]}
 
 ${CARD_RULES}
-"pin":true hanya untuk 1-3 kartu yang HARUS selalu diingat (tokoh utama, aturan inti dunia).
-Buat kartu untuk tokoh, tempat, organisasi, aturan dunia, dan konflik penting; gunakan sub-kartu untuk turunannya.
+"pin":true hanya untuk 1-2 kartu aturan inti dunia yang HARUS selalu diingat.
+Buat kartu untuk tempat awal (beserta wilayah induknya), karakter penting, mob/ancaman, item dan perlengkapan awal, skill yang dimiliki, serta pengetahuan/aturan dunia dan janji/rahasia yang tersirat; gunakan sub-kartu untuk turunannya. Untuk karakter penting isi kolom look, persona, dan rel bila informasinya ada di teks.
 
 SKEMA STATUS (inventory_schema): ${FIELD_RULES}
-Sesuaikan 5-10 field dengan genre: RPG/aksi -> level, hp, mp, gold, perlengkapan(list), item(list), skill(list, note=durasi/cooldown), pet(list), status(text). Drama/romansa -> afinitas(map), uang(number), hubungan(text), reputasi(map). Misteri -> petunjuk(list), kecurigaan(map). Genre campuran -> gabungkan yang relevan. SELALU sertakan "lokasi" (text) dan "waktu" (text). Isi "value" awal sesuai dunia.
+Sesuaikan 5-10 field dengan genre: RPG/aksi -> level, hp, mp, gold, perlengkapan(list kind tetap), item(list), skill(list, note=durasi/cooldown), pet(list), status(text). Drama/romansa -> afinitas(map), uang(number), hubungan(text), reputasi(map). Misteri -> petunjuk(list), kecurigaan(map). Genre campuran -> gabungkan yang relevan. SELALU sertakan "lokasi" (text) dan "waktu" (text). Isi "value" awal sesuai dunia dan profil tokoh utama.
 Buat 3-4 "suggestions" awal yang beragam.`;
-  const r=parseJSON(await gemini({model:M(st).analyzer,system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
+  const r=parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
   st.summary.base=String(r.summary||'').trim();
   addFields(st,r.inventory_schema);
-  addCards(st,r.cards);
+  addCards(st,(Array.isArray(r.cards)?r.cards:[]).filter(c=>{const e=c&&c.keyword&&findCard(st,c.keyword);return !(e&&e.isPlayer)}));
   st.suggestions=(Array.isArray(r.suggestions)?r.suggestions:[]).map(String).slice(0,4);
 }
 
+/* Percakapan terakhir (n giliran) sebagai teks; skipLast=2 membuang giliran yang sedang dianalisa */
+function recentTurns(st,n,skipLast=0,cap=1800){
+  const end=st.log.length-skipLast,start=Math.max(0,end-n*2);
+  return st.log.slice(start,end).map(e=>{
+    let t=e.text;if(t.length>cap)t='…'+t.slice(-cap);
+    return (e.role==='user'?`[Pemain, ${MODE[e.mode]||'Aksi'}] `:'[Narasi] ')+t;
+  }).join('\n\n');
+}
+
+/* TAHAP 1 (model ringan, opsional lewat Mode mendalam): sutradara adegan.
+   Memilih kartu aktif, menentukan siapa yang hadir, memperbarui kartu usang, memeriksa kelayakan input,
+   dan memberi arahan nada, tempo, panjang, suasana hati tokoh, serta hal yang perlu dihindari. */
+async function preAnalyze(st,text,m){
+  const act=new Set((st.active&&st.active.ids)||[]);
+  const all=Object.values(st.cards);
+  const line=(c,full)=>{
+    const par=c.parent&&st.cards[c.parent];
+    let s=`- ${mainKw(c)}${c.isPlayer?' (tokoh utama)':''} [${CT[c.type]||CT.pengetahuan}${par?', bagian dari '+mainKw(par):''}${c.type==='janji'&&c.status?', '+c.status:''}]: ${full?c.text:c.text.slice(0,110)}`;
+    if(full&&c.type==='karakter'){if(c.persona)s+=` | Kepribadian: ${c.persona}`;if(c.rel)s+=` | Hubungan: ${c.rel}`}
+    return s;
+  };
+  const activeTxt=all.filter(c=>act.has(c.id)).map(c=>line(c,true)).join('\n')||'(belum ada)';
+  const restTxt=all.filter(c=>!act.has(c.id)).map(c=>line(c,false)).join('\n')||'(tidak ada)';
+  const n=S.contextTurns;
+  const prompt=`TUGAS (Tahap 1: sutradara adegan). Kamu menyiapkan bahan agar narator menulis lanjutan cerita yang konsisten, alami, dan terasa ditulis manusia. Evaluasi input pemain, kelola kartu memori, dan beri arahan adegan.
+
+[TOKOH UTAMA] ${st.world.mc||'-'}
+[RINGKASAN CERITA]
+${summaryText(st)||'(kosong)'}
+[STATUS SAAT INI]
+${invCompact(st)||'(kosong)'}
+[JANJI DAN RAHASIA YANG MASIH BERLAKU]
+${openThreads(st)||'(tidak ada)'}
+[PERCAKAPAN TERAKHIR (${n} giliran)]
+${recentTurns(st,n)||'(cerita belum dimulai)'}
+[KARTU AKTIF SAAT INI]
+${activeTxt}
+[KARTU LAIN YANG TERSEDIA]
+${restTxt}
+[INPUT PEMAIN BARU (${MODE[m]})]
+${text}
+
+Keluarkan JSON:
+{"focus":"1-2 kalimat: situasi dan arah adegan saat ini (di mana, siapa terlibat, tujuan atau ketegangan yang sedang berjalan)",
+ "active_cards":["keyword utama kartu yang dipakai giliran ini, maksimal ${S.maxCards}"],
+ "in_scene":["keyword utama karakter dan mob yang hadir atau berinteraksi di adegan ini"],
+ "card_updates":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru maks 3 kalimat atau null","look":null,"persona":null,"rel":null,"status":null}],
+ "guidance":"catatan singkat untuk narator bila input bermasalah, atau string kosong",
+ "direction":{"tone":"nada dan suasana adegan, mis. tegang, hangat tapi canggung","pace":"lambat|sedang|cepat","length":"pendek|sedang|panjang","beats":["1-3 kejadian atau reaksi kecil yang wajar"],"voices":[{"name":"keyword karakter","note":"kondisi emosi saat ini dan cara bicara atau bereaksi, maks 25 kata"}],"avoid":["pola yang terlalu sering di narasi terakhir"]}}
+
+ATURAN:
+1. Pilih kartu yang RELEVAN dengan percakapan terakhir dan input baru. Lepas kartu yang pembahasannya sudah tidak relevan. Pertahankan tempat saat ini, karakter dan mob yang terlibat, serta item, perlengkapan, skill, janji, atau rahasia yang sedang berperan. Kartu induk dan kartu tokoh utama ditambahkan otomatis oleh sistem.
+2. "active_cards" dan "in_scene" memakai keyword utama kartu yang ADA di daftar. Jangan membuat kartu baru. Hanya yang masuk "in_scene" akan dikirim ke narator dengan profil lengkap (penampilan, kepribadian, hubungan), jadi isi dengan yang benar-benar hadir.
+3. "card_updates": hanya untuk kartu yang isinya sudah usang atau bertentangan dengan percakapan terakhir (kondisi tempat berubah, sifat atau hubungan karakter berubah, status janji berubah). Tulis ulang secara ringkas. Kosongkan bila tidak perlu.
+4. "guidance": isi bila input pemain bertentangan dengan STATUS atau fakta (memakai benda yang tidak dimiliki, melampaui kemampuan atau level, berada di tempat yang salah). Tulis arahan netral tentang cara narator menanganinya. Jangan menulis ulang input pemain.
+5. "direction.length": adegan santai, transisi, atau jawaban singkat boleh "pendek"; konflik, penemuan penting, atau emosi besar boleh "panjang"; selebihnya "sedang".
+6. "beats": hal kecil yang wajar terjadi di dunia (reaksi tokoh lain sesuai agenda dan kepribadiannya, perubahan lingkungan, gangguan kecil). JANGAN menentukan keputusan, ucapan, atau pikiran tokoh utama, dan jangan menyelesaikan konflik besar sekaligus.
+7. "voices": untuk tiap karakter di "in_scene" (maks 4), tulis suasana hati saat ini dan cara bicara atau bereaksi yang sesuai kepribadian serta hubungannya dengan tokoh lain yang hadir.
+8. "avoid": 1-4 pola yang sudah terlalu sering muncul di narasi terakhir (pembuka paragraf serupa, gestur atau klise yang berulang, frasa yang sama, cara menutup adegan). Kosongkan bila tidak ada.`;
+  return parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
+}
+/* Gabungkan keputusan model dengan pengaman: kartu pin, kartu yang katanya ada di input, dan fallback kata kunci */
+const arr=(a,n)=>Array.isArray(a)?a.map(x=>String(x).trim()).filter(Boolean).slice(0,n):[];
+function makePlan(st,text,r){
+  const ok=!!r&&typeof r==='object';
+  if(ok&&Array.isArray(r.card_updates))for(const c of r.card_updates){if(!c||!c.keyword)continue;const ex=findCard(st,c.keyword);if(ex)patchCard(ex,c)}
+  const idOf=k=>{const c=findCard(st,k);return c?c.id:null};
+  const picks=ok&&Array.isArray(r.active_cards)?r.active_cards.map(idOf).filter(Boolean):[];
+  const scene=ok&&Array.isArray(r.in_scene)?r.in_scene.map(idOf).filter(Boolean):[];
+  const litIn=matchCards(st,text).filter(h=>!h.c.pin).map(h=>h.c.id);
+  const pins=Object.values(st.cards).filter(c=>c.pin).map(c=>c.id);
+  const prevIds=((st.active&&st.active.ids)||[]).filter(id=>st.cards[id]&&!st.cards[id].pin);
+  let ids;
+  if(!ok)ids=S.scanLast?matchCards(st,text+'\n'+lastAI(st)).filter(h=>!h.c.pin).map(h=>h.c.id):litIn;
+  else ids=[...new Set([...litIn,...scene,...picks])];
+  if(!ids.length)ids=prevIds;
+  ids=ids.slice(0,Math.max(1,S.maxCards));
+  const cards=expandCards(st,[...new Set([...pins,...ids])]);
+  const isChar=id=>{const c=st.cards[id];return !!c&&(c.type==='karakter'||c.type==='mob')};
+  const full=new Set([...scene,...litIn.filter(isChar),...cards.filter(c=>c.isPlayer).map(c=>c.id)]);
+  const prev=new Set((st.active&&st.active.ids)||[]),now=new Set(cards.map(c=>c.id));
+  const added=cards.filter(c=>!prev.has(c.id)).map(mainKw);
+  const dropped=[...prev].filter(id=>!now.has(id)&&st.cards[id]).map(id=>mainKw(st.cards[id]));
+  const focus=ok?String(r.focus||'').trim():((st.active&&st.active.focus)||'');
+  const guidance=ok?String(r.guidance||'').trim():'';
+  const d=ok&&r.direction&&typeof r.direction==='object'?r.direction:null;
+  const dir=d?{tone:String(d.tone||'').trim(),pace:String(d.pace||'').trim(),length:String(d.length||'').trim().toLowerCase(),
+    beats:arr(d.beats,3),avoid:arr(d.avoid,4),
+    voices:(Array.isArray(d.voices)?d.voices:[]).map(v=>v&&v.name&&v.note?{name:String(v.name).trim(),note:String(v.note).trim()}:null).filter(Boolean).slice(0,4)}:null;
+  const factor={pendek:.5,sedang:1,panjang:1.4}[dir&&dir.length]||1;
+  const minWords=(S.varyLength&&dir)?Math.max(60,Math.round(S.minWords*factor/10)*10):S.minWords;
+  return{cards,full,focus,guidance,dir,minWords,
+    active:{ids:cards.map(c=>c.id),focus,guidance,added,dropped,scene:[...full].filter(id=>st.cards[id]&&!st.cards[id].isPlayer).map(id=>mainKw(st.cards[id])),dir}};
+}
+
+/* TAHAP 2b (model ringan): periksa draf narasi terhadap fakta cerita */
+async function checkConsistency(st,text,m,plan,narr){
+  const n=S.contextTurns,inc=new Set(plan.cards.map(c=>c.id));
+  const prompt=`TUGAS (Pemeriksa konsistensi): Periksa DRAF NARASI terhadap fakta cerita. Cari HANYA pelanggaran yang jelas. Jangan menilai gaya, selera, atau kualitas tulisan.
+
+[TOKOH UTAMA] ${st.world.mc||'-'}
+[RINGKASAN CERITA]
+${summaryText(st)||'(kosong)'}
+[KARTU MEMORI AKTIF]
+${plan.cards.map(c=>cardLine(st,c,inc,true)).join('\n')||'(tidak ada)'}
+[STATUS SAAT INI]
+${invCompact(st)||'(kosong)'}
+[PERCAKAPAN SEBELUMNYA (${n} giliran)]
+${recentTurns(st,n)||'(cerita baru dimulai)'}
+[INPUT PEMAIN (${MODE[m]})]
+${text}
+[DRAF NARASI]
+${narr}
+
+Keluarkan JSON: {"violations":[{"kind":"fakta|status|kontrol|karakter|kontinuitas","severity":"major|minor","detail":"1 kalimat, sebut bagian yang bermasalah","fix":"instruksi perbaikan singkat"}]}
+
+Jenis pelanggaran:
+- fakta: bertentangan dengan ringkasan atau kartu (nama, tempat, hubungan, kejadian yang sudah terjadi).
+- status: memakai benda yang tidak dimiliki, melampaui kemampuan/level/stamina, lokasi atau waktu tidak sesuai STATUS.
+- kontrol: narasi memutuskan tindakan, ucapan, atau pikiran BARU tokoh utama di luar input pemain.
+- karakter: perilaku atau cara bicara tokoh bertentangan dengan umur, ras, gender, atau sifat pada kartunya.
+- kontinuitas: mengulang atau menghapus kejadian adegan terakhir, tokoh yang sudah pergi atau mati muncul lagi tanpa alasan, kronologi melompat tanpa dasar.
+Aturan: "major" bila jelas bertentangan dengan fakta atau merampas kendali pemain; "minor" untuk kejanggalan ringan. Perkembangan cerita yang wajar BUKAN pelanggaran. Maksimal 4 temuan. Jika tidak ada, kembalikan {"violations":[]}.`;
+  const r=parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.2}));
+  return (Array.isArray(r.violations)?r.violations:[]).filter(v=>v&&v.detail).slice(0,4)
+    .map(v=>({kind:String(v.kind||''),severity:v.severity==='major'?'major':'minor',detail:String(v.detail).trim(),fix:String(v.fix||'').trim()}));
+}
+
+/* TAHAP 3 (model ringan): analisa narasi baru */
 async function analyzeTurn(st,p,narr){
-  const prompt=`TUGAS: Analisa satu giliran cerita dan perbarui memori.
+  const prompt=`TUGAS (Tahap 3 dari 3): Analisa satu giliran cerita dan perbarui memori.
 
 [TOKOH UTAMA] ${st.world.mc||'-'}
 [RINGKASAN SAAT INI]
 ${summaryText(st)||'(kosong)'}
+[PERCAKAPAN SEBELUMNYA (${S.contextTurns} giliran terakhir sebelum giliran ini)]
+${recentTurns(st,S.contextTurns,2)||'(tidak ada)'}
 [KARTU YANG SUDAH ADA]
 ${cardIndex(st)}
 [SKEMA STATUS]
@@ -535,17 +1009,18 @@ ${narr}
 
 Keluarkan JSON:
 {"summary":"1-5 kalimat: HANYA perubahan/perkembangan penting dari narasi baru (dunia, tokoh, hubungan, janji, rahasia)",
- "new_cards":[{"keyword":"...","text":"maks 3 kalimat","parent":null}],
- "update_cards":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru maks 3 kalimat"}],
+ "new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"status":null,"text":"maks 3 kalimat","parent":null}],
+ "update_cards":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru maks 3 kalimat (boleh dikosongkan)","look":null,"persona":null,"rel":null,"status":null}],
  "new_fields":[],
  "inventory_ops":[],
  "suggestions":["3-4 saran langkah berikutnya, masing-masing maks 8 kata, beragam: aman, berisiko, sosial, eksplorasi"]}
 
+Evaluasi status dengan membandingkan NARASI BARU terhadap percakapan sebelumnya dan STATUS SAAT INI: perbarui lokasi, waktu, angka, hubungan, dan kondisi lain yang benar-benar berubah, serta koreksi status lama yang tidak sesuai dengan kejadian.
 ${CARD_RULES}
-Buat kartu baru hanya untuk entitas/fakta penting yang BARU muncul dan perlu diingat jangka panjang.
+Buat kartu baru hanya untuk entitas/fakta penting yang BARU muncul dan perlu diingat jangka panjang. Perbarui kartu lama hanya bila narasi mengubah faktanya. Untuk karakter: perbarui "rel" bila hubungan berubah, "persona" bila kebiasaan atau sifat baru terlihat jelas, "look" bila ciri fisik baru muncul (luka, pakaian khas, dan sebagainya). Kartu janji: buat bila ada janji, kesepakatan, utang budi, ancaman, atau rahasia penting; ubah "status" saat ditepati (terpenuhi), dilanggar, atau terbongkar.
 ${OPS_RULES}
 "new_fields" = tambahan field status baru bila narasi memperkenalkan mekanik baru yang belum ada di SKEMA ([] bila tidak perlu). ${FIELD_RULES}`;
-  return parseJSON(await gemini({model:M(st).analyzer,system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
+  return parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
 }
 function applyAnalysis(st,r,turn){
   if(r.summary&&String(r.summary).trim())st.summary.entries.push({turn,text:String(r.summary).trim()});
@@ -565,16 +1040,16 @@ ${s.entries.map(e=>`(${e.turn}) ${e.text}`).join('\n')}
 ${cardIndex(st)}
 
 Gabungkan menjadi SATU ringkasan kronologis maksimal 8 kalimat yang menjaga alur utama dan kondisi terkini. Pindahkan fakta detail (tokoh, tempat, aturan, hubungan, janji, utang) ke kartu memori baru atau perbarui kartu lama.
-Keluarkan JSON: {"summary":"...","new_cards":[{"keyword":"...","text":"maks 3 kalimat","parent":null}],"update_cards":[{"keyword":"...","text":"..."}]}
+Keluarkan JSON: {"summary":"...","new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"status":null,"text":"maks 3 kalimat","parent":null}],"update_cards":[{"keyword":"...","text":"..."}]}
 ${CARD_RULES}`;
-  const r=parseJSON(await gemini({model:M(st).analyzer,system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
+  const r=parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
   if(!r.summary||!String(r.summary).trim())throw new Error('Hasil pemadatan kosong.');
   addCards(st,r.new_cards);updateCards(st,r.update_cards);
   st.summary={base:String(r.summary).trim(),entries:[]};
 }
 
 /* ---------- Prompt: Narator (model utama) ---------- */
-function buildNarration(st,text,m){
+function buildNarration(st,text,m,plan){
   const w=st.world;
   const system=`Kamu adalah NARATOR dan pembangun dunia untuk game cerita teks interaktif. Pemain mengendalikan tokoh utama "${w.mc||'tokoh utama'}".
 
@@ -582,8 +1057,12 @@ ATURAN MUTLAK:
 - Tulis HANYA teks narasi lanjutan (prosa murni). Tanpa pembuka/penutup, tanpa komentar meta, tanpa judul, tanpa daftar pilihan, tanpa angka/status game, tanpa markdown.
 - Kamu hanya menarasikan hasil tindakan, reaksi dunia, dan tokoh lain. Jangan membuat keputusan atau ucapan baru untuk tokoh utama di luar input pemain; kembangkan input pemain secara wajar.
 - Patuhi fakta pada RINGKASAN, KARTU MEMORI, dan STATUS. Jangan kontradiktif. Konsekuensi harus sesuai STATUS (tidak memakai benda yang tidak dimiliki, tidak melampaui kemampuan).
+- Kartu karakter memuat umur, ras, gender, penampilan fisik, kepribadian (sifat, gaya bicara, pola perilaku), dan hubungan dengan tokoh lain. Jadikan itu dasar tindakan, dialog, dan reaksi mereka. Tiap tokoh harus terdengar dan bereaksi berbeda.
 - Bangun dunia yang hidup: tokoh lain punya agenda, lingkungan bereaksi, ada kejadian tak terduga yang masuk akal.
-- Panjang minimal ${S.minWords} kata. Bahasa Indonesia.
+- Tulis seperti penulis manusia: tunjukkan lewat tindakan, detail indrawi, dan dialog, bukan penjelasan langsung. Tokoh bicara sesuai kepribadiannya, tidak saling menjelaskan hal yang sudah sama-sama diketahui, dan boleh ragu, memotong, atau diam.
+- Variasikan pembuka kalimat dan paragraf. Hindari klise (misalnya jantung berdegup kencang atau udara terasa berat), pengulangan frasa dari adegan terakhir, rangkuman di akhir, pelajaran moral, dan penutup yang terlalu rapi. Boleh berhenti pada momen yang masih menggantung.
+- Ikuti ARAHAN ADEGAN bila ada (nada, tempo, suasana hati tokoh, hal yang dihindari), tetapi fakta pada kartu dan status tetap lebih utama.
+- Panjang minimal ${plan.minWords} kata. Bahasa Indonesia.
 
 GENRE:
 ${w.genre||'-'}
@@ -593,15 +1072,19 @@ ${w.style||'-'}
 
 ATURAN DUNIA DAN PENEKANAN:
 ${w.rules||'-'}`;
-  const cards=relevantCards(st,text+(S.scanLast?'\n'+lastAI(st):''));
+  const cards=plan.cards;
   const inc=new Set(cards.map(c=>c.id));
   const parts=[];
   parts.push('[RINGKASAN CERITA SEJAUH INI]\n'+(summaryText(st)||'(cerita belum dimulai)'));
-  if(cards.length)parts.push('[KARTU MEMORI RELEVAN]\n'+cards.map(c=>cardLine(st,c,inc)).join('\n'));
+  if(plan.focus)parts.push('[FOKUS ADEGAN SAAT INI]\n'+plan.focus);
+  if(cards.length)parts.push('[KARTU MEMORI AKTIF]\n'+cards.map(c=>cardLine(st,c,inc,plan.full.has(c.id))).join('\n'));
+  const th=openThreads(st);if(th)parts.push('[JANJI DAN RAHASIA YANG MASIH BERLAKU (jangan diselesaikan atau dibongkar kecuali alurnya wajar)]\n'+th);
   const inv=invCompact(st);if(inv)parts.push('[STATUS SAAT INI]\n'+inv);
   const rs=recentScene(st);if(rs)parts.push('[ADEGAN TERAKHIR]\n'+rs);
+  const dr=directionText(plan.dir);if(dr)parts.push('[ARAHAN ADEGAN (panduan, bukan perintah mutlak)]\n'+dr);
+  if(plan.guidance)parts.push('[CATATAN EVALUASI INPUT (wajib dipertimbangkan)]\n'+plan.guidance);
   parts.push('[INPUT PEMAIN]\n'+MODEPROMPT[m]+text);
-  parts.push(st.log.length?`Lanjutkan ceritanya. Minimal ${S.minWords} kata.`:`Ini adegan pembuka cerita: perkenalkan tokoh utama dan dunia secara hidup. Minimal ${S.minWords} kata.`);
+  parts.push(st.log.length?`Lanjutkan ceritanya. Minimal ${plan.minWords} kata.`:`Ini adegan pembuka cerita: perkenalkan tokoh utama dan dunia secara hidup. Minimal ${plan.minWords} kata.`);
   return{system,prompt:parts.join('\n\n')};
 }
 
@@ -609,15 +1092,23 @@ ${w.rules||'-'}`;
 const paras=t=>String(t).split(/\n{2,}/).filter(p=>p.trim()).map(p=>'<p>'+esc(p.trim()).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>')+'</p>').join('');
 const nearBottom=()=>{const l=$('#log');return l.scrollHeight-l.scrollTop-l.clientHeight<140};
 const toBottom=()=>{const l=$('#log');l.scrollTop=l.scrollHeight};
-function snap(st){return{logLen:st.log.length,data:JSON.stringify({summary:st.summary,cards:st.cards,inv:st.inv,suggestions:st.suggestions,turn:st.turn,pending:st.pending})}}
+function snap(st){return{logLen:st.log.length,data:JSON.stringify({summary:st.summary,cards:st.cards,inv:st.inv,suggestions:st.suggestions,turn:st.turn,pending:st.pending,active:st.active})}}
 
+function tokHtml(st){
+  const u=st.lastUsage;if(!u||!u.calls||!u.calls.length)return'';
+  const f=n=>Number(n||0).toLocaleString('id-ID');
+  const rows=u.calls.map(c=>`<tr><td>${esc(c.stage)}</td><td>${esc(shortModel(c.model))}</td><td>${f(c.in)}</td><td>${f(c.out)}</td><td>${f(c.think)}</td></tr>`).join('');
+  return `<details class="tok"><summary>Token siklus terakhir: <b>${f(u.total)}</b> <small>(masuk ${f(u.in)}, keluar ${f(u.out)}${u.think?`, berpikir ${f(u.think)}`:''}). Total cerita ${f(st.tokTotal)}</small></summary><table><thead><tr><th>Tahap</th><th>Model</th><th>Masuk</th><th>Keluar</th><th>Berpikir</th></tr></thead><tbody>${rows}</tbody></table></details>`;
+}
+const noteHtml=e=>e.note&&e.note.items&&e.note.items.length?`<p class="chk"><small>${e.note.fixed?'Ditulis ulang untuk memperbaiki: ':'Pemeriksa menemukan: '}${esc(e.note.items.join('; '))}</small></p>`:'';
 function renderLog(){
   const st=cur,el=$('#log');
   if(!st.log.length){
     el.innerHTML=`<div class="empty"><p>Dunia sudah siap. Mulai dengan adegan pembuka, atau tulis tindakan pertama tokoh utamamu di bawah.</p><button class="btn pri" data-act="start">Mulai cerita</button></div>`;
     return;
   }
-  el.innerHTML=st.log.map(e=>e.role==='user'?`<div class="pl"><span class="md">${MODE[e.mode]||'Aksi'}</span>${esc(e.text)}</div>`:`<article class="nr">${paras(e.text)}</article>`).join('')
+  el.innerHTML=st.log.map(e=>e.role==='user'?`<div class="pl"><span class="md">${MODE[e.mode]||'Aksi'}</span>${esc(e.text)}</div>`:`<article class="nr">${paras(e.text)}${noteHtml(e)}</article>`).join('')
+    +(busy?'':tokHtml(st))
     +((undo&&!busy)?`<div class="tools"><button data-act="regen">Ulangi giliran</button><button data-act="undo">Urungkan</button></div>`:'');
   toBottom();
 }
@@ -630,63 +1121,158 @@ function renderSuggest(){
   }
   el.innerHTML=h;el.hidden=!h;
 }
-function setBusy(b){busy=b;$('#btnSend').disabled=b;$('#inp').disabled=b;if(!b)setStatus()}
+function setBusy(b){
+  busy=b;$('#inp').disabled=b;$('#prog').hidden=!b;
+  const s=$('#btnSend');s.textContent=b?'Batal':'Kirim';s.classList.toggle('warn',b);s.classList.toggle('pri',!b);
+  if(!b){setStatus();stopWait()}
+}
 function appendTemp(text,m){
   const log=$('#log');const e=log.querySelector('.empty');if(e)e.remove();
-  log.insertAdjacentHTML('beforeend',`<div class="pl"><span class="md">${MODE[m]}</span>${esc(text)}</div><article class="nr live" id="live"><p class="typing">…</p></article>`);
+  log.insertAdjacentHTML('beforeend',`<div class="pl"><span class="md">${MODE[m]}</span>${esc(text)}</div><article class="nr live" id="live">${waitHtml(S.deepMode?'1/3 Mengevaluasi input dan kartu…':'2/3 Narator membaca ingatan dunia…')}</article>`);
   toBottom();
 }
-function updateLive(t){const el=$('#live');if(!el)return;const nb=nearBottom();el.innerHTML=paras(t);if(nb)toBottom()}
+let firstChunk=false;
+function updateLive(t){
+  const el=$('#live');if(!el)return;
+  if(!firstChunk){firstChunk=true;stopWait()}
+  const nb=nearBottom();el.innerHTML=paras(t);if(nb)toBottom();
+}
+
+function renderCtx(){
+  const st=cur,el=$('#ctx'),a=st&&st.active;
+  if(!a||(!a.ids.length&&!a.focus)){el.hidden=true;return}
+  const cs=a.ids.map(id=>st.cards[id]).filter(Boolean),d=a.dir;
+  el.hidden=false;
+  $('#ctxN').textContent='Kartu aktif: '+cs.length;
+  $('#ctxF').textContent=a.focus||'';
+  const line=(l,v)=>v?`<p><small>${l}: ${esc(v)}</small></p>`:'';
+  $('#ctxB').innerHTML=(a.focus?`<p>${esc(a.focus)}</p>`:'')
+    +'<div>'+cs.map(c=>`<button class="kc ${c.pin?'pin':''}" data-act="ctx-card"><small>${esc(CT[c.type]||CT.pengetahuan)}</small>${esc(mainKw(c))}</button>`).join('')+'</div>'
+    +line('Hadir',(a.scene||[]).join(', '))
+    +(d?line('Nada dan tempo',[d.tone,d.pace?'tempo '+d.pace:'',d.length?'panjang '+d.length:''].filter(Boolean).join(', '))+line('Kemungkinan kejadian',d.beats.join('; '))+line('Dihindari',d.avoid.join('; ')):'')
+    +line('Baru dipakai',(a.added||[]).join(', '))+line('Dilepas',(a.dropped||[]).join(', '))
+    +line('Catatan evaluasi',a.guidance||'');
+}
 
 async function sendTurn(text,m){
   const st=cur;text=(text||'').trim();
   if(busy||!text)return;
   if(!S.apiKey){toast('Isi API Key di Pengaturan dulu.');openDrawer('set');return}
+  abortCtl=new AbortController();firstChunk=false;
   setBusy(true);renderSuggest();
-  const snapshot=snap(st);
-  const {system,prompt}=buildNarration(st,text,m);
+  const snapshot=snap(st);let committed=false;Tok.begin();
   $('#inp').value='';resizeInp();
   appendTemp(text,m);
+  startWait(S.deepMode?['1/3 Mengevaluasi input dan kartu…','Memilih kartu yang relevan dengan percakapan terakhir…','Menyiapkan arahan adegan…']:['2/3 Narator membaca ingatan dunia…','Menyusun adegan berikutnya…']);
   try{
-    setStatus('Narator menulis…');
-    const narr=(await gemini({model:M(st).main,system,prompt,temperature:S.temperature,stream:true,onChunk:updateLive})).trim();
+    // Tahap 1: evaluasi input + kelola kartu aktif (model ringan)
+    let r=null;
+    if(S.deepMode){
+      setStatus('1/3 Mengevaluasi input dan kartu…');Tok.stage='Evaluasi awal';
+      try{r=await preAnalyze(st,text,m)}
+      catch(e){if(e&&e.name==='AbortError')throw e;err(e,'Evaluasi awal gagal, memakai pencocokan kata kunci.')}
+    }
+    const plan=makePlan(st,text,r);
+    st.active=plan.active;renderCtx();
+    // Tahap 2: narasi (model utama)
+    const {system,prompt}=buildNarration(st,text,m,plan);
+    startWait(['2/3 Narator membaca ingatan dunia…','Menyusun adegan berikutnya…','Merangkai kata demi kata…','Menunggu respons model, sebentar lagi…']);
+    const wt=$('#waitTxt');if(wt)wt.textContent=lab('2/3 Narator membaca ingatan dunia…');
+    setStatus('2/3 Narator menulis…');
+    Tok.stage='Narasi';
+    let narr=(await gemini({chain:chainMain(st),system,prompt,temperature:S.temperature,stream:true,onChunk:updateLive})).trim();
+    let note=null;
+    if(S.consistency!=='off'){
+      // Tahap 2b: pemeriksa konsistensi (model ringan)
+      setStatus('2/3 Memeriksa konsistensi narasi…');
+      $('#log').insertAdjacentHTML('beforeend',waitHtml('2/3 Memeriksa konsistensi narasi…','waitBox3'));toBottom();
+      startWait(['2/3 Memeriksa konsistensi narasi…','Membandingkan dengan kartu, status, dan percakapan…']);
+      let vs=[];Tok.stage='Pemeriksa konsistensi';
+      try{vs=await checkConsistency(st,text,m,plan,narr)}
+      catch(e){if(e&&e.name==='AbortError')throw e;console.warn('Pemeriksa konsistensi gagal',e)}
+      const w3=$('#waitBox3');if(w3)w3.remove();
+      const majors=vs.filter(v=>v.severity==='major');
+      if(vs.length)note={fixed:false,items:vs.map(v=>v.detail)};
+      if(S.consistency==='fix'&&majors.length){
+        try{
+          setStatus('2/3 Menulis ulang untuk memperbaiki…');
+          const lv=$('#live');if(lv)lv.innerHTML=waitHtml('Menulis ulang untuk memperbaiki: '+majors[0].detail.slice(0,90));
+          firstChunk=false;startWait(['Menulis ulang untuk memperbaiki ketidakkonsistenan…','Merangkai ulang adegan…']);
+          Tok.stage='Narasi ulang';
+          const p2=prompt+'\n\n[KOREKSI WAJIB]\nDraf sebelumnya melanggar hal berikut. Tulis ulang adegan yang sama (jalan kejadian boleh serupa) TANPA pelanggaran ini:\n'+majors.map(v=>`- ${v.detail}${v.fix?' (perbaikan: '+v.fix+')':''}`).join('\n');
+          narr=(await gemini({chain:chainMain(st),system,prompt:p2,temperature:S.temperature,stream:true,onChunk:updateLive})).trim();
+          note={fixed:true,items:majors.map(v=>v.detail)};
+        }catch(e){
+          if(e&&e.name==='AbortError')throw e;
+          err(e,'Penulisan ulang gagal, memakai narasi pertama.');
+        }
+      }
+    }
     undo=snapshot;
     st.turn++;
-    st.log.push({role:'user',text,mode:m,turn:st.turn},{role:'ai',text:narr,turn:st.turn});
+    st.log.push({role:'user',text,mode:m,turn:st.turn},{role:'ai',text:narr,turn:st.turn,note});
     st.pending={turn:st.turn,input:text,mode:m};
-    st.suggestions=[];
+    st.suggestions=[];committed=true;
     touch();renderLog();
+    // Tahap 3: analisa hasil narasi (model ringan)
     await runAnalysis(st);
   }catch(e){
+    if(!committed){Object.assign(st,JSON.parse(snapshot.data));renderCtx()}
     renderLog();$('#inp').value=text;resizeInp();err(e);
-  }finally{setBusy(false);renderSuggest();renderLog()}
+  }finally{if(Tok.finish(st))touch();setBusy(false);renderSuggest();renderLog()}
 }
 async function runAnalysis(st){
   const p=st.pending;if(!p)return;
-  setStatus('Menganalisa memori…');
+  setStatus('3/3 Menganalisa narasi…');
+  $('#log').insertAdjacentHTML('beforeend',waitHtml('3/3 Menganalisa narasi: ringkasan, kartu, dan status…','waitBox2'));toBottom();
+  startWait(['3/3 Menganalisa narasi: ringkasan, kartu, dan status…','Memperbarui inventaris dan hubungan…','Menyiapkan saran langkah berikutnya…']);
+  Tok.stage='Analisis hasil';
   try{
     const r=await analyzeTurn(st,p,lastAI(st));
     applyAnalysis(st,r,p.turn);st.pending=null;touch();
-  }catch(e){err(e,'Analisa gagal, narasi tetap tersimpan. Ketuk "Analisa ulang".');return}
+  }catch(e){const w=$('#waitBox2');if(w)w.remove();err(e,'Analisa gagal, narasi tetap tersimpan. Ketuk "Analisa ulang".');return}
   if(st.summary.entries.length>=S.compressEvery){
-    try{setStatus('Memadatkan ringkasan…');await compress(st);touch()}catch(e){err(e,'Pemadatan ringkasan gagal.')}
+    try{setStatus('Memadatkan ringkasan…');Tok.stage='Pemadatan';await compress(st);touch()}catch(e){err(e,'Pemadatan ringkasan gagal.')}
   }
 }
 function undoLast(){
   if(!undo||busy)return false;
   const s=JSON.parse(undo.data);Object.assign(cur,s);cur.log.length=undo.logLen;undo=null;
-  touch();renderLog();renderSuggest();return true;
+  touch();renderCtx();renderLog();renderSuggest();return true;
 }
 
 /* ---------- Pembuat dunia ---------- */
+const PRESETS=[
+ {name:'Akademi Sihir',title:'Akademi Lentera Senja',genre:['Fantasi RPG'],style:['Sastrawi deskriptif'],rule:['Pemain pegang tokoh utama','Dunia hidup'],
+  mc:{name:'Arin',age:'16',race:'Manusia',gender:'Laki-laki',trait:'Penasaran, keras kepala, setia kawan, takut ketinggian.'},
+  world:'Akademi Lentera Senja berdiri di tebing tinggi di atas Laut Kabut. Setiap murid baru menerima satu lentera yang menyala sesuai bakat sihirnya. Lentera Arin padam sejak hari pertama, dan itu tidak pernah terjadi pada siapa pun. Kepala sekolah menyembunyikan sesuatu, dan perpustakaan terlarang di bawah menara jam mulai berbisik di malam hari.'},
+ {name:'Kafe Hujan',title:'Kafe di Ujung Hujan',genre:['Slice of Life','Drama Romansa'],style:['Dialog dominan'],rule:['Pemain pegang tokoh utama','Konsekuensi nyata'],
+  mc:{name:'Sari',age:'24',race:'Manusia',gender:'Perempuan',trait:'Tenang, perhatian, sulit mengungkapkan perasaan.'},
+  world:'Sari mewarisi kafe kecil milik neneknya di kota pelabuhan yang selalu hujan. Kafe itu hampir bangkrut. Pelanggan tetapnya adalah pelukis pendiam, mantan kekasih yang baru pulang dari luar negeri, dan pemilik toko kembang di seberang jalan yang diam-diam ingin membeli bangunan itu.'},
+ {name:'Stasiun Kosong',title:'Stasiun Kosong',genre:['Misteri Detektif','Horor Psikologis'],style:['Dinamis ringkas'],rule:['Pemain pegang tokoh utama','Konsekuensi nyata'],
+  mc:{name:'Dimas',age:'29',race:'Manusia',gender:'Laki-laki',trait:'Logis, skeptis, mudah curiga, menyimpan rasa bersalah masa lalu.'},
+  world:'Dimas, seorang penyelidik asuransi, terjebak di stasiun kereta tua saat badai. Papan jadwal menampilkan nama-nama penumpang yang sudah meninggal. Lima orang asing ikut terjebak, dan salah satu dari mereka tahu apa yang terjadi pada kereta terakhir.'}
+];
 function renderChips(){
   for(const [t,id] of [['genre','Genre'],['style','Style'],['rule','Rule']]){
     const items=lib.tags.filter(x=>x.type===t);
     $('#chips'+id).innerHTML=items.length?items.map(x=>`<button class="chip ${newSel.has(x.id)?'on':''}" data-tag="${x.id}" aria-pressed="${newSel.has(x.id)}">${esc(x.name)}</button>`).join(''):'<small>Belum ada tag. Tambahkan di Pustaka.</small>';
   }
+  $('#presets').innerHTML=PRESETS.map((p,i)=>`<button class="chip soft" data-preset="${i}">${esc(p.name)}</button>`).join('');
+}
+function applyPreset(i){
+  const p=PRESETS[i];if(!p)return;
+  $('#nfTitle').value=p.title;$('#nfWorld').value=p.world;
+  $('#nfMc').value=p.mc.name;$('#nfAge').value=p.mc.age;$('#nfRace').value=p.mc.race;$('#nfGender').value=p.mc.gender;$('#nfTrait').value=p.mc.trait;if($('#nfLook'))$('#nfLook').value=p.mc.look||'';
+  newSel=new Set();
+  for(const [t,names] of [['genre',p.genre],['style',p.style],['rule',p.rule]])
+    for(const n of names){const tg=lib.tags.find(x=>x.type===t&&x.name.toLowerCase()===n.toLowerCase());if(tg)newSel.add(tg.id)}
+  renderChips();toast('Contoh dimuat. Ubah sesukamu, lalu ketuk Bangun dunia.');
 }
 function openNew(){
   newSel=new Set();renderChips();
+  for(const id of ['nfTitle','nfMc','nfAge','nfRace','nfTrait','nfLook','nfRules','nfWorld'])$('#'+id).value='';
+  $('#nfGender').value='';
   $('#nfMain').value=S.mainModel;$('#nfAnalyzer').value=S.analyzerModel;$('#createMsg').textContent='';
   show('v-new');
 }
@@ -695,38 +1281,64 @@ async function createWorld(){
   if(!title||!world){toast('Isi judul dan deskripsi dunia.');return}
   if(!S.apiKey){toast('Isi API Key di Pengaturan dulu.');openDrawer('set');return}
   const pick=t=>lib.tags.filter(x=>x.type===t&&newSel.has(x.id));
+  const prof={age:$('#nfAge').value.trim(),race:$('#nfRace').value.trim(),gender:$('#nfGender').value,trait:$('#nfTrait').value.trim(),look:($('#nfLook')||{value:''}).value.trim()};
+  const mcName=$('#nfMc').value.trim();
   const st={
-    v:1,id:uid(),title,created:Date.now(),updated:Date.now(),cloudAt:0,
-    world:{mc:$('#nfMc').value.trim(),text:world,genreNames:pick('genre').map(x=>x.name),
+    v:2,id:uid(),title,created:Date.now(),updated:Date.now(),cloudAt:0,
+    world:{mc:mcName,mcProfile:prof,text:world,genreNames:pick('genre').map(x=>x.name),
       genre:pick('genre').map(x=>x.text).join('\n'),style:pick('style').map(x=>x.text).join('\n'),
       rules:[...pick('rule').map(x=>x.text),$('#nfRules').value.trim()].filter(Boolean).join('\n')},
     models:{main:$('#nfMain').value.trim()||S.mainModel,analyzer:$('#nfAnalyzer').value.trim()||S.analyzerModel},
-    summary:{base:'',entries:[]},cards:{},inv:{schema:[],data:{}},log:[],suggestions:[],turn:0,pending:null
+    summary:{base:'',entries:[]},cards:{},inv:{schema:[],data:{}},log:[],suggestions:[],turn:0,pending:null,active:{ids:[],focus:'',guidance:'',added:[],dropped:[]}
   };
-  const b=$('#btnCreate');b.disabled=true;$('#createMsg').textContent='Menganalisa dunia (membuat ringkasan, kartu memori, dan status)…';
+  if(mcName){
+    const id=uid();
+    st.cards[id]={id,keyword:mcName,type:'karakter',age:prof.age,race:prof.race,gender:prof.gender,look:prof.look||'',persona:prof.trait||'',rel:'',status:'',
+      text:'Tokoh utama yang dimainkan pemain.',parent:null,pin:true,isPlayer:true};
+  }
+  const b=$('#btnCreate');b.disabled=true;abortCtl=new AbortController();
+  $('#createMsg').innerHTML=waitHtml('Menganalisa dunia: membuat ringkasan, kartu memori, dan status…');
+  startWait(['Menganalisa dunia: membuat ringkasan, kartu memori, dan status…','Menentukan inventaris sesuai genre…','Menyusun pohon kartu memori…']);
   try{
     await analyzeWorld(st);
     cur=st;cloudDirty=true;flushSave();
     openStory(st.id);
-  }catch(e){err(e);$('#createMsg').textContent='Gagal: '+e.message}
-  finally{b.disabled=false}
+  }catch(e){err(e);$('#createMsg').textContent='Gagal: '+friendly(e)}
+  finally{b.disabled=false;stopWait()}
 }
 
 /* ---------- Beranda ---------- */
+function renderSetup(){
+  const el=$('#setup');
+  if(S.apiKey){el.hidden=true;el.innerHTML='';return}
+  el.hidden=false;
+  el.innerHTML=`<h3>Mulai dalam 3 langkah</h3>
+  <ol class="steps">
+    <li><b>Ambil API Key gratis</b><small>Masuk dengan akun Google di <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>, lalu salin key-nya.</small></li>
+    <li><b>Tempel di sini</b><input id="obKey" type="password" autocomplete="off" placeholder="AIza…"><button class="btn pri sm" data-act="ob-save">Simpan dan tes</button><small>Key hanya disimpan di browser ini.</small></li>
+    <li><b>Buat dunia pertamamu</b><small>Pilih contoh siap pakai atau tulis dunia sendiri.</small></li>
+  </ol>`;
+}
 function renderHome(){
+  renderSetup();
   const idx=listStories().sort((a,b)=>b.updated-a.updated);
-  $('#homeList').innerHTML=idx.length?idx.map(s=>`<div class="story"><button class="open" data-act="open" data-id="${s.id}"><b>${esc(s.title)}</b><small>${s.turn} giliran, diubah ${ago(s.updated)}</small></button><button class="btn warn sm" data-act="del-story" data-id="${s.id}">Hapus</button></div>`).join(''):'<p class="empty">Belum ada cerita. Susun dunia pertamamu.</p>';
-  $('#keyWarn').hidden=!!S.apiKey;
+  $('#homeStories').innerHTML=idx.length
+    ?`<div class="sechead"><h2>Ceritamu</h2><small>${idx.length} cerita</small></div>`+idx.map((s,i)=>`<div class="scard ${i===0?'latest':''}" style="--h:${hue(s.id)}"><button class="open" data-act="open" data-id="${s.id}"><span class="av">${esc((s.title||'?').trim().charAt(0).toUpperCase())}</span><span class="sb"><b>${esc(s.title)}${i===0?'<span class="badge-last">terakhir dimainkan</span>':''}</b>${(s.genres&&s.genres.length)?`<span class="gs">${s.genres.map(g=>`<i>${esc(g)}</i>`).join('')}</span>`:''}${s.excerpt?`<span class="ex">${esc(s.excerpt)}</span>`:''}<small>${s.turn} giliran, ${rel(s.updated)}</small></span></button><button class="more" data-act="del-story" data-id="${s.id}" aria-label="Hapus ${esc(s.title)}">Hapus</button></div>`).join('')
+    :`<div class="empty"><p>Belum ada cerita.<br>Ketuk tombol di bawah untuk membuat dunia pertamamu.</p></div>`;
   $('#homeRemote').innerHTML=remoteHtml();
 }
+function syncDeep(){const b=$('#btnDeep');if(b){b.classList.toggle('on',!!S.deepMode);b.setAttribute('aria-pressed',String(!!S.deepMode))}}
 function openStory(id){
   cur=loadStory(id);if(!cur){toast('Cerita tidak ditemukan.');return}
-  cur.inv=cur.inv||{schema:[],data:{}};cur.cards=cur.cards||{};cur.suggestions=cur.suggestions||[];
-  undo=null;cloudDirty=cloudDirty||(cur.updated>(cur.cloudAt||0));
+  cur.inv=cur.inv||{schema:[],data:{}};cur.cards=cur.cards||{};cur.suggestions=cur.suggestions||[];cur.world.mcProfile=cur.world.mcProfile||{};cur.active=cur.active||{ids:[],focus:'',guidance:'',added:[],dropped:[]};
+  Object.values(cur.cards).forEach(c=>{c.type=normType(c.type);c.age=c.age||'';c.race=c.race||'';c.gender=c.gender||'';c.look=c.look||'';c.persona=c.persona||'';c.rel=c.rel||'';c.status=c.status||''});
+  for(const f of cur.inv.schema){const d=cur.inv.data;if(f.type==='list'&&Array.isArray(d[f.key]))d[f.key]=d[f.key].map(normItem)}
+  undo=null;cloudDirty=cloudDirty||(cur.updated>(cur.cloudAt||0));cardQ='';cardType='';cardOpen=null;cardExp=new Set();
   $('#rTitle').textContent=cur.title;
-  show('v-read');renderLog();renderSuggest();setStatus();
+  show('v-read');syncDeep();renderCtx();renderLog();renderSuggest();setStatus();renderQuota();
 }
 async function closeStory(){
+  if(busy){toast('Tunggu proses selesai atau ketuk Batal dulu.');return}
   flushSave();
   if(cloudDirty&&Drive.valid()&&cur){try{await driveUpload(cur,true)}catch(e){}}
   cur=null;renderHome();show('v-home');
@@ -775,7 +1387,7 @@ const Drive={token:null,exp:0,
   },
   async download(fid){return (await this.api(`https://www.googleapis.com/drive/v3/files/${fid}?alt=media`)).json()}
 };
-const pkgOf=st=>({app:'penutur',v:1,savedAt:Date.now(),story:st,library:lib});
+const pkgOf=st=>({app:'penutur',v:2,savedAt:Date.now(),story:st,library:lib});
 async function driveUpload(st,quiet){
   setStatus('Mengunggah ke Drive…');
   const r=await Drive.upload(st,pkgOf(st));
@@ -786,11 +1398,10 @@ async function driveUpload(st,quiet){
 }
 function importPackage(pkg){
   if(!pkg||!pkg.story||!pkg.story.id||!pkg.story.world)throw new Error('File bukan checkpoint Penutur yang valid.');
-  if(pkg.library&&Array.isArray(pkg.library.tags)){
-    for(const t of pkg.library.tags)if(t&&t.id&&!lib.tags.some(x=>x.id===t.id))lib.tags.push(t);
-    saveLib();
-  }
+  let r=null;
+  if(pkg.library&&Array.isArray(pkg.library.tags))r=mergeLib(pkg.library.tags);
   const prev=cur;cur=pkg.story;flushSave();cur=prev;
+  return r;
 }
 function remoteHtml(){
   if(!Drive.valid())return '<p class="hint">Drive belum tersambung. Isi Client ID di Pengaturan, lalu ketuk Sambungkan Drive.</p>';
@@ -800,7 +1411,7 @@ function remoteHtml(){
     const sid=f.appProperties&&f.appProperties.storyId,l=local.find(x=>x.id===sid),rt=Date.parse(f.modifiedTime);
     let s='belum ada di perangkat ini';
     if(l)s=rt>(l.cloudAt||0)+5000?'lebih baru di Drive':(l.updated>(l.cloudAt||0)+1000?'perangkat ini lebih baru':'sinkron');
-    return `<div class="story"><div class="grow"><b>${esc(f.name.replace(/^Penutur - /,'').replace(/\.json$/,''))}</b><small>${ago(rt)}, ${s}</small></div><button class="btn sm" data-act="drive-pull" data-fid="${f.id}" data-sid="${esc(sid||'')}" data-rt="${rt}">Ambil</button></div>`;
+    return `<div class="tag"><b>${esc(f.name.replace(/^Penutur - /,'').replace(/\.json$/,''))}</b><small>${ago(rt)}, ${s}</small><button class="btn sm" data-act="drive-pull" data-fid="${f.id}" data-sid="${esc(sid||'')}" data-rt="${rt}">Ambil</button></div>`;
   }).join('');
 }
 async function driveRefresh(){
@@ -814,15 +1425,15 @@ setInterval(async()=>{
   if(!cur||!cloudDirty||busy||!S.driveClientId||S.driveMinutes<=0)return;
   if(Date.now()-lastCloudTry<S.driveMinutes*60000)return;
   lastCloudTry=Date.now();
-  if(!Drive.valid()){setStatus('Drive perlu disambung ulang (ketuk menu, Simpan)');return}
+  if(!Drive.valid()){setStatus('Drive perlu disambung ulang (menu, Simpan)');return}
   try{await driveUpload(cur,true)}catch(e){console.warn(e)}
 },30000);
 
 /* ---------- Drawer ---------- */
 function tabsFor(){
   return view==='v-read'
-    ?[['sum','Ringkasan'],['cards','Kartu'],['inv','Status'],['world','Dunia'],['lib','Pustaka'],['set','Pengaturan'],['save','Simpan']]
-    :[['lib','Pustaka'],['set','Pengaturan'],['save','Simpan']];
+    ?[['sum','Ringkasan'],['cards','Kartu'],['inv','Status'],['world','Dunia'],['quota','Kuota'],['lib','Pustaka'],['set','Pengaturan'],['save','Simpan'],['help','Bantuan']]
+    :[['set','Pengaturan'],['lib','Pustaka'],['quota','Kuota'],['save','Simpan'],['help','Bantuan']];
 }
 function openDrawer(t){
   const ts=tabsFor();tab=ts.some(x=>x[0]===t)?t:ts[0][0];
@@ -831,66 +1442,135 @@ function openDrawer(t){
 function closeDrawer(){
   if(document.activeElement)document.activeElement.blur();
   $('#drawer').classList.remove('on');$('#scrim').classList.remove('on');
-  if(cur){flushSave();renderSuggest()}
+  if(cur){flushSave();renderSuggest();renderQuota()}
   if(view==='v-new')renderChips();
   if(view==='v-home')renderHome();
 }
 function renderTab(){
   $('#tabs').innerHTML=tabsFor().map(([k,n])=>`<button data-act="tab" data-tab="${k}" class="${k===tab?'on':''}">${n}</button>`).join('');
-  const fn={sum:tabSum,cards:tabCards,inv:tabInv,world:tabWorld,lib:tabLib,set:tabSet,save:tabSave}[tab];
+  const fn={sum:tabSum,cards:tabCards,inv:tabInv,world:tabWorld,quota:tabQuota,lib:tabLib,set:tabSet,save:tabSave,help:tabHelp}[tab];
   const sc=$('#dbody').scrollTop;$('#dbody').innerHTML=fn();$('#dbody').scrollTop=sc;
+  if(tab==='cards')renderCardList();
 }
 
 function tabSum(){
   const st=cur;
-  return `<p class="hint">Ringkasan ini dikirim ke narator setiap giliran. Catatan sejak pemadatan terakhir: ${st.summary.entries.length} dari ${S.compressEvery}.</p>
+  return `<p class="hint">Ringkasan ini dikirim ke narator setiap giliran. Catatan sejak pemadatan terakhir: ${st.summary.entries.length} dari ${S.compressEvery}. Boleh diedit bila ada yang keliru.</p>
   <textarea id="sumTa" rows="14">${esc(summaryText(st))}</textarea>
   <div class="row"><button class="btn pri" data-act="sum-save">Simpan ringkasan</button><button class="btn" data-act="sum-compress">Padatkan sekarang</button></div>`;
 }
-function tabCards(){
+
+/* --- Kartu memori --- */
+function cardEditor(c){
   const st=cur,cs=Object.values(st.cards);
-  const roots=cs.filter(c=>!c.parent||!st.cards[c.parent]);
-  const kids=id=>cs.filter(c=>c.parent===id);
-  const row=(c,d)=>{
-    const opts=['<option value="">(tidak ada, kartu utama)</option>'].concat(cs.filter(x=>x.id!==c.id&&!wouldCycle(st,c.id,x.id)).map(x=>`<option value="${x.id}" ${x.id===c.parent?'selected':''}>${esc(mainKw(x))}</option>`)).join('');
-    return `<details class="card" style="margin-left:${d*14}px"><summary>${esc(mainKw(c))}${c.pin?' (selalu disertakan)':''}<small>${esc(c.text.slice(0,80))}</small></summary>
-      <label>Kata kunci (pisahkan dengan koma)<input data-bind="card" data-id="${c.id}" data-f="keyword" value="${esc(c.keyword)}"></label>
-      <label>Isi (maksimal 3 kalimat)<textarea rows="3" data-bind="card" data-id="${c.id}" data-f="text">${esc(c.text)}</textarea></label>
-      <label>Induk<select data-bind="card" data-id="${c.id}" data-f="parent">${opts}</select></label>
-      <label class="chk"><input type="checkbox" data-bind="card" data-id="${c.id}" data-f="pin" ${c.pin?'checked':''}> Selalu sertakan di prompt</label>
-      <div class="row"><button class="btn warn sm" data-act="card-del" data-id="${c.id}">Hapus kartu</button></div></details>`+kids(c.id).map(k=>row(k,d+1)).join('');
-  };
-  return `<p class="hint">${cs.length} kartu. Kartu masuk ke prompt saat kata kuncinya muncul di inputmu. Sub-kartu ikut membawa induknya.</p>`
-    +(roots.map(c=>row(c,0)).join('')||'<p class="empty">Belum ada kartu.</p>')
-    +`<div class="row"><button class="btn" data-act="card-add">Tambah kartu</button></div>`;
+  const opts=['<option value="">(tidak ada, kartu utama)</option>'].concat(cs.filter(x=>x.id!==c.id&&!wouldCycle(st,c.id,x.id)).map(x=>`<option value="${x.id}" ${x.id===c.parent?'selected':''}>${esc(mainKw(x))}</option>`)).join('');
+  const typeOpts=Object.entries(CT).map(([k,n])=>`<option value="${k}" ${(c.type||'pengetahuan')===k?'selected':''}>${n}</option>`).join('');
+  const b=f=>`data-bind="card" data-id="${c.id}" data-f="${f}"`;
+  const prof=(c.type==='karakter')?`<div class="row"><label>Umur<input ${b('age')} value="${esc(c.age)}"></label><label>Ras<input ${b('race')} value="${esc(c.race)}"></label><label>Gender<input ${b('gender')} list="genders" value="${esc(c.gender)}"></label></div>`:'';
+  const prof2=c.type==='karakter'
+    ?`<label>Penampilan fisik (ujung kepala sampai ujung kaki, ciri khusus)<textarea rows="3" ${b('look')}>${esc(c.look||'')}</textarea></label><label>Kepribadian (sifat dasar, gaya bicara, pola perilaku)<textarea rows="3" ${b('persona')}>${esc(c.persona||'')}</textarea></label><label>Hubungan dengan karakter lain<textarea rows="3" ${b('rel')}>${esc(c.rel||'')}</textarea></label>`
+    :(c.type==='janji'?`<label>Status<select ${b('status')}>${STATUSES.map(x=>`<option value="${x}" ${(c.status||'terbuka')===x?'selected':''}>${x}</option>`).join('')}</select></label>`:'');
+  return `<div class="ced">
+    <label>Kata kunci (pisahkan dengan koma)<input ${b('keyword')} value="${esc(c.keyword)}"></label>
+    <label>Jenis<select ${b('type')}>${typeOpts}</select></label>
+    ${prof}
+    ${prof2}
+    <label>Isi (${TYPE_HINT[c.type]||'maksimal 3 kalimat'}; maksimal 3 kalimat)<textarea rows="4" ${b('text')}>${esc(c.text)}</textarea></label>
+    <label>Induk<select ${b('parent')}>${opts}</select></label>
+    <label class="chk"><input type="checkbox" ${b('pin')} ${c.pin?'checked':''}> Selalu sertakan di prompt</label>
+    <div class="row"><button class="btn warn sm" data-act="card-del" data-id="${c.id}">Hapus kartu</button></div>
+  </div>`;
 }
+function renderCardList(){
+  const box=$('#cardList');if(!box||!cur)return;
+  const st=cur,cs=Object.values(st.cards),q=cardQ.trim().toLowerCase(),actSet=new Set((st.active&&st.active.ids)||[]);
+  const typeOk=c=>!cardType||(c.type||'pengetahuan')===cardType;
+  const qOk=c=>!q||(c.keyword+' '+c.text+' '+c.race+' '+c.gender).toLowerCase().includes(q);
+  const kids=id=>cs.filter(x=>x.parent===id);
+  const path=c=>{const a=[];let p=c,g=0;while(p.parent&&st.cards[p.parent]&&g++<8){p=st.cards[p.parent];a.unshift(mainKw(p))}return a.join(' › ')};
+  const sortF=(a,b)=>(b.isPlayer?1:0)-(a.isPlayer?1:0)||mainKw(a).localeCompare(mainKw(b),'id');
+  const row=(c,d,flat)=>{
+    const k=kids(c.id),exp=cardExp.has(c.id);
+    const tg=(!flat&&k.length)?`<button class="tg" data-act="card-toggle" data-id="${c.id}" aria-expanded="${exp}" aria-label="${exp?'Sembunyikan':'Tampilkan'} sub-kartu ${esc(mainKw(c))}">${exp?'&#9662;':'&#9656;'}</button>`:'<span class="tg"></span>';
+    const meta=[c.type==='karakter'?[c.age,c.race,c.gender].filter(Boolean).join(', '):'',flat&&path(c)?'dalam '+path(c):'',c.text].filter(Boolean).join(' | ');
+    return `<div class="crow" style="margin-left:${flat?0:d*16}px">${tg}<button class="cmain ${cardOpen===c.id?'on':''}" data-act="card-edit" data-id="${c.id}"><span class="cname">${esc(mainKw(c))}</span>${c.isPlayer?'<span class="badge me">Pemain</span>':''}<span class="badge">${CT[c.type||'pengetahuan']}</span>${actSet.has(c.id)?'<span class="badge on">aktif</span>':''}${k.length?`<span class="badge">${k.length} sub</span>`:''}<small>${esc(meta)}</small></button></div>${cardOpen===c.id?cardEditor(c):''}`;
+  };
+  let html='',shown=0;
+  if(q||cardType){
+    const r=cs.filter(c=>typeOk(c)&&qOk(c)).sort(sortF);shown=r.length;
+    html=r.map(c=>row(c,0,true)).join('')||'<p class="empty">Tidak ada kartu yang cocok.</p>';
+  }else{
+    const roots=cs.filter(c=>!c.parent||!st.cards[c.parent]).sort(sortF);shown=cs.length;
+    const walk=(c,d)=>row(c,d,false)+(cardExp.has(c.id)?kids(c.id).sort(sortF).map(k=>walk(k,d+1)).join(''):'');
+    html=roots.map(c=>walk(c,0)).join('')||'<p class="empty">Belum ada kartu. Kartu dibuat otomatis saat ceritamu berjalan.</p>';
+  }
+  box.innerHTML=html;
+  const cnt=$('#cardCount');if(cnt)cnt.textContent=(q||cardType)?`${shown} hasil dari ${cs.length} kartu`:`${cs.length} kartu`;
+}
+function tabCards(){
+  const typeOpts='<option value="">Semua jenis</option>'+Object.entries(CT).map(([k,n])=>`<option value="${k}" ${cardType===k?'selected':''}>${n}</option>`).join('');
+  return `<datalist id="genders"><option value="Laki-laki"></option><option value="Perempuan"></option><option value="Lainnya"></option></datalist>
+  <div class="csearch"><input id="cardQ" type="search" placeholder="Cari kata kunci atau isi…" value="${esc(cardQ)}" aria-label="Cari kartu"><select id="cardT" aria-label="Filter jenis">${typeOpts}</select></div>
+  <div class="ctools"><small id="cardCount"></small><button class="btn sm" data-act="card-expall">Buka semua</button><button class="btn sm" data-act="card-colall">Ciutkan</button><button class="btn sm" data-act="card-add">Tambah</button></div>
+  <div id="cardList"></div>
+  <p class="hint">Tiap giliran, model analis memilih kartu yang relevan dengan percakapan terakhir dan melepas yang sudah tidak relevan. Kartu bertanda aktif sedang dipakai. Kartu yang katanya muncul di inputmu dan kartu bertanda selalu sertakan pasti ikut. Sub-kartu membawa induknya, tetapi induk hanya menyebut nama sub-kartunya.</p>`;
+}
+
+/* --- Status/inventaris --- */
 function tabInv(){
   const st=cur,d=st.inv.data;
   const body=f=>{
     const v=d[f.key],k=esc(f.key);
     if(f.type==='number')return `<input type="number" data-bind="inv-num" data-key="${k}" value="${esc(v)}">${f.max!=null?`<small>maksimal ${f.max}</small>`:''}`;
     if(f.type==='text')return `<input data-bind="inv-text" data-key="${k}" value="${esc(v)}">`;
-    if(f.type==='list')return v.map((it,i)=>`<div class="irow"><input data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="name" value="${esc(it.name)}" aria-label="Nama"><input type="number" data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="qty" value="${it.qty}" aria-label="Jumlah"><input data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="note" value="${esc(it.note)}" placeholder="catatan/durasi" aria-label="Catatan"><button class="x" data-act="inv-delitem" data-key="${k}" data-i="${i}" aria-label="Hapus">&#10005;</button></div>`).join('')+`<button class="btn sm" data-act="inv-additem" data-key="${k}">Tambah</button>`;
+    if(f.type==='list')return v.map((it,i)=>`<div class="irow"><input data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="name" value="${esc(it.name)}" aria-label="Nama"><input type="number" data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="qty" value="${it.qty}" aria-label="Jumlah"><select data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="kind" aria-label="Jenis"><option value="tetap" ${it.kind!=='habis'?'selected':''}>Barang tetap</option><option value="habis" ${it.kind==='habis'?'selected':''}>Habis pakai</option></select><button class="x" data-act="inv-delitem" data-key="${k}" data-i="${i}" aria-label="Hapus">&#10005;</button><input class="inote" data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="note" value="${esc(it.note)}" placeholder="catatan, durasi, kondisi" aria-label="Catatan"></div>`).join('')+`<button class="btn sm" data-act="inv-additem" data-key="${k}">Tambah</button>`;
     return Object.entries(v).map(([a,b])=>`<div class="mrow"><input data-bind="inv-mapk" data-key="${k}" data-old="${esc(a)}" value="${esc(a)}" aria-label="Nama"><input type="number" data-bind="inv-mapv" data-key="${k}" data-name="${esc(a)}" value="${b}" aria-label="Nilai"><button class="x" data-act="inv-delmap" data-key="${k}" data-name="${esc(a)}" aria-label="Hapus">&#10005;</button></div>`).join('')+`<button class="btn sm" data-act="inv-addmap" data-key="${k}">Tambah</button>`;
   };
-  return `<p class="hint">Status diperbarui otomatis oleh analis setiap giliran. Kamu bisa mengoreksinya langsung di sini.</p>`
-    +(st.inv.schema.map(f=>`<div class="field"><b>${esc(f.label)}<button class="x" data-act="inv-delfield" data-key="${esc(f.key)}" aria-label="Hapus field">&#10005;</button></b>${body(f)}</div>`).join('')||'<p class="empty">Belum ada field status.</p>')
-    +`<h3>Tambah field</h3><div class="row"><input id="nfK" placeholder="Nama field, mis. Mana" style="flex:2"><select id="nfT" style="flex:1"><option value="number">Angka</option><option value="text">Teks</option><option value="list">Daftar</option><option value="map">Pasangan nama dan angka</option></select></div><button class="btn" data-act="inv-addfield">Tambah field</button>`;
+  return `<p class="hint">Status diperbarui otomatis oleh analis setiap giliran. Barang tetap (senjata, perlengkapan, benda) dan stok habis pakai (ramuan, bekal) disimpan di daftar. Yang dikonsumsi langsung saat kejadian tidak dicatat sebagai barang, hanya efeknya. Kamu bisa mengoreksi apa pun di sini.</p>`
+    +(st.inv.schema.map(f=>`<div class="field"><b>${esc(f.label)}<button class="x" data-act="inv-delfield" data-key="${esc(f.key)}" aria-label="Hapus field ${esc(f.label)}">&#10005;</button></b>${body(f)}</div>`).join('')||'<p class="empty">Belum ada field status.</p>')
+    +`<h3>Tambah field</h3><div class="row"><input id="nfK" placeholder="Nama field, mis. Mana" style="flex:2"><select id="nfT" style="flex:1"><option value="number">Angka</option><option value="text">Teks</option><option value="list">Daftar</option><option value="map">Nama dan angka</option></select></div><button class="btn" data-act="inv-addfield">Tambah field</button>`;
 }
 function tabWorld(){
   const st=cur,w=st.world;
   const f=(l,k,v,rows)=>`<label>${l}<textarea rows="${rows}" data-bind="world" data-f="${k}">${esc(v)}</textarea></label>`;
-  return `<p class="hint">Perubahan di sini langsung dipakai mulai giliran berikutnya.</p>
+  return `<p class="hint">Perubahan di sini langsung dipakai mulai giliran berikutnya. Umur, ras, gender, dan sifat tokoh utama diubah di tab Kartu (kartu bertanda Pemain).</p>
   <label>Judul<input data-bind="world" data-f="title" value="${esc(st.title)}"></label>
-  <label>Tokoh utama<input data-bind="world" data-f="mc" value="${esc(w.mc)}"></label>
+  <label>Nama tokoh utama<input data-bind="world" data-f="mc" value="${esc(w.mc)}"></label>
   ${f('Genre','genre',w.genre,3)}${f('Gaya bahasa','style',w.style,3)}${f('Aturan dan penekanan','rules',w.rules,4)}${f('Dunia dan latar','text',w.text,6)}
   <label>Model narator<input list="models" data-bind="world" data-f="main" value="${esc(M(st).main)}"></label>
   <label>Model analis<input list="models" data-bind="world" data-f="analyzer" value="${esc(M(st).analyzer)}"></label>`;
 }
+
+/* --- Kuota --- */
+function quotaModels(){
+  const st=cur;
+  const list=[[st?M(st).main:S.mainModel,'narator utama'],[st?M(st).analyzer:S.analyzerModel,'analis'],[S.fallback1,'cadangan 1'],[S.fallback2,'cadangan 2']];
+  const map=new Map();
+  for(const [m,r] of list){if(!m)continue;map.set(m,(map.has(m)?map.get(m)+', ':'')+r)}
+  return [...map];
+}
+function tabQuota(){
+  const rows=quotaModels().map(([m,roles])=>{
+    const i=Usage.info(m),e=esc(m);
+    return `<div class="field"><b><span>${e}</span><small>${roles}</small></b>
+      <div class="qrow"><span>Per menit</span>${meter(i.rpm,i.l.rpm)}<span>${i.rpm} dari ${i.l.rpm}</span></div>
+      <div class="qrow"><span>Per hari</span>${meter(i.rpd,i.l.rpd)}<span>${i.rpd} dari ${i.l.rpd}</span></div>
+      ${i.full?'<small class="wr">Server menolak karena kuota harian habis. Model dilewati sampai reset.</small>':(i.cool?'<small class="wr">Sedang dijeda karena limit per menit.</small>':'')}
+      <div class="row"><label>Batas per menit<input type="number" min="1" data-lim="${e}" data-f="rpm" value="${i.l.rpm}"></label><label>Batas per hari<input type="number" min="1" data-lim="${e}" data-f="rpd" value="${i.l.rpd}"></label></div>
+      <button class="btn sm" data-act="quota-reset" data-m="${e}">Reset hitungan</button></div>`;
+  }).join('');
+  return `<p class="hint">Hitungan berasal dari permintaan yang dikirim dari browser ini. Batas resmi tiap model berbeda dan bisa berubah, jadi sesuaikan angka di bawah dengan nilai di Google AI Studio. Reset harian mengikuti waktu Pasifik (sekitar pukul 14.00 WIB). Bila server menolak karena limit, model dilewati dan otomatis diganti model cadangan.</p>${rows}
+  <label class="chk"><input type="checkbox" data-set="autoFallback" ${S.autoFallback?'checked':''}> Ganti otomatis ke model cadangan saat limit tercapai</label>
+  <label>Model cadangan 1<input list="models" data-set="fallback1" value="${esc(S.fallback1)}"></label>
+  <label>Model cadangan 2<input list="models" data-set="fallback2" value="${esc(S.fallback2)}"></label>`;
+}
+
+/* --- Pustaka --- */
 function tabLib(){
   const e=editTag?lib.tags.find(x=>x.id===editTag):null;
   const grp=(t,n)=>`<h3>${n}</h3>`+(lib.tags.filter(x=>x.type===t).map(x=>`<div class="tag"><b>${esc(x.name)}</b><small>${esc(x.text)}</small><button class="btn sm" data-act="tag-edit" data-id="${x.id}">Ubah</button> <button class="btn warn sm" data-act="tag-del" data-id="${x.id}">Hapus</button></div>`).join('')||'<small>Kosong.</small>');
-  return `<p class="hint">Tag adalah templat genre, gaya bahasa, atau aturan yang bisa dipasang ke dunia baru.</p>
+  return `<p class="hint">Tag adalah templat genre, gaya bahasa, atau aturan yang bisa dipasang ke dunia baru. Mengimpor pustaka dengan tag bernama sama akan menggantikan tag lama, bukan menggandakannya.</p>
+  <div class="row"><button class="btn sm" data-act="lib-export">Ekspor pustaka</button><button class="btn sm" data-act="import">Impor file</button></div>
   ${grp('genre','Genre')}${grp('style','Gaya bahasa')}${grp('rule','Aturan')}
   <h3>${e?'Ubah tag':'Tag baru'}</h3>
   <label>Jenis<select id="tgType"><option value="genre">Genre</option><option value="style">Gaya bahasa</option><option value="rule">Aturan</option></select></label>
@@ -898,26 +1578,36 @@ function tabLib(){
   <label>Isi instruksi<textarea id="tgText" rows="4">${esc(e?e.text:'')}</textarea></label>
   <div class="row"><button class="btn pri" data-act="tag-save">${e?'Simpan perubahan':'Tambah tag'}</button>${e?'<button class="btn" data-act="tag-cancel">Batal</button>':''}</div>`;
 }
+
+/* --- Pengaturan --- */
 function tabSet(){
   const n=(l,k,min,max,step=1)=>`<label>${l}<input type="number" min="${min}" max="${max}" step="${step}" data-set="${k}" value="${S[k]}"></label>`;
-  return `<label>API Key Gemini<input type="password" autocomplete="off" data-set="apiKey" value="${esc(S.apiKey)}" placeholder="AIza…"></label>
-  <p class="hint">Disimpan hanya di browser ini dan tidak ikut ke checkpoint Drive. Buat di Google AI Studio.</p>
+  return `<details class="card" open><summary>Akun dan koneksi</summary>
+  <label>API Key Gemini<input type="password" autocomplete="off" data-set="apiKey" value="${esc(S.apiKey)}" placeholder="AIza…"></label>
+  <p class="hint">Dapatkan gratis di <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. Key disimpan hanya di browser ini dan tidak ikut ke checkpoint Drive.</p>
+  <div class="row"><button class="btn" data-act="test-key">Tes koneksi</button></div></details>
+  <details class="card" open><summary>Tampilan dan cerita</summary>
+  ${n('Ukuran huruf cerita (px)','fontSize',14,28)}
+  ${n('Panjang minimal narasi (kata)','minWords',20,1500,10)}
+  <label class="chk"><input type="checkbox" data-set="tapSend" ${S.tapSend?'checked':''}> Ketuk saran langsung mengirim</label></details>
+  <details class="card"><summary>Lanjutan: model dan memori</summary>
   <label>Model narator (default)<input list="models" data-set="mainModel" value="${esc(S.mainModel)}"></label>
   <label>Model analis (default)<input list="models" data-set="analyzerModel" value="${esc(S.analyzerModel)}"></label>
-  <p class="hint">Isi ID model persis seperti di Google AI Studio. Model per cerita bisa diubah di tab Dunia.</p>
-  ${n('Panjang minimal narasi (kata)','minWords',20,1500,10)}
+  <p class="hint">Isi ID model persis seperti di Google AI Studio. Model cadangan dan batas kuota ada di tab Kuota.</p>
   ${n('Kreativitas (temperature)','temperature',0,2,0.1)}
   ${n('Padatkan ringkasan tiap (giliran)','compressEvery',5,100)}
-  ${n('Maksimal kartu per giliran','maxCards',1,40)}
+  ${n('Maksimal kartu aktif per giliran','maxCards',1,40)}
+  ${n('Percakapan terakhir yang dianalisa (giliran, disarankan 3-5)','contextTurns',1,10)}
+  <label>Pemeriksa konsistensi narasi<select data-set="consistency"><option value="fix" ${S.consistency==='fix'?'selected':''}>Perbaiki otomatis (tulis ulang 1x bila ada pelanggaran besar)</option><option value="warn" ${S.consistency==='warn'?'selected':''}>Beri catatan saja</option><option value="off" ${S.consistency==='off'?'selected':''}>Mati (hemat kuota)</option></select></label>
+  <p class="hint">Setelah narasi selesai ditulis, model analis memeriksa apakah narasi bertentangan dengan kartu, status, atau percakapan terakhir. Menambah satu panggilan model analis per giliran.</p>
   ${n('Adegan terakhir yang dikirim (karakter)','recentChars',0,6000,100)}
-  ${n('Ukuran huruf cerita (px)','fontSize',14,28)}
-  <label class="chk"><input type="checkbox" data-set="scanLast" ${S.scanLast?'checked':''}> Cari kata kunci kartu juga di narasi terakhir</label>
-  <label class="chk"><input type="checkbox" data-set="tapSend" ${S.tapSend?'checked':''}> Ketuk saran langsung mengirim</label>
-  <h3>Google Drive</h3>
+  <label class="chk"><input type="checkbox" data-set="deepMode" ${S.deepMode?'checked':''}> Mode mendalam: analisis awal sebelum narasi (kartu aktif, arahan adegan, suasana hati tokoh). Matikan untuk menghemat token.</label>
+  <label class="chk"><input type="checkbox" data-set="varyLength" ${S.varyLength?'checked':''}> Izinkan analis menyesuaikan panjang narasi (50% sampai 140% dari minimum) menurut adegan</label>
+  <label class="chk"><input type="checkbox" data-set="scanLast" ${S.scanLast?'checked':''}> Bila evaluasi awal gagal, cari kata kunci kartu juga di narasi terakhir</label></details>
+  <details class="card"><summary>Google Drive</summary>
   <label>OAuth Client ID<input data-set="driveClientId" value="${esc(S.driveClientId)}" placeholder="xxxx.apps.googleusercontent.com"></label>
   ${n('Unggah otomatis tiap (menit, 0 = mati)','driveMinutes',0,120)}
-  <details class="card"><summary>Cara mendapatkan Client ID</summary><ol style="padding-left:18px">
-  <li>Buka console.cloud.google.com, buat project baru.</li>
+  <ol style="padding-left:18px"><li>Buka console.cloud.google.com, buat project baru.</li>
   <li>APIs &amp; Services, Library, aktifkan Google Drive API.</li>
   <li>OAuth consent screen: tipe External, tambahkan emailmu sebagai Test user.</li>
   <li>Credentials, Create credentials, OAuth client ID, tipe Web application.</li>
@@ -925,54 +1615,97 @@ function tabSet(){
   <li>Salin Client ID ke kolom di atas.</li></ol></details>`;
 }
 function tabSave(){
-  return `${cur?`<h3>Cerita ini</h3><div class="row"><button class="btn pri" data-act="drive-up">Selesai: unggah checkpoint ke Drive</button><button class="btn" data-act="export">Ekspor file</button></div>`:''}
+  return `${cur?`<h3>Cerita ini</h3><div class="row"><button class="btn pri" data-act="drive-up">Selesai: unggah ke Drive</button><button class="btn" data-act="export">Ekspor file</button></div>`:''}
   <h3>Google Drive</h3>
   <div class="row"><button class="btn" data-act="drive-connect">Sambungkan Drive</button><button class="btn" data-act="drive-refresh">Segarkan daftar</button></div>
   ${remoteHtml()}
-  <h3>Dari file</h3><div class="row"><button class="btn" data-act="import">Impor file checkpoint</button></div>
+  <h3>Dari file</h3><div class="row"><button class="btn" data-act="import">Impor file cerita atau pustaka</button></div>
   <p class="hint">Token Drive berlaku sekitar 1 jam. Setelah kedaluwarsa, ketuk Sambungkan Drive lagi agar unggah otomatis berjalan.</p>`;
+}
+function tabHelp(){
+  return `<h3>Cara bermain</h3>
+  <ol style="padding-left:18px"><li>Buat dunia: tulis latar, pilih genre dan gaya, atau mulai dari contoh.</li>
+  <li>Ketuk Mulai cerita, lalu tulis apa yang dilakukan tokoh utamamu.</li>
+  <li>Narator menulis kelanjutannya. Ketuk saran di bawah layar bila bingung.</li></ol>
+  <h3>Tiga jenis input</h3>
+  <p class="hint"><b>Aksi</b> untuk tindakan tokohmu. <b>Ucap</b> untuk dialog. <b>Arahkan alur</b> untuk menentukan kejadian yang harus terjadi berikutnya.</p>
+  <h3>Memori cerita</h3>
+  <p class="hint">Ringkasan, kartu memori, dan status dicatat otomatis setiap giliran oleh model analis. Semuanya bisa kamu lihat dan koreksi di menu ini. Geser layar ke kiri untuk membuka menu.</p>
+  <h3>Mode mendalam dan token</h3>
+  <p class="hint">Tombol Mendalam di atas kolom input menyalakan analisis awal: model analis memilih kartu yang relevan, menentukan siapa yang hadir, dan memberi arahan nada serta suasana hati tokoh sebelum narator menulis. Hasilnya lebih alami, tetapi menambah satu panggilan model. Matikan untuk menghemat token. Di bawah narasi terakhir ada rincian token yang dipakai pada satu siklus.</p>
+  <h3>Kuota dan model cadangan</h3>
+  <p class="hint">Akun gratis punya batas permintaan. Pantau di tab Kuota. Bila batas model utama habis, aplikasi otomatis memakai model cadangan.</p>
+  <h3>Menyimpan</h3>
+  <p class="hint">Cerita tersimpan otomatis di browser ini. Hapus data situs atau ganti perangkat akan menghilangkannya, jadi unggah ke Drive atau ekspor file secara berkala.</p>
+  <h3>Privasi</h3>
+  <p class="hint">API Key hanya disimpan di browser ini. Teks ceritamu dikirim ke Google Gemini API untuk diproses.</p>
+  <h3>Hapus semua data</h3>
+  <div class="row"><button class="btn warn" data-act="wipe">Hapus semua data di perangkat ini</button></div>`;
 }
 
 /* ---------- Event: klik ---------- */
 const acts={
   menu:()=>openDrawer(view==='v-read'?'sum':'set'),
   close:closeDrawer,
+  quota:()=>openDrawer('quota'),
   tab:el=>{tab=el.dataset.tab;renderTab()},
   new:openNew,
   'new-cancel':()=>{show('v-home');renderHome()},
   create:createWorld,
   open:el=>openStory(el.dataset.id),
   'del-story':el=>{
-    if(!confirm('Hapus cerita ini dari perangkat? (checkpoint di Drive tidak ikut terhapus)'))return;
+    if(!confirm('Hapus cerita ini dari perangkat? Checkpoint di Drive tidak ikut terhapus.'))return;
     store.del('penutur:story:'+el.dataset.id);store.set('penutur:index',listStories().filter(x=>x.id!==el.dataset.id));renderHome();
   },
+  'ob-save':async()=>{
+    const k=($('#obKey').value||'').trim();if(!k){toast('Tempel API Key dulu.');return}
+    S.apiKey=k;saveSettings();toast('Menguji koneksi…');
+    try{await gemini({chain:[S.analyzerModel,S.fallback2],prompt:'Balas hanya dengan: OK',temperature:0});toast('Berhasil. Sekarang buat dunia pertamamu.')}
+    catch(e){err(e,'Key tersimpan, tetapi tes gagal.')}
+    renderHome();
+  },
+  'test-key':async()=>{
+    if(!S.apiKey){toast('Isi API Key dulu.');return}
+    toast('Menguji koneksi…');
+    try{await gemini({chain:[S.analyzerModel,S.fallback2],prompt:'Balas hanya dengan: OK',temperature:0});toast('Koneksi berhasil. API Key valid.')}catch(e){err(e)}
+  },
   back:closeStory,
-  mode:el=>{mode=el.dataset.mode;$$('.modes button').forEach(b=>b.classList.toggle('on',b===el));
+  mode:el=>{mode=el.dataset.mode;$$('.modes button[data-mode]').forEach(b=>b.classList.toggle('on',b===el));
     $('#inp').placeholder={aksi:'Apa yang dilakukan tokoh utama?',ucap:'Apa yang dikatakan tokoh utama?',alur:'Apa yang harus terjadi selanjutnya?'}[mode]},
-  send:()=>sendTurn($('#inp').value,mode),
+  send:()=>{if(busy){abortCtl&&abortCtl.abort();return}sendTurn($('#inp').value,mode)},
   start:()=>sendTurn('Mulai cerita','alur'),
   undo:()=>{undoLast()},
   regen:()=>{
     const u=cur.log.slice(-2)[0];if(!u||!undo)return;
     const {text,mode:m}=u;if(undoLast())sendTurn(text,m);
   },
-  reanalyze:async()=>{if(busy)return;setBusy(true);renderSuggest();try{await runAnalysis(cur)}finally{setBusy(false);renderSuggest()}},
+  deep:()=>{S.deepMode=!S.deepMode;saveSettings();syncDeep();toast(S.deepMode?'Mode mendalam aktif: ada satu panggilan analisis awal sebelum narasi.':'Mode mendalam mati: hemat token, kartu dipilih lewat kata kunci.',4200)},
+  reanalyze:async()=>{
+    if(busy)return;abortCtl=new AbortController();setBusy(true);renderSuggest();Tok.begin();
+    try{await runAnalysis(cur)}finally{if(Tok.finish(cur))touch();setBusy(false);renderSuggest();renderLog()}
+  },
   'sum-save':()=>{cur.summary={base:$('#sumTa').value.trim(),entries:[]};touch();toast('Ringkasan disimpan.');renderTab()},
   'sum-compress':async()=>{
     if(busy)return;if(!S.apiKey){toast('Isi API Key dulu.');return}
-    setBusy(true);toast('Memadatkan ringkasan…');
+    abortCtl=new AbortController();setBusy(true);toast('Memadatkan ringkasan…');
     try{
       if(!cur.summary.entries.length){cur.summary.base=$('#sumTa').value.trim()}
       await compress(cur);touch();toast('Ringkasan dipadatkan.');renderTab();
     }catch(e){err(e)}finally{setBusy(false)}
   },
-  'card-add':()=>{const id=uid();cur.cards[id]={id,keyword:'Kartu baru',text:'Isi kartu.',parent:null,pin:false};touch();renderTab()},
+  'ctx-card':()=>openDrawer('cards'),
+  'card-add':()=>{const id=uid();cur.cards[id]={id,keyword:'Kartu baru',type:'pengetahuan',age:'',race:'',gender:'',look:'',persona:'',rel:'',status:'',text:'Isi kartu.',parent:null,pin:false,isPlayer:false};cardOpen=id;cardQ='';cardType='';touch();renderTab()},
   'card-del':el=>{
     const c=cur.cards[el.dataset.id];if(!c)return;
+    if(c.isPlayer&&!confirm('Ini kartu tokoh utama. Tetap hapus?'))return;
     Object.values(cur.cards).forEach(k=>{if(k.parent===c.id)k.parent=c.parent||null});
-    delete cur.cards[c.id];touch();renderTab();
+    delete cur.cards[c.id];cardOpen=null;touch();renderCardList();
   },
-  'inv-additem':el=>{cur.inv.data[el.dataset.key].push({name:'Baru',qty:1,note:''});touch();renderTab()},
+  'card-toggle':el=>{const id=el.dataset.id;cardExp.has(id)?cardExp.delete(id):cardExp.add(id);renderCardList()},
+  'card-edit':el=>{const id=el.dataset.id;cardOpen=cardOpen===id?null:id;renderCardList()},
+  'card-expall':()=>{cardExp=new Set(Object.values(cur.cards).filter(c=>c.parent).map(c=>c.parent));renderCardList()},
+  'card-colall':()=>{cardExp=new Set();cardOpen=null;renderCardList()},
+  'inv-additem':el=>{cur.inv.data[el.dataset.key].push({name:'Baru',qty:1,note:'',kind:'tetap'});touch();renderTab()},
   'inv-delitem':el=>{cur.inv.data[el.dataset.key].splice(+el.dataset.i,1);touch();renderTab()},
   'inv-addmap':el=>{const m=cur.inv.data[el.dataset.key];let n='Baru',i=1;while(n in m)n='Baru '+(++i);m[n]=0;touch();renderTab()},
   'inv-delmap':el=>{delete cur.inv.data[el.dataset.key][el.dataset.name];touch();renderTab()},
@@ -985,21 +1718,35 @@ const acts={
     const key=label.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'field_'+uid().slice(0,3);
     addFields(cur,[{key,label,type:$('#nfT').value}]);touch();renderTab();
   },
-  'tag-edit':el=>{editTag=el.dataset.id;renderTab();const t=lib.tags.find(x=>x.id===editTag);if(t)$('#tgType').value=t.type},
+  'quota-reset':el=>{Usage.reset(el.dataset.m);renderTab();renderQuota()},
+  'tag-edit':el=>{editTag=el.dataset.id;renderTab();const t=lib.tags.find(x=>x.id===editTag);if(t)$('#tgType').value=t.type;$('#dbody').scrollTop=$('#dbody').scrollHeight},
   'tag-cancel':()=>{editTag=null;renderTab()},
   'tag-del':el=>{if(!confirm('Hapus tag ini?'))return;lib.tags=lib.tags.filter(x=>x.id!==el.dataset.id);newSel.delete(el.dataset.id);saveLib();renderTab()},
   'tag-save':()=>{
     const name=$('#tgName').value.trim(),text=$('#tgText').value.trim(),type=$('#tgType').value;
     if(!name||!text){toast('Isi nama dan instruksi.');return}
-    if(editTag){const t=lib.tags.find(x=>x.id===editTag);Object.assign(t,{name,text,type})}else lib.tags.push({id:uid(),type,name,text});
-    editTag=null;saveLib();renderTab();toast('Tag tersimpan.');
+    if(editTag){const t=lib.tags.find(x=>x.id===editTag);Object.assign(t,{name,text,type})}
+    else{
+      const ex=lib.tags.find(x=>tagKey(x)===tagKey({type,name}));
+      if(ex){ex.text=text;toast('Tag dengan nama sama diperbarui.')}else lib.tags.push({id:uid(),type,name,text});
+    }
+    editTag=null;dedupeLib();saveLib();renderTab();
+  },
+  'lib-export':()=>{
+    const blob=new Blob([JSON.stringify({app:'penutur-lib',v:2,tags:lib.tags})],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='penutur-pustaka.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
   },
   export:()=>{
     flushSave();
     const blob=new Blob([JSON.stringify(pkgOf(cur))],{type:'application/json'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`penutur-${cur.title.replace(/[^\w]+/g,'_')}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`penutur-${slug(cur.title)||'cerita'}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
   },
   import:()=>$('#fileIn').click(),
+  wipe:()=>{
+    if(!confirm('Hapus SEMUA cerita, pustaka, dan pengaturan (termasuk API Key) dari perangkat ini? Ini tidak bisa dibatalkan.'))return;
+    try{Object.keys(localStorage).filter(k=>k.startsWith('penutur:')).forEach(k=>localStorage.removeItem(k))}catch(e){}
+    location.reload();
+  },
   'drive-connect':async()=>{try{await Drive.connect();toast('Drive tersambung.');await driveRefresh()}catch(e){err(e)}},
   'drive-refresh':driveRefresh,
   'drive-up':async()=>{try{if(!Drive.valid())await Drive.connect();await driveUpload(cur)}catch(e){err(e)}},
@@ -1018,6 +1765,8 @@ const acts={
 document.addEventListener('click',e=>{
   const s=e.target.closest('[data-sug]');
   if(s&&cur){const t=cur.suggestions[+s.dataset.sug];if(!t)return;if(S.tapSend)sendTurn(t,'aksi');else{$('#inp').value=t;resizeInp();$('#inp').focus()}return}
+  const pr=e.target.closest('[data-preset]');
+  if(pr){applyPreset(+pr.dataset.preset);return}
   const tg=e.target.closest('[data-tag]');
   if(tg){const id=tg.dataset.tag;newSel.has(id)?newSel.delete(id):newSel.add(id);renderChips();return}
   const a=e.target.closest('[data-act]');
@@ -1025,23 +1774,33 @@ document.addEventListener('click',e=>{
 });
 
 /* ---------- Event: perubahan input di drawer ---------- */
+$('#dbody').addEventListener('input',e=>{
+  if(e.target.id==='cardQ'){cardQ=e.target.value;renderCardList()}
+});
 $('#dbody').addEventListener('change',e=>{
   const el=e.target,D=el.dataset;
+  if(el.id==='cardT'){cardType=el.value;renderCardList();return}
   if(D.set){
     const k=D.set;
     S[k]=el.type==='checkbox'?el.checked:(typeof DEF[k]==='number'?num(el.value,DEF[k]):el.value.trim());
-    saveSettings();if(k==='fontSize')applyFont();return;
+    saveSettings();if(k==='fontSize')applyFont();if(k==='apiKey')renderSetup();if(k==='deepMode')syncDeep();
+    if(cur)renderQuota();return;
+  }
+  if(D.lim){
+    S.limits[D.lim]=S.limits[D.lim]||{};S.limits[D.lim][D.f]=Math.max(1,num(el.value,1));
+    saveSettings();renderQuota();renderTab();return;
   }
   if(!D.bind||!cur)return;
   const st=cur,d=st.inv.data,v=el.type==='checkbox'?el.checked:el.value;
   switch(D.bind){
     case 'card':{
       const c=st.cards[D.id];if(!c)return;
-      if(D.f==='text')c.text=clip3(v)||v;
+      if(D.f==='text')c.text=clip3(v)||String(v);
       else if(D.f==='parent')c.parent=v&&!wouldCycle(st,c.id,v)?v:null;
       else if(D.f==='pin')c.pin=v;
+      else if(['type','age','race','gender','look','persona','rel','status'].includes(D.f))c[D.f]=String(v).trim();
       else c.keyword=String(v).trim()||c.keyword;
-      touch();if(D.f==='keyword'||D.f==='parent'||D.f==='pin')renderTab();break}
+      touch();renderCardList();return}
     case 'inv-num':d[D.key]=clampN(num(v),st.inv.schema.find(f=>f.key===D.key));break;
     case 'inv-text':d[D.key]=v;break;
     case 'inv-item':{const it=d[D.key][+D.i];if(it){it[D.f]=D.f==='qty'?num(v,1):v}break}
@@ -1049,8 +1808,13 @@ $('#dbody').addEventListener('change',e=>{
     case 'inv-mapk':{const nn=String(v).trim();if(nn&&nn!==D.old){d[D.key][nn]=d[D.key][D.old];delete d[D.key][D.old];renderTab()}break}
     case 'world':
       if(D.f==='title'){st.title=String(v).trim()||st.title;$('#rTitle').textContent=st.title}
-      else if(D.f==='main'||D.f==='analyzer'){st.models=st.models||{};st.models[D.f]=String(v).trim()}
-      else st.world[D.f]=D.f==='mc'?String(v).trim():v;
+      else if(D.f==='main'||D.f==='analyzer'){st.models=st.models||{};st.models[D.f]=String(v).trim();renderQuota()}
+      else if(D.f==='mc'){
+        st.world.mc=String(v).trim();
+        const pc=Object.values(st.cards).find(c=>c.isPlayer);
+        if(pc&&st.world.mc){const parts=pc.keyword.split(',').map(s=>s.trim());parts[0]=st.world.mc;pc.keyword=parts.join(', ')}
+      }
+      else st.world[D.f]=v;
       break;
   }
   touch();
@@ -1070,18 +1834,25 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 $('#fileIn').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
   try{
-    const pkg=JSON.parse(await f.text());importPackage(pkg);toast('Cerita diimpor.');renderHome();
+    const pkg=JSON.parse(await f.text());
+    if(pkg&&pkg.story){
+      const r=importPackage(pkg);
+      toast('Cerita diimpor.'+(r?` Pustaka: ${r.a} baru, ${r.u} diganti.`:''));
+    }else if(pkg&&(pkg.app==='penutur-lib'||Array.isArray(pkg.tags))){
+      const r=mergeLib(pkg.tags);toast(`Pustaka diimpor: ${r.a} ditambah, ${r.u} diganti.`);
+    }else throw new Error('File tidak dikenali sebagai cerita atau pustaka Penutur.');
+    renderHome();
+    if($('#drawer').classList.contains('on')&&(tab==='lib'||tab==='save'))renderTab();
+    if(view==='v-new')renderChips();
   }catch(err2){err(err2)}
 });
 
 /* ---------- Mulai ---------- */
 renderHome();
 show('v-home');
-// Ambil daftar checkpoint saat dibuka bila Drive pernah tersambung (diam-diam; bila ditolak, cukup ketuk Sambungkan Drive).
 if(S.driveClientId&&store.get('penutur:driveLinked',false)){
   Drive.connect().then(()=>Drive.list()).then(l=>{remote=l;renderHome()}).catch(()=>{});
 }
-if('serviceWorker' in navigator&&location.protocol.startsWith('http')){/* opsional: tambahkan service worker sendiri untuk mode offline */}
 </script>
 </body>
 </html>
