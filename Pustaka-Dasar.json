@@ -1,0 +1,566 @@
+{
+  "app": "penutur",
+  "kind": "library",
+  "v": 1,
+  "exported": "2026-10-22",
+  "tags": [
+    {
+      "id": "ln-genre-01",
+      "type": "genre",
+      "name": "Isekai Petualangan",
+      "text": "Tokoh utama terseret ke dunia lain yang punya sistem sihir, guild, monster, dan level. Kemajuan harus diraih lewat latihan dan pengalaman. Sertakan kejutan dari perbedaan dunia asalnya, dan jangan biarkan tokoh utama langsung menjadi yang terkuat tanpa usaha."
+    },
+    {
+      "id": "ln-genre-02",
+      "type": "genre",
+      "name": "Isekai Status (Sistem Level)",
+      "text": "Dunia memiliki sistem status yang terlihat (HP, MP, level, skill, poin). Narasi boleh menyebut angka status secara alami, tetapi tidak boleh mengubah status tanpa alasan dalam cerita. Setiap naik level atau mendapat skill harus terasa berharga."
+    },
+    {
+      "id": "ln-genre-03",
+      "type": "genre",
+      "name": "Reinkarnasi Bangsawan",
+      "text": "Tokoh utama bereinkarnasi sebagai anak bangsawan atau tokoh kelas tinggi di dunia fantasi. Intrik keluarga, politik kerajaan, dan ekspektasi sosial menjadi konflik utama. Ingatan kehidupan sebelumnya memberi keunggulan pengetahuan, tetapi tidak otomatis memberi kekuatan."
+    },
+    {
+      "id": "ln-genre-04",
+      "type": "genre",
+      "name": "Sekolah Sihir",
+      "text": "Latar akademi sihir dengan kelas, ujian, klub, dan kompetisi antar asrama. Hubungan antar siswa dan guru berkembang seiring waktu. Ada rahasia akademi yang tersebar sebagai petunjuk."
+    },
+    {
+      "id": "ln-genre-05",
+      "type": "genre",
+      "name": "Dungeon dan Hunter",
+      "text": "Dunia dengan dungeon yang muncul secara berkala dan hunter berperingkat. Setiap lantai dungeon punya aturan dan ancaman sendiri. Ekonomi hunter (sewa, perlengkapan, reputasi) ikut memengaruhi pilihan tokoh."
+    },
+    {
+      "id": "ln-genre-06",
+      "type": "genre",
+      "name": "Romansa Sekolah",
+      "text": "Kehidupan remaja di sekolah dengan persahabatan, cinta yang tumbuh perlahan, dan kecanggungan. Perasaan tokoh harus berkembang lewat interaksi kecil. Hindari romansa yang terburu-buru atau hubungan yang tiba-tiba disetujui tanpa proses."
+    },
+    {
+      "id": "ln-genre-07",
+      "type": "genre",
+      "name": "Harem Ringan (Komedi)",
+      "text": "Tokoh utama dikelilingi beberapa karakter yang punya ketertarikan dan kepribadian berbeda. Komedi datang dari situasi dan karakter, bukan dari merendahkan karakter lain. Setiap hubungan tumbuh dengan kecepatan masing-masing."
+    },
+    {
+      "id": "ln-genre-08",
+      "type": "genre",
+      "name": "Misteri Akademi",
+      "text": "Sekolah atau kota dengan kasus aneh yang harus dipecahkan tokoh utama bersama teman-temannya. Petunjuk tersebar adil, dan jawaban tidak boleh dibocorkan sebelum pemain menemukannya."
+    },
+    {
+      "id": "ln-genre-09",
+      "type": "genre",
+      "name": "Slice of Life Penyembuhan",
+      "text": "Kehidupan tenang di desa, toko, atau kafe dengan rutinitas dan tamu yang datang. Konflik kecil dan manusiawi, fokus pada kehangatan dan pertumbuhan pelan."
+    },
+    {
+      "id": "ln-genre-10",
+      "type": "genre",
+      "name": "Pengembara dan Pedagang",
+      "text": "Tokoh utama berdagang, menjelajah, atau membuka usaha di dunia fantasi. Ekonomi (harga, bahan, pelanggan, utang) dan peta wilayah harus konsisten."
+    },
+    {
+      "id": "ln-genre-11",
+      "type": "genre",
+      "name": "Dark Fantasy",
+      "text": "Dunia keras dengan konsekuensi nyata. Kematian dan kehilangan punya bobot. Kemenangan selalu mahal, dan kekuatan datang dengan harga."
+    },
+    {
+      "id": "ln-genre-12",
+      "type": "genre",
+      "name": "Sci-Fi Mecha",
+      "text": "Masa depan dengan mesin besar, perang atau pertahanan, dan organisasi militer. Teknologi memiliki aturan yang konsisten dan keterbatasan yang jelas."
+    },
+    {
+      "id": "ln-genre-13",
+      "type": "genre",
+      "name": "Horor Fantasi",
+      "text": "Dunia fantasi dengan ancaman gaib, kutukan, dan rahasia kelam. Ketegangan dibangun lewat suasana dan ketidakpastian, bukan kejutan murahan."
+    },
+    {
+      "id": "ln-genre-14",
+      "type": "genre",
+      "name": "Cultivation (Xianxia)",
+      "text": "Dunia kultivasi dengan tingkatan ranah, teknik, dan sekte. Kemajuan lambat dan bertahap, dengan harga yang jelas untuk setiap terobosan."
+    },
+    {
+      "id": "ln-style-15",
+      "type": "style",
+      "name": "Ringan Light Novel",
+      "text": "Kalimat pendek sampai sedang, dialog banyak, dan narasi batin tokoh utama sesekali. Deskripsi cukup seperlunya, dengan humor ringan dan reaksi karakter yang hidup."
+    },
+    {
+      "id": "ln-style-16",
+      "type": "style",
+      "name": "Narasi Batin Tokoh",
+      "text": "Tampilkan pikiran dan kekhawatiran tokoh utama lewat narasi orang pertama yang tidak berlebihan. Pikiran harus berkaitan dengan situasi, bukan monolog panjang."
+    },
+    {
+      "id": "ln-style-17",
+      "type": "style",
+      "name": "Sastrawi Ringan",
+      "text": "Prosa dengan detail indrawi dan variasi kalimat, tetapi tetap mudah dibaca. Hindari metafora yang berlebihan."
+    },
+    {
+      "id": "ln-style-18",
+      "type": "style",
+      "name": "Dinamis Aksi",
+      "text": "Kalimat pendek dan tempo cepat saat pertarungan. Fokus pada gerakan, posisi, dan akibat. Saat tenang, tempo boleh melambat."
+    },
+    {
+      "id": "ln-style-19",
+      "type": "style",
+      "name": "Komedi Situasional",
+      "text": "Humor muncul dari kesalahpahaman, reaksi berlebihan yang konsisten dengan karakter, dan situasi canggung. Jangan menyelipkan lelucon yang memutus ketegangan terlalu sering."
+    },
+    {
+      "id": "ln-style-20",
+      "type": "style",
+      "name": "Dialog Dominan",
+      "text": "Sebagian besar adegan lewat dialog. Setiap tokoh punya cara bicara khas (panggilan, kata kesukaan, cara memotong kalimat). Narasi hanya menjembatani."
+    },
+    {
+      "id": "ln-style-21",
+      "type": "style",
+      "name": "Romantis Lembut",
+      "text": "Perasaan ditunjukkan lewat tatapan, jeda, dan tindakan kecil. Hindari ungkapan perasaan yang terlalu eksplisit terlalu cepat."
+    },
+    {
+      "id": "ln-style-22",
+      "type": "style",
+      "name": "Formal dan Bangsawan",
+      "text": "Dialog dan narasi memakai nada sopan dan berjarak, dengan istilah sosial yang konsisten. Tokoh bangsawan berbicara dengan tata krama, rakyat biasa lebih lugas."
+    },
+    {
+      "id": "ln-style-23",
+      "type": "style",
+      "name": "Gelap dan Berat",
+      "text": "Narasi tenang dan muram, dengan detail kekerasan secukupnya dan fokus pada emosi serta akibat. Hindari eksploitasi penderitaan."
+    },
+    {
+      "id": "ln-style-24",
+      "type": "style",
+      "name": "Misteri Terkontrol",
+      "text": "Narasi menyembunyikan informasi secara sengaja dan tidak menjelaskan semuanya. Pembaca diberi petunjuk, bukan jawaban."
+    },
+    {
+      "id": "ln-rule-25",
+      "type": "rule",
+      "name": "Status Konsisten",
+      "text": "Angka, skill, dan item hanya berubah lewat kejadian dalam cerita. Narator tidak boleh memberi bonus atau mengurangi status tanpa penyebab yang jelas."
+    },
+    {
+      "id": "ln-rule-26",
+      "type": "rule",
+      "name": "Kemajuan Berbayar",
+      "text": "Setiap kekuatan baru harus dibayar dengan latihan, risiko, waktu, atau harga lain. Tidak ada kenaikan kekuatan gratis."
+    },
+    {
+      "id": "ln-rule-27",
+      "type": "rule",
+      "name": "Tokoh Lain Punya Agenda",
+      "text": "Karakter pendukung dan musuh bertindak sesuai tujuannya sendiri, dan bereaksi terhadap tindakan tokoh utama, meskipun pemain tidak melihatnya."
+    },
+    {
+      "id": "ln-rule-28",
+      "type": "rule",
+      "name": "Dunia Tidak Berhenti",
+      "text": "Waktu terus berjalan. Peristiwa di luar pandangan tokoh tetap berkembang dan bisa sampai ke tokoh utama."
+    },
+    {
+      "id": "ln-rule-29",
+      "type": "rule",
+      "name": "Konsekuensi Nyata",
+      "text": "Tindakan berisiko bisa gagal. Jangan menyelamatkan tokoh utama dari akibat keputusannya."
+    },
+    {
+      "id": "ln-rule-30",
+      "type": "rule",
+      "name": "Tidak Ada Deus Ex Machina",
+      "text": "Solusi masalah harus berasal dari informasi, kemampuan, atau sumber daya yang sudah ada di cerita."
+    },
+    {
+      "id": "ln-rule-31",
+      "type": "rule",
+      "name": "Hubungan Bertahap",
+      "text": "Kedekatan antar karakter tumbuh lewat interaksi berulang. Pengakuan perasaan atau kepercayaan penuh hanya datang setelah momen yang cukup."
+    },
+    {
+      "id": "ln-rule-32",
+      "type": "rule",
+      "name": "Ekonomi Dunia Konsisten",
+      "text": "Harga, uang, dan kebutuhan hidup tetap sama sepanjang cerita kecuali ada peristiwa yang mengubahnya."
+    },
+    {
+      "id": "ln-rule-33",
+      "type": "rule",
+      "name": "Hindari Pengulangan",
+      "text": "Jangan mengulang pola yang sama di setiap adegan: pembuka yang mirip, reaksi karakter yang sama, atau penutup yang selalu berupa kejutan."
+    },
+    {
+      "id": "wn-genre-01",
+      "type": "genre",
+      "name": "Sistem Rebirth Balas Dendam",
+      "text": "Tokoh utama kembali ke masa lalu dengan ingatan kehidupan sebelumnya dan ingin membalas pengkhianatan. Setiap langkah balas dendam harus punya rencana dan harga. Musuh lama diperkenalkan bertahap, dan kekuatan baru tidak datang sekaligus."
+    },
+    {
+      "id": "wn-genre-02",
+      "type": "genre",
+      "name": "Kultivasi dan Sekte",
+      "text": "Dunia dengan tingkatan ranah, teknik, pusaka, dan persaingan sekte. Kemajuan bertahap dan jelas, setiap terobosan membutuhkan sumber daya atau risiko. Hubungan antar sekte dan politik kekuasaan selalu berjalan di latar belakang."
+    },
+    {
+      "id": "wn-genre-03",
+      "type": "genre",
+      "name": "Sistem Penakluk Dungeon",
+      "text": "Tokoh utama mendapat sistem yang memberi misi, hadiah, dan poin. Misi harus terasa seperti tantangan nyata, bukan daftar tugas. Hadiah sistem boleh besar tetapi selalu punya syarat atau biaya."
+    },
+    {
+      "id": "wn-genre-04",
+      "type": "genre",
+      "name": "Pewaris Keluarga Terbuang",
+      "text": "Tokoh utama diabaikan atau diusir dari keluarga kuat, lalu naik lewat usaha sendiri dan aliansi baru. Intrik keluarga dan perebutan warisan menjadi sumber konflik berulang."
+    },
+    {
+      "id": "wn-genre-05",
+      "type": "genre",
+      "name": "Dunia Game (VRMMO)",
+      "text": "Tokoh utama bermain game realistis dengan sistem level, guild, boss, dan ekonomi pemain. Mekanik game harus konsisten, dan dampak dunia game ke kehidupan nyata perlu dijaga."
+    },
+    {
+      "id": "wn-genre-06",
+      "type": "genre",
+      "name": "Pengembara Bela Diri",
+      "text": "Tokoh utama mengembara di dunia persilatan, belajar teknik dari guru, dan terlibat dalam perebutan kitab atau aliansi. Duel memiliki aturan dan akibat yang jelas."
+    },
+    {
+      "id": "wn-genre-07",
+      "type": "genre",
+      "name": "Pemimpin Kerajaan dan Politik",
+      "text": "Tokoh utama membangun wilayah, pasukan, atau kerajaan dari nol. Keputusan ekonomi, perang, dan diplomasi punya dampak yang bisa dilacak dari waktu ke waktu."
+    },
+    {
+      "id": "wn-genre-08",
+      "type": "genre",
+      "name": "Pemburu Monster Modern",
+      "text": "Dunia modern yang diserang gerbang ke dunia monster. Tokoh utama bergabung dengan hunter, membangun kekuatan, dan menghadapi organisasi yang punya agenda tersembunyi."
+    },
+    {
+      "id": "wn-genre-09",
+      "type": "genre",
+      "name": "Pengendali Pedang dan Perang",
+      "text": "Dunia perang dengan pertempuran skala kecil dan besar. Strategi, formasi, dan logistik ikut memengaruhi hasil."
+    },
+    {
+      "id": "wn-genre-10",
+      "type": "genre",
+      "name": "Akademi Bakat",
+      "text": "Tokoh utama masuk akademi elit yang menguji bakat. Persaingan siswa, peringkat, dan kesempatan emas menjadi motor cerita. Ada pengkhianatan dan aliansi yang berubah."
+    },
+    {
+      "id": "wn-genre-11",
+      "type": "genre",
+      "name": "Misteri Kultivasi",
+      "text": "Tokoh utama menemukan rahasia kuno di sekte atau tempat terlarang. Petunjuk tersebar dan jawaban datang bertahap, dengan ancaman yang terus meningkat."
+    },
+    {
+      "id": "wn-genre-12",
+      "type": "genre",
+      "name": "Romansa Istana dan Harem Politik",
+      "text": "Intrik kekuasaan di istana, hubungan rumit antar tokoh, dan pilihan yang berisiko. Perasaan dan kepentingan politik saling bertabrakan."
+    },
+    {
+      "id": "wn-genre-13",
+      "type": "genre",
+      "name": "Apocalypse dan Bertahan Hidup",
+      "text": "Dunia setelah bencana dengan sumber daya terbatas, kelompok yang saling curiga, dan keputusan sulit. Kemajuan tokoh datang dari persediaan, kemampuan, dan kepercayaan."
+    },
+    {
+      "id": "wn-style-14",
+      "type": "style",
+      "name": "Dinamis Ringkas Webnovel",
+      "text": "Paragraf pendek, kalimat tegas, tempo cepat. Setiap adegan langsung masuk ke konflik dan diakhiri dengan pancingan untuk bab berikutnya."
+    },
+    {
+      "id": "wn-style-15",
+      "type": "style",
+      "name": "Narasi Aksi Terukur",
+      "text": "Pertarungan dijelaskan lewat gerakan, jarak, dan akibat. Hindari deskripsi berlebihan yang memperlambat aksi."
+    },
+    {
+      "id": "wn-style-16",
+      "type": "style",
+      "name": "Cliffhanger Tiap Adegan",
+      "text": "Setiap bagian berakhir dengan ketegangan, pengungkapan kecil, atau pertanyaan baru. Jangan selalu menutup konflik sepenuhnya."
+    },
+    {
+      "id": "wn-style-17",
+      "type": "style",
+      "name": "Monolog Batin Tajam",
+      "text": "Pikiran tokoh utama singkat dan strategis, menunjukkan perhitungan, bukan emosi berlebihan. Pikiran harus berkaitan dengan situasi saat itu."
+    },
+    {
+      "id": "wn-style-18",
+      "type": "style",
+      "name": "Dialog Bertensi",
+      "text": "Percakapan penuh sindiran, tawar-menawar, dan lapisan makna. Tokoh tidak selalu mengatakan apa yang dipikirkan."
+    },
+    {
+      "id": "wn-style-19",
+      "type": "style",
+      "name": "Narasi Sistem Ringkas",
+      "text": "Untuk genre sistem, notifikasi atau status ditulis singkat dan jelas, tidak berbelit. Angka disebut seperlunya."
+    },
+    {
+      "id": "wn-style-20",
+      "type": "style",
+      "name": "Epik Bertingkat",
+      "text": "Gambaran dunia makin luas seiring kemajuan tokoh. Detail lokasi dan kekuatan disajikan bertahap."
+    },
+    {
+      "id": "wn-style-21",
+      "type": "style",
+      "name": "Drama Keluarga dan Emosi",
+      "text": "Konflik keluarga digambarkan lewat tatapan, sikap diam, dan percakapan yang terpotong. Emosi lebih banyak tersirat."
+    },
+    {
+      "id": "wn-style-22",
+      "type": "style",
+      "name": "Humor Ringan Sarkastik",
+      "text": "Tokoh utama sesekali melontarkan komentar dingin atau sindiran yang tidak merendahkan karakter lain."
+    },
+    {
+      "id": "wn-rule-23",
+      "type": "rule",
+      "name": "Ritme Bab",
+      "text": "Setiap giliran narasi harus punya satu kejadian utama dan diakhiri dengan kait untuk giliran berikutnya. Jangan menutup semua konflik dalam satu adegan."
+    },
+    {
+      "id": "wn-rule-24",
+      "type": "rule",
+      "name": "Peningkatan Bertahap",
+      "text": "Kekuatan dan lawan naik secara berjenjang. Lawan yang kalah harus punya alasan kembali atau digantikan oleh ancaman yang lebih besar."
+    },
+    {
+      "id": "wn-rule-25",
+      "type": "rule",
+      "name": "Harga Setiap Kemajuan",
+      "text": "Setiap terobosan, sistem, atau pusaka datang dengan syarat, risiko, atau biaya yang nyata."
+    },
+    {
+      "id": "wn-rule-26",
+      "type": "rule",
+      "name": "Musuh Punya Rencana",
+      "text": "Antagonis bertindak berdasarkan tujuan yang masuk akal dan bereaksi terhadap langkah tokoh utama."
+    },
+    {
+      "id": "wn-rule-27",
+      "type": "rule",
+      "name": "Status dan Sumber Daya Dilacak",
+      "text": "Angka, poin, reputasi, dan sumber daya hanya berubah lewat kejadian yang terjadi di cerita."
+    },
+    {
+      "id": "wn-rule-28",
+      "type": "rule",
+      "name": "Tidak Ada Pemulihan Gratis",
+      "text": "Luka, kelelahan, dan kerugian butuh waktu atau sumber daya untuk pulih, dan pemulihan itu sendiri bisa menjadi adegan."
+    },
+    {
+      "id": "wn-rule-29",
+      "type": "rule",
+      "name": "Hindari Kebetulan Berlebihan",
+      "text": "Pertemuan dan penemuan penting harus punya sebab. Jangan membiarkan tokoh kebetulan bertemu orang kunci berulang kali."
+    },
+    {
+      "id": "wn-rule-30",
+      "type": "rule",
+      "name": "Janji Harus Dibayar",
+      "text": "Setiap janji, ancaman, atau rahasia yang diperkenalkan harus terus berpengaruh dan akhirnya terbayar atau dilanggar dengan akibat."
+    },
+    {
+      "id": "wn-rule-31",
+      "type": "rule",
+      "name": "Dunia Berkembang Sendiri",
+      "text": "Kekuatan politik, sekte, dan organisasi terus bergerak dan bereaksi, meskipun tokoh utama tidak sedang melihatnya."
+    },
+    {
+      "id": "mg-genre-01",
+      "type": "genre",
+      "name": "Adaptasi Manga Shonen Aksi",
+      "text": "Pertarungan, turnamen, dan pertumbuhan tokoh yang terasa seperti episode manga. Setiap konflik punya tujuan yang jelas, dan lawan baru biasanya muncul setelah lawan lama dikalahkan atau dikenali kekuatannya."
+    },
+    {
+      "id": "mg-genre-02",
+      "type": "genre",
+      "name": "Adaptasi Manga Shoujo Romansa",
+      "text": "Kisah cinta remaja dengan perasaan yang berkembang lewat tatapan, momen kecil, dan kesalahpahaman. Ekspresi wajah dan detail latar yang biasa digambar di manga diterjemahkan menjadi deskripsi tubuh dan suasana."
+    },
+    {
+      "id": "mg-genre-03",
+      "type": "genre",
+      "name": "Adaptasi Manga Seinen Gelap",
+      "text": "Cerita dewasa dengan tema politik, moral, atau psikologi. Konflik berat disampaikan dengan kendali, dan akibatnya terasa nyata."
+    },
+    {
+      "id": "mg-genre-04",
+      "type": "genre",
+      "name": "Adaptasi Manga Slice of Life",
+      "text": "Kehidupan sehari-hari dengan rutinitas, pekerjaan, dan hubungan keluarga atau pertemanan. Kejadian kecil diberi bobot lewat detail indrawi yang tidak sempat digambar."
+    },
+    {
+      "id": "mg-genre-05",
+      "type": "genre",
+      "name": "Adaptasi Manga Horor",
+      "text": "Ketegangan dibangun lewat panel sunyi, ekspresi, dan bunyi di manga. Dalam novel, ketegangan datang dari jeda, bayangan, dan apa yang tidak dijelaskan."
+    },
+    {
+      "id": "mg-genre-06",
+      "type": "genre",
+      "name": "Adaptasi Manga Misteri dan Thriller",
+      "text": "Kasus, petunjuk, dan pemecahan misteri yang tersebar di beberapa adegan. Petunjuk visual dari manga diganti dengan deskripsi yang adil bagi pembaca."
+    },
+    {
+      "id": "mg-genre-07",
+      "type": "genre",
+      "name": "Adaptasi Manga Isekai",
+      "text": "Tokoh terseret ke dunia lain, dengan sistem sihir atau kekuatan yang sudah dikenal dari manga. Peta, aturan, dan tokoh pendukung harus konsisten dari awal sampai akhir."
+    },
+    {
+      "id": "mg-genre-08",
+      "type": "genre",
+      "name": "Adaptasi Manga Olahraga",
+      "text": "Pertandingan dan latihan tim dengan fokus pada taktik, tekanan, dan emosi pemain. Gerakan dijelaskan dengan urutan yang jelas, bukan panel demi panel."
+    },
+    {
+      "id": "mg-genre-09",
+      "type": "genre",
+      "name": "Adaptasi Manga Mecha dan Sci-Fi",
+      "text": "Robot, pilot, dan organisasi militer atau ilmiah. Desain mesin dan aturan teknologi disampaikan dengan deskripsi yang konsisten."
+    },
+    {
+      "id": "mg-genre-10",
+      "type": "genre",
+      "name": "Adaptasi Manga Komedi",
+      "text": "Humor dari situasi, karakter yang berlebihan, dan tempo kejutan. Lelucon visual diterjemahkan menjadi reaksi dan jeda dalam dialog."
+    },
+    {
+      "id": "mg-style-11",
+      "type": "style",
+      "name": "Narasi Panel Novel",
+      "text": "Setiap adegan dibagi seperti panel manga: pembukaan (latar), aksi, reaksi, lalu jeda. Transisi antar adegan jelas, dan pembaca selalu tahu di mana posisi tokoh."
+    },
+    {
+      "id": "mg-style-12",
+      "type": "style",
+      "name": "Deskripsi Visual Ringkas",
+      "text": "Ciri khas tokoh (warna rambut, pakaian, ekspresi) disebut konsisten dan singkat. Jangan mengubah penampilan tanpa alasan dalam cerita."
+    },
+    {
+      "id": "mg-style-13",
+      "type": "style",
+      "name": "Dialog Ekspresif",
+      "text": "Dialog membawa banyak emosi. Tiap tokoh punya cara bicara khas, dan reaksi wajah diganti dengan jeda, nada, atau tindakan kecil."
+    },
+    {
+      "id": "mg-style-14",
+      "type": "style",
+      "name": "Onomatope Terkendali",
+      "text": "Bunyi dan gerakan yang biasa ditulis dengan onomatope di manga diterjemahkan menjadi deskripsi ringkas. Hindari menulis suara secara harfiah berulang kali."
+    },
+    {
+      "id": "mg-style-15",
+      "type": "style",
+      "name": "Tempo Aksi Panel",
+      "text": "Pertarungan dibagi menjadi beberapa momen: persiapan, serangan, akibat. Setiap momen diberi ruang napas sebelum pindah ke aksi berikutnya."
+    },
+    {
+      "id": "mg-style-16",
+      "type": "style",
+      "name": "Narasi Batin Mendalam",
+      "text": "Pikiran tokoh mengisi bagian yang tidak tergambar, seperti alasan, ketakutan, dan keraguan. Pikiran harus singkat dan berkaitan dengan adegan."
+    },
+    {
+      "id": "mg-style-17",
+      "type": "style",
+      "name": "Romantis Tatapan",
+      "text": "Momen romantis dibangun lewat jarak, tatapan, dan jeda. Ungkapan perasaan eksplisit datang pelan."
+    },
+    {
+      "id": "mg-style-18",
+      "type": "style",
+      "name": "Komedi Ekspresi",
+      "text": "Reaksi berlebihan tokoh dijelaskan dengan dialog dan tindakan yang konsisten, bukan dengan narasi yang menjelaskan lelucon."
+    },
+    {
+      "id": "mg-rule-19",
+      "type": "rule",
+      "name": "Kesetiaan pada Karakter Manga",
+      "text": "Kepribadian, cara bicara, dan kebiasaan tokoh harus sesuai dengan karakter yang sudah dikenal. Perubahan sikap harus punya alasan dalam cerita."
+    },
+    {
+      "id": "mg-rule-20",
+      "type": "rule",
+      "name": "Konsistensi Visual",
+      "text": "Penampilan, pakaian, dan ciri khas tokoh tidak berubah kecuali ada kejadian yang menyebabkannya. Setiap tokoh punya tanda yang mudah dikenali."
+    },
+    {
+      "id": "mg-rule-21",
+      "type": "rule",
+      "name": "Jaga Ritme Panel",
+      "text": "Setiap giliran narasi memuat satu momen utama, seperti satu halaman manga. Jangan memadatkan banyak kejadian dalam satu giliran."
+    },
+    {
+      "id": "mg-rule-22",
+      "type": "rule",
+      "name": "Narasi Mengisi Celah",
+      "text": "Tambahkan informasi yang tidak bisa ditampilkan gambar, seperti pikiran, latar belakang, dan suasana, tetapi jangan mengulang apa yang sudah jelas dari visual yang dibayangkan."
+    },
+    {
+      "id": "mg-rule-23",
+      "type": "rule",
+      "name": "Tidak Menyalin Adegan Terkenal",
+      "text": "Narator tidak mereproduksi dialog atau panel yang terkenal dari manga asli. Ceritanya ditulis ulang dengan kata-kata sendiri dan mengikuti alur yang dipilih pemain."
+    },
+    {
+      "id": "mg-rule-24",
+      "type": "rule",
+      "name": "Status dan Kemampuan Konsisten",
+      "text": "Kekuatan dan kemampuan tokoh mengikuti tingkat yang sudah ditetapkan dalam dunia. Peningkatan harus lewat latihan atau kejadian."
+    },
+    {
+      "id": "mg-rule-25",
+      "type": "rule",
+      "name": "Musuh dan Sekutu Berkembang",
+      "text": "Tokoh pendukung dan antagonis punya tujuan sendiri dan tidak diam menunggu pemain."
+    },
+    {
+      "id": "mg-rule-26",
+      "type": "rule",
+      "name": "Janji dan Rahasia Terbayar",
+      "text": "Setiap janji atau rahasia yang diperkenalkan harus terus berpengaruh dan akhirnya terpenuhi, dilanggar, atau terbongkar dengan akibat."
+    },
+    {
+      "id": "sh-rule-01",
+      "type": "rule",
+      "name": "Pemain Pegang Keputusan",
+      "text": "Jangan menulis tindakan, ucapan, atau pikiran baru untuk tokoh utama di luar input pemain."
+    },
+    {
+      "id": "sh-rule-02",
+      "type": "rule",
+      "name": "Tanpa Narasi Meta",
+      "text": "Narator tidak menyebut kartu, ringkasan, panel, atau sistem internal cerita. Istilah sistem atau manga hanya muncul jika tokoh dunia memang menggunakannya."
+    },
+    {
+      "id": "sh-rule-03",
+      "type": "rule",
+      "name": "Tidak Menyalin Teks Asli",
+      "text": "Narator tidak menyalin dialog atau narasi dari sumber asli. Cerita ditulis ulang dengan kata-kata sendiri."
+    }
+  ]
+}
