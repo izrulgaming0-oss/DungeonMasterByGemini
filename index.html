@@ -36,6 +36,7 @@ small{color:var(--muted);font-size:12.5px}
 .bar .ttl{flex:1;min-width:0}
 .bar h1{margin:0;font:600 16px/1.2 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#rClock{color:var(--ink);opacity:.8}
 .ib{width:42px;height:42px;border:0;background:transparent;border-radius:10px;display:grid;place-items:center;font-size:24px;line-height:1}
 .ib:hover{background:var(--surface2)}
 .scroll{flex:1;overflow-y:auto;padding:18px 16px 60px}
@@ -167,7 +168,27 @@ input[type=checkbox]{width:18px;height:18px}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{flex:none;background:none;border:0;border-bottom:2px solid transparent;padding:13px 12px;color:var(--muted);font-weight:500}
 .tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
-#dbody{flex:1;overflow-y:auto;padding:4px 16px 50px}
+#dbody{flex:1;overflow-y:auto;padding:12px 16px 84px;overscroll-behavior:contain}
+.dnav{display:flex;gap:6px;padding:8px 10px;background:var(--surface);border-bottom:1px solid var(--line)}
+.dnav button{flex:1;min-height:42px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--muted);font-weight:600}
+.dnav button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.subtabs{display:flex;gap:7px;overflow-x:auto;padding:8px 10px;background:var(--surface2);scrollbar-width:thin}
+.subtabs button{flex:none;min-height:40px;padding:7px 13px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--muted)}
+.subtabs button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+#drawer .dh{flex:none}
+#drawer .dfooter{flex:none;display:flex;gap:8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line)}
+#drawer .dfooter .btn{flex:1;min-height:42px}
+.irow{grid-template-columns:minmax(0,1fr) 64px 40px;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.irow select{grid-column:1}
+.irow .x{grid-column:3;grid-row:1;justify-self:end}
+.irow .inote{grid-column:1/-1}
+.mrow{grid-template-columns:minmax(0,1fr) 80px 40px;gap:8px}
+.x{min-width:40px;min-height:40px;border-radius:8px;touch-action:manipulation}
+.field:has([data-bind="inv-num"]){display:inline-flex;flex-direction:column;vertical-align:top;width:calc(50% - 6px);margin-right:4px;min-height:94px}
+.field:has([data-bind="inv-num"])>b{font-size:13px}
+.field:has([data-bind="inv-num"]) input{font-size:18px;font-weight:600}
+@media(min-width:600px){#drawer{width:min(94vw,32rem)}}
+@media(max-width:600px){#drawer{width:100vw;max-width:none;border-left:0}#dbody{padding:10px 12px 90px}.dh>.ib{width:48px;height:48px}.btn,.chip{min-height:40px}.row{gap:8px}.irow input,.irow select,.mrow input{min-height:42px}}
 
 details.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:0 0 10px;padding:0 12px}
 details.card>summary{padding:11px 0;cursor:pointer;font-weight:600}
@@ -287,7 +308,7 @@ details.card[open]{padding-bottom:12px}
 <section id="v-read" class="view" hidden>
   <div class="bar">
     <button class="ib" data-act="back" aria-label="Kembali ke beranda">&#8249;</button>
-    <div class="ttl"><h1 id="rTitle"></h1><small id="rStat"></small></div>
+    <div class="ttl"><h1 id="rTitle"></h1><small id="rClock"></small><small id="rStat"></small></div>
     <button class="ib" data-act="menu" aria-label="Buka menu">&#9776;</button>
   </div>
   <div id="prog" hidden><i></i></div>
@@ -311,17 +332,22 @@ details.card[open]{padding-bottom:12px}
 
 <div id="scrim" data-act="close"></div>
 <aside id="drawer" aria-label="Menu">
-  <div class="dh"><div class="tabs" id="tabs"></div><button class="ib" data-act="close" aria-label="Tutup menu">&#10005;</button></div>
-  <div id="dbody"></div>
+  <div class="dh"><strong style="padding:0 14px;white-space:nowrap">Menu</strong><button class="ib" data-act="close" aria-label="Tutup menu">&#10005;</button></div>
+  <nav class="dnav" id="drawerGroups" aria-label="Kategori menu"></nav><nav class="subtabs" id="tabs" aria-label="Submenu"></nav>
+  <div id="dbody"></div><div class="dfooter"><button class="btn" data-act="drawer-save">Simpan sekarang</button><button class="btn pri" data-act="close">Selesai</button></div>
 </aside>
 <div id="toast" role="status"></div>
 <input type="file" id="fileIn" accept=".json,application/json" hidden>
 <datalist id="models">
-  <option value="gemini-2.5-flash"></option>
+  <option value="gemini-3.8-flash"></option>
+  <option value="gemini-3.6-flash"></option>
+  <option value="gemini-3.5-flash-lite"></option>
+  <option value="gemini-3.1-flash-lite"></option>
+  <option value="gemini-flash-latest"></option>
   <option value="gemini-flash-lite-latest"></option>
-  <option value="gemini-2.5-flash"></option>
-  <option value="gemini-2.5-flash-lite"></option>\n  <option value="gemini-3.5-flash-lite"></option>
   <option value="gemini-3-flash-preview"></option>
+  <option value="gemini-2.5-flash"></option>
+  <option value="gemini-2.5-flash-lite"></option>
 </datalist>
 
 <script>
@@ -528,7 +554,7 @@ function flushSave(){
   store.set('penutur:index',idx);
   if(!ok&&!warnedStore){warnedStore=true;toast('Penyimpanan browser ditolak atau penuh. Segera ekspor atau unggah ke Drive.',8000)}
 }
-function touch(){if(!cur)return;cur.updated=Date.now();cloudDirty=true;clearTimeout(saveT);saveT=setTimeout(flushSave,400);setStatus()}
+function touch(){if(!cur)return;renderClock();cur.updated=Date.now();cloudDirty=true;clearTimeout(saveT);saveT=setTimeout(flushSave,400);setStatus()}
 window.addEventListener('pagehide',flushSave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flushSave()});
 
@@ -974,6 +1000,64 @@ function eventEligible(st,e){
   }
   return true;
 }
+
+/* Normalisasi event Director: prasyarat flag yang tidak pernah didefinisikan diubah jadi syarat naratif supaya event tidak macet selamanya */
+const OPEN_ST=['pending','active'];
+function cleanPrereqs(st,raw){
+  const flags=ensureWorldState(st).flags,arr=Array.isArray(raw)?raw:(raw?[raw]:[]),out=[];
+  for(const x of arr){
+    let q=String(x==null?'':x).trim();if(!q)continue;
+    const m=q.match(/^flag:\s*([^=]+?)\s*(?:=(.*))?$/i);
+    if(m){
+      const key=m[1].trim(),val=m[2]!=null?m[2].trim():null;
+      if(/^(nama_flag|flag|key|kunci)$/i.test(key)||!(key in flags))q=(val!=null?key+' = '+val:key).replace(/_/g,' ');
+      else q='flag:'+key+(val!=null?'='+val:'');
+    }
+    out.push(q.slice(0,200));
+  }
+  return out.slice(0,4);
+}
+function makeEvent(st,raw,fallbackId){
+  const ws=ensureWorldState(st),n0=v=>Math.max(0,num(v,0)),t=(v,n)=>String(v==null?'':v).slice(0,n);
+  return{id:String(raw.id||fallbackId),title:t(raw.title,120),description:t(raw.description,500),location:t(raw.location,120),
+    consequences:t(raw.consequences,400),foreshadowing:t(raw.foreshadowing,300),status:'pending',
+    min_elapsed_days:n0(raw.min_elapsed_days),min_elapsed_hours:n0(raw.min_elapsed_hours),
+    prerequisites:cleanPrereqs(st,raw.prerequisites),queued_at_elapsed_minutes:ws.elapsed_minutes};
+}
+const openCount=d=>d.queue.filter(e=>OPEN_ST.includes(e.status)).length;
+/* Event selesai tidak lagi menghabiskan kuota antrean; simpan 6 terakhir saja */
+function pruneQueue(d){
+  const done=d.queue.filter(e=>!OPEN_ST.includes(e.status)).slice(-6);
+  d.queue=d.queue.filter(e=>OPEN_ST.includes(e.status)||done.includes(e));
+}
+function addQueueEvents(st,list,max){
+  const d=st.director;if(!d||!Array.isArray(list))return;
+  d.queue=Array.isArray(d.queue)?d.queue:[];pruneQueue(d);
+  for(const raw of list.slice(0,max)){
+    if(!raw||typeof raw!=='object'||openCount(d)>=8)break;
+    const e=makeEvent(st,raw,'event_'+uid());
+    if(d.queue.some(x=>x.id===e.id))e.id=e.id+'_'+uid().slice(0,3);
+    d.queue.push(e);
+  }
+}
+function cleanMacro(m){
+  if(!m||typeof m!=='object')return null;
+  const t=(v,n)=>String(v==null?'':v).trim().slice(0,n);
+  const arr=(v,n,f)=>(Array.isArray(v)?v:[]).slice(0,n).map(f).filter(Boolean);
+  return{premise:t(m.premise,500),central_conflict:t(m.central_conflict,500),stakes:t(m.stakes,300),
+    factions:arr(m.factions,5,x=>typeof x==='string'?t(x,200):(x&&x.name?t(x.name,60)+': '+t(x.goal||x.description,160):'')),
+    secrets:arr(m.secrets,5,x=>t(typeof x==='string'?x:(x&&(x.text||x.description)),200)),
+    arc:arr(m.arc,6,(x,i)=>typeof x==='string'?{stage:t(x,80),goal:'',signal:''}:(x&&typeof x==='object'?{stage:t(x.stage||x.name||('Tahap '+(i+1)),80),goal:t(x.goal,200),signal:t(x.signal,200)}:null)),
+    current_stage:0};
+}
+function fmtElapsed(m){m=Math.max(0,Math.floor(num(m,0)));const d=Math.floor(m/1440),h=Math.floor(m%1440/60),n=m%60;return [d?d+' hr':'',h?h+' j':'',(n||(!d&&!h))?n+' mnt':''].filter(Boolean).join(' ')}
+function renderClock(){
+  const el=$('#rClock');if(!el)return;
+  const ws=cur&&cur.worldState;
+  if(!cur||!ws){el.textContent='';return}
+  const parts=['Hari '+Math.max(1,num(ws.day_count,1)),ws.time_of_day||ws.time,ws.location].filter(Boolean);
+  el.textContent=parts.join(' · ')+' · berlalu '+fmtElapsed(ws.elapsed_minutes);
+}
 function clockLabel(ws){return `Hari ${ws.day_count}, ${ws.time_of_day||'waktu belum ditentukan'} (total ${ws.elapsed_minutes} menit)`;}
 function applyWorldClock(st,r,turn){
   const ws=ensureWorldState(st);if(num(ws.last_time_applied_turn,0)>=num(turn,0))return;
@@ -992,31 +1076,54 @@ function applyWorldClock(st,r,turn){
 
 /* ---------- Hidden Director: antrean event privat dan simulasi dunia ---------- */
 /* Queue ini tidak pernah dikirim ke narator secara utuh; hanya petunjuk halus yang lolos. */
-async function initializeDirector(st){
+async function initializeDirector(st,force){
   migrateV42(st);
   st.director=st.director||{enabled:false,initModel:S.directorModel,runtimeModel:S.directorRuntimeModel,queue:[],history:[],lastRunTurn:0};
   if(!st.director.initModel)st.director.initModel=S.directorModel;
   if(!st.director.runtimeModel)st.director.runtimeModel=st.director.model||S.directorRuntimeModel;
-  if(!st.director.enabled)return;
-  const prompt=`Rancang Private Chapter Queue untuk dunia cerita interaktif ini.
+  if(!st.director.enabled&&!force)return;
+  const w=st.world||{},mp=w.mcProfile||{};
+  const cards=Object.values(st.cards||{}).slice(0,25).map(c=>`- ${mainKw(c)} (${CT[c.type]||c.type}): ${String(c.text||'').slice(0,140)}`).join('\n')||'(belum ada)';
+  const prompt=`Rancang PLOT MAKRO dan Private Chapter Queue untuk dunia cerita interaktif ini.
 DUNIA: ${st.title}
-LATAR: ${st.world.text}
-GENRE: ${st.world.genreNames.join(', ')}
-TOKOH UTAMA: ${st.world.mc||'(tanpa nama)'}
-RINGKASAN AWAL: ${summaryText(st)}
+LATAR: ${w.text||''}
+GENRE: ${(w.genreNames||[]).join(', ')||'(bebas)'}
+ATURAN DUNIA: ${String(w.rules||'(tidak ada)').slice(0,600)}
+TOKOH UTAMA: ${w.mc||'(tanpa nama)'} ${[mp.race,mp.gender,mp.age,mp.trait].filter(Boolean).join(', ')}
+KARTU YANG SUDAH ADA:
+${cards}
+RINGKASAN AWAL: ${summaryText(st)||'(belum ada)'}
 STATUS AWAL: ${invCompact(st)||'(belum ada)'}
-Rancang struktur awal faksi melalui world_state.flags bila relevan. Buat 3-6 event adaptif dengan sebab, konsekuensi, prasyarat, dan gerbang waktu fiktif; jangan memakai nomor giliran sebagai pemicu.
-Jangan menganggap pemain pasti hadir. Event yang diabaikan tetap berjalan di dunia. Bila akar masalah dihilangkan, event bisa dibatalkan atau berubah.
+
+Kerjakan berurutan:
+1. macro_plot: premis, konflik inti, taruhan, 2-4 faksi (tujuan dan cara bergerak), 2-4 rahasia dunia, dan arc 3-5 tahap berurutan (stage, goal, signal = tanda di cerita bahwa tahap itu tercapai). Akhir cerita dibiarkan terbuka dan bergantung tindakan pemain.
+2. world_state.flags: kondisi awal faksi atau ancaman sebagai pasangan kunci_snake_case dan nilai pendek.
+3. queue: 4-6 event adaptif yang menggerakkan arc. Event pertama harus bisa terjadi dalam 1-6 jam fiktif agar dunia mulai bergerak; sisanya bertahap hingga beberapa hari. Prasyarat boleh berupa kalimat bebas, atau "flag:kunci=nilai" HANYA bila kunci itu sudah kamu tulis di world_state.flags. Jangan memakai nomor giliran.
+Jangan menganggap pemain pasti hadir. Event yang diabaikan tetap berjalan. Jangan membocorkan rahasia ke pemain.
+
 Keluarkan JSON saja:
-{"queue":[{"id":"event_1","title":"judul privat","description":"rencana kejadian rahasia","min_elapsed_days":0,"min_elapsed_hours":2,"prerequisites":["flag:nama_flag=nilai"],"location":"tempat","consequences":"akibat bila dibiarkan","foreshadowing":"desas-desus atau tanda halus","status":"pending"}],
-"world_state":{"location":"lokasi awal jika diketahui","time_of_day":"HH:MM atau deskripsi waktu","day_count":1,"elapsed_minutes":0,"flags":{}}}
-Buat gerbang waktu yang bervariasi dan masuk akal. Prasyarat berupa array string. Jangan keluarkan spoiler untuk pemain.`;
-  const out=parseJSON(await gemini({chain:chainDirectorInit(st),system:'Kamu adalah perancang alur makro dan simulasi dunia. Jaga kebebasan pemain, kausalitas, serta rahasia event.',prompt,json:true,temperature:.45}));
-  st.director.queue=Array.isArray(out.queue)?out.queue.map((e,i)=>({...e,id:String(e.id||('event_'+(i+1))),status:e.status||'pending',queued_at_elapsed_minutes:ensureWorldState(st).elapsed_minutes,min_elapsed_days:Math.max(0,num(e.min_elapsed_days,0)),min_elapsed_hours:Math.max(0,num(e.min_elapsed_hours,0)),prerequisites:Array.isArray(e.prerequisites)?e.prerequisites:(e.prerequisites?[String(e.prerequisites)]:[])})).slice(0,8):[];
+{"macro_plot":{"premise":"","central_conflict":"","stakes":"","factions":[{"name":"","goal":""}],"secrets":[""],"arc":[{"stage":"","goal":"","signal":""}]},
+"world_state":{"location":"lokasi awal bila diketahui","time_of_day":"HH:MM atau label waktu","day_count":1,"flags":{}},
+"queue":[{"id":"event_1","title":"judul privat","description":"rencana rahasia","min_elapsed_days":0,"min_elapsed_hours":2,"prerequisites":[],"location":"tempat","consequences":"akibat bila dibiarkan","foreshadowing":"desas-desus atau tanda halus"}]}`;
+  const out=parseJSON(await gemini({chain:chainDirectorInit(st),system:'Kamu adalah perancang alur makro dan simulasi dunia. Jaga kebebasan pemain, kausalitas, serta rahasia event. Balas hanya JSON.',prompt,json:true,temperature:.45}));
+  const rawQ=Array.isArray(out.queue)?out.queue:(Array.isArray(out.events)?out.events:[]);
+  if(!rawQ.length)throw new Error('Hidden Director tidak menghasilkan event. Coba lagi atau ganti model perencana.');
+  // 1) world state lebih dulu, agar prasyarat flag bisa divalidasi. Jam (elapsed_minutes) tidak pernah diubah model.
+  const ws=ensureWorldState(st),wo=out.world_state&&typeof out.world_state==='object'?out.world_state:{},fresh=!st.turn;
+  if(wo.location&&(fresh||!ws.location))ws.location=String(wo.location).slice(0,160);
+  if(fresh&&(wo.time_of_day||wo.time)){ws.time_of_day=String(wo.time_of_day||wo.time).slice(0,80);ws.time=ws.time_of_day}
+  if(fresh&&wo.day_count!=null)ws.day_count=Math.max(1,Math.floor(num(wo.day_count,1)));
+  if(wo.flags&&typeof wo.flags==='object'&&!Array.isArray(wo.flags)){
+    for(const [k,v] of Object.entries(wo.flags))if(['string','number','boolean'].includes(typeof v))ws.flags[String(k).trim()]=v;
+  }
+  // 2) antrean dan plot makro
+  st.director.queue=[];
+  addQueueEvents(st,rawQ,8);
+  if(!st.director.queue.length)throw new Error('Hidden Director tidak menghasilkan event yang valid.');
+  st.director.macro=cleanMacro(out.macro_plot||out.macro);
   st.director.history=st.director.history||[];
-  st.director.lastRunTurn=0;
-  if(out.world_state&&typeof out.world_state==='object'){st.worldState={...ensureWorldState(st),...out.world_state};ensureWorldState(st);}
-  st.director.guidance='';
+  st.director.lastRunTurn=num(st.turn,0);
+  st.director.guidance='';st.director.lastError=null;
   touch();
 }
 async function runHiddenDirector(st,input){
@@ -1024,15 +1131,25 @@ async function runHiddenDirector(st,input){
   const d=st.director;
   if(!d||!d.enabled)return '';
   if(!d.runtimeModel)d.runtimeModel=d.model||S.directorRuntimeModel;
-  if(!Array.isArray(d.queue)||!d.queue.length){try{await initializeDirector(st)}catch(e){console.warn('Hidden Director init gagal',e);return ''}}
-  const ws=ensureWorldState(st);
   const nextTurn=st.turn+1;
-  const pending=d.queue.filter(e=>e.status==='pending'||e.status==='active');
+  if(!Array.isArray(d.queue))d.queue=[];
+  if(!d.queue.length){
+    // antrean kosong (inisialisasi sebelumnya gagal): coba lagi, tetapi tidak setiap giliran
+    if(nextTurn-num(d.initTryTurn,-99)<3)return String(d.guidance||'');
+    d.initTryTurn=nextTurn;
+    await initializeDirector(st);
+    if(!d.queue.length)return '';
+  }
+  const ws=ensureWorldState(st);
+  const pending=d.queue.filter(e=>OPEN_ST.includes(e.status));
   const eligible=pending.filter(e=>eventEligible(st,e));
   const due=eligible.length>0;
   if(!due&&nextTurn-num(d.lastRunTurn,0)<2)return String(d.guidance||'');
+  const mac=d.macro||null;
   const prompt=`Evaluasi dunia dari balik layar sebelum narator menulis giliran berikutnya.
 Jangan menulis prosa. Perbarui event privat dan keadaan dunia berdasarkan sebab-akibat.
+[PLOT MAKRO PRIVAT]
+${mac?JSON.stringify(mac):'(belum ada)'}
 [QUEUE PRIVAT]
 ${JSON.stringify(d.queue)}
 [WORLD STATE]
@@ -1050,7 +1167,7 @@ ${input}
 [NARASI TERAKHIR]
 ${lastAI(st)||'(belum ada)'}
 [RIWAYAT DIREKTUR]
-${(d.history||[]).slice(-4).map(x=>JSON.stringify(x)).join('\\n')||'(kosong)'}
+${(d.history||[]).slice(-4).map(x=>JSON.stringify(x)).join('\n')||'(kosong)'}
 Aturan:
 - Hanya event yang ditampilkan pada EVENT YANG SUDAH LOLOS GERBANG WAKTU boleh menjadi active atau maju menuju resolved. Event lain wajib tetap pending, meski model menganggapnya menarik.
 - Event yang waktunya tiba tetap berjalan meski pemain berada di tempat lain; gerakkan faksi di balik layar, perbarui world state dan siapkan kabar/desas-desus yang mungkin sampai ke pemain.
@@ -1058,37 +1175,39 @@ Aturan:
 - Jangan menghapus akibat yang sudah terjadi dan jangan membatalkan tindakan pemain demi plot.
 - Foreshadowing hanya berupa petunjuk kecil yang wajar, tidak membocorkan rahasia atau menyebut antrean rahasia.
 - Jangan memaksa narator memasukkan event jika tidak relevan dengan adegan.
+- Bila PLOT MAKRO ada: majukan macro_progress.current_stage (indeks mulai 0) HANYA bila signal tahap saat ini sudah terlihat di cerita; jangan melompat lebih dari satu tahap.
+- Bila event terbuka kurang dari 2, tambahkan 1-2 event baru yang melanjutkan tahap arc berikutnya (tetap dengan gerbang waktu).
+- Prasyarat "flag:kunci=nilai" hanya boleh memakai kunci yang sudah ada di WORLD STATE.flags.
 Keluarkan JSON:
 {"queue_updates":[{"id":"id event","status":"pending|active|resolved|canceled|failed","note":"perubahan singkat"}],
-"queue_additions":[{"id":"event_id","title":"judul privat","description":"rencana","min_elapsed_days":0,"min_elapsed_hours":3,"prerequisites":[],"location":"tempat","consequences":"akibat","foreshadowing":"petunjuk","status":"pending"}],
-"world_state_patch":{"location":"","time_of_day":"","day_count":1,"elapsed_minutes":0,"flags":{}},
+"queue_additions":[{"id":"event_id","title":"judul privat","description":"rencana","min_elapsed_days":0,"min_elapsed_hours":3,"prerequisites":[],"location":"tempat","consequences":"akibat","foreshadowing":"petunjuk"}],
+"world_state_patch":{"location":"","time_of_day":"","day_count":1,"flags":{}},
+"macro_progress":{"current_stage":0,"note":""},
 "guidance":"maksimal 2 kalimat petunjuk halus untuk narator; kosongkan bila tidak ada",
 "history_note":"catatan privat singkat tentang perubahan sebab-akibat"}`;
-  const r=parseJSON(await gemini({chain:chainDirectorRuntime(st),system:'Kamu adalah Hidden Director. Jaga dunia tetap hidup dan responsif, tetapi jangan mengambil kendali pemain.',prompt,json:true,temperature:.25}));
+  const r=parseJSON(await gemini({chain:chainDirectorRuntime(st),system:'Kamu adalah Hidden Director. Jaga dunia tetap hidup dan responsif, tetapi jangan mengambil kendali pemain. Balas hanya JSON.',prompt,json:true,temperature:.25}));
   for(const u of (Array.isArray(r.queue_updates)?r.queue_updates:[])){
     const e=d.queue.find(x=>x.id===u.id);if(!e||!['pending','active','resolved','canceled','failed'].includes(u.status))continue;
-    // A time-gated event cannot be activated before its fictional clock gate passes.
-    if(u.status==='active'&&!eventEligible(st,e))continue;
-    if((u.status==='resolved'||u.status==='canceled'||u.status==='failed')&&e.status==='pending'&&!eventEligible(st,e)&&u.status==='resolved')continue;
-    e.status=u.status;if(u.note)e.lastNote=String(u.note).slice(0,350)
+    // Event tidak boleh aktif atau selesai sebelum gerbang waktu fiktifnya lewat.
+    if((u.status==='active'||u.status==='resolved')&&!eventEligible(st,e))continue;
+    e.status=u.status;if(u.note)e.lastNote=String(u.note).slice(0,350);
   }
-  // Adaptasi antrean: model boleh menambahkan event baru, tetapi semua event mendapat baseline clock saat dibuat.
-  if(Array.isArray(r.queue_additions))for(const raw of r.queue_additions.slice(0,4)){
-    if(!raw||typeof raw!=='object'||d.queue.length>=8)break;
-    const id=String(raw.id||('event_'+uid()));if(d.queue.some(e=>e.id===id))continue;
-    d.queue.push({...raw,id,status:'pending',min_elapsed_days:Math.max(0,num(raw.min_elapsed_days,0)),min_elapsed_hours:Math.max(0,num(raw.min_elapsed_hours,0)),prerequisites:Array.isArray(raw.prerequisites)?raw.prerequisites:(raw.prerequisites?[String(raw.prerequisites)]:[]),queued_at_elapsed_minutes:ensureWorldState(st).elapsed_minutes});
+  addQueueEvents(st,r.queue_additions,4);
+  const patch=r.world_state_patch&&typeof r.world_state_patch==='object'?r.world_state_patch:{};
+  const cw=ensureWorldState(st);
+  if(patch.location)cw.location=String(patch.location).slice(0,160);
+  if(patch.time_of_day||patch.time){cw.time_of_day=String(patch.time_of_day||patch.time).slice(0,80);cw.time=cw.time_of_day}
+  // day_count dan elapsed_minutes dimiliki analisis pasca-narasi; Director tidak boleh memajukannya.
+  if(patch.flags&&typeof patch.flags==='object'&&!Array.isArray(patch.flags)){
+    for(const [k,v] of Object.entries(patch.flags))if(['string','number','boolean'].includes(typeof v))cw.flags[String(k).trim()]=v;
   }
-  const patch=r.world_state_patch||{};
-  st.worldState=st.worldState||{flags:{}};
-  if(patch.location)st.worldState.location=patch.location;
-  if(patch.time_of_day||patch.time){st.worldState.time_of_day=String(patch.time_of_day||patch.time);st.worldState.time=st.worldState.time_of_day;}
-  if(patch.day_count!=null)st.worldState.day_count=Math.max(1,Math.floor(num(patch.day_count,st.worldState.day_count)));
-  // elapsed_minutes is owned by post-narration analysis; director cannot advance it.
-  if(patch.flags&&typeof patch.flags==='object')st.worldState.flags={...(st.worldState.flags||{}),...patch.flags};
-  // Final deterministic gate protects against model-side status mistakes.
+  if(d.macro&&Array.isArray(d.macro.arc)&&d.macro.arc.length&&r.macro_progress&&r.macro_progress.current_stage!=null){
+    const cs=Math.floor(num(r.macro_progress.current_stage,d.macro.current_stage||0)),old=d.macro.current_stage||0;
+    d.macro.current_stage=Math.max(old,Math.min(old+1,d.macro.arc.length-1,cs));
+  }
   for(const e of d.queue)if(e.status==='active'&&!eventEligible(st,e))e.status='pending';
   d.guidance=String(r.guidance||'').slice(0,700);
-  d.lastRunTurn=nextTurn;
+  d.lastRunTurn=nextTurn;d.lastError=null;
   d.history=d.history||[];d.history.push({turn:nextTurn,note:String(r.history_note||'').slice(0,500)});
   if(d.history.length>30)d.history=d.history.slice(-30);
   touch();
@@ -1276,11 +1395,7 @@ function applyPostAnalysisQueue(st,r){
     if(u.status==='active'&&e.status==='resolved')continue;
     e.status=u.status;if(u.note)e.lastNote=String(u.note).slice(0,350);
   }
-  for(const raw of (Array.isArray(r.queue_additions)?r.queue_additions.slice(0,2):[])){
-    if(!raw||typeof raw!=='object'||d.queue.length>=8)break;
-    const id=String(raw.id||('event_'+uid()));if(d.queue.some(e=>e.id===id))continue;
-    d.queue.push({...raw,id,status:'pending',min_elapsed_days:Math.max(0,num(raw.min_elapsed_days,0)),min_elapsed_hours:Math.max(0,num(raw.min_elapsed_hours,0)),prerequisites:Array.isArray(raw.prerequisites)?raw.prerequisites:(raw.prerequisites?[String(raw.prerequisites)]:[]),queued_at_elapsed_minutes:ensureWorldState(st).elapsed_minutes});
-  }
+  addQueueEvents(st,r.queue_additions,2);
   for(const e of d.queue)if(e.status==='active'&&!eventEligible(st,e))e.status='pending';
 }
 function applyAnalysis(st,r,turn){
@@ -1378,7 +1493,14 @@ ATURAN DASAR:
 const paras=t=>String(t).split(/\n{2,}/).filter(p=>p.trim()).map(p=>'<p>'+esc(p.trim()).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>')+'</p>').join('');
 const nearBottom=()=>{const l=$('#log');return l.scrollHeight-l.scrollTop-l.clientHeight<140};
 const toBottom=()=>{const l=$('#log');l.scrollTop=l.scrollHeight};
-function snap(st){return{logLen:st.log.length,data:JSON.stringify({summary:st.summary,cards:st.cards,inv:st.inv,suggestions:st.suggestions,turn:st.turn,pending:st.pending,active:st.active})}}
+function snap(st){return{logLen:st.log.length,data:JSON.stringify({summary:st.summary,cards:st.cards,inv:st.inv,suggestions:st.suggestions,turn:st.turn,pending:st.pending,active:st.active,worldState:st.worldState,director:st.director})}}
+/* Pulihkan snapshot, termasuk jam dunia dan antrean Hidden Director; pengaturan Director (aktif, model) tetap memakai yang sekarang */
+function restoreSnap(st,data){
+  const o=JSON.parse(data),keep=st.director?{enabled:st.director.enabled,initModel:st.director.initModel,runtimeModel:st.director.runtimeModel}:null;
+  Object.assign(st,o);
+  if(keep&&st.director)Object.assign(st.director,keep);
+  migrateV42(st);
+}
 
 function tokHtml(st){
   const u=st.lastUsage;if(!u||!u.calls||!u.calls.length)return'';
@@ -1455,7 +1577,7 @@ async function sendTurn(text,m){
     // Tahap 0: Hidden Director mengevaluasi event privat sebelum narator menulis.
     if(st.director&&st.director.enabled){
       setStatus('0/4 Hidden Director mengevaluasi dunia…');Tok.stage='Hidden Director';
-      try{await runHiddenDirector(st,text)}catch(e){if(e&&e.name==='AbortError')throw e;console.warn('Hidden Director gagal; giliran dilanjutkan',e)}
+      try{await runHiddenDirector(st,text)}catch(e){if(e&&e.name==='AbortError')throw e;console.warn('Hidden Director gagal; giliran dilanjutkan',e);if(st.director)st.director.lastError={turn:st.turn+1,msg:friendly(e)};err(e,'Hidden Director gagal, giliran dilanjutkan tanpa dia.')}
     }
     // Tahap 1: evaluasi input + kelola kartu aktif (model ringan)
     let r=null;
@@ -1509,7 +1631,7 @@ async function sendTurn(text,m){
     // Tahap 3: analisa hasil narasi (model ringan)
     await runAnalysis(st);
   }catch(e){
-    if(!committed){Object.assign(st,JSON.parse(snapshot.data));renderCtx()}
+    if(!committed){restoreSnap(st,snapshot.data);renderCtx();renderClock()}
     renderLog();$('#inp').value=text;resizeInp();err(e);
   }finally{if(Tok.finish(st))touch();setBusy(false);renderSuggest();renderLog()}
 }
@@ -1532,7 +1654,7 @@ async function runAnalysis(st){
 }
 function undoLast(){
   if(!undo||busy)return false;
-  const s=JSON.parse(undo.data);Object.assign(cur,s);cur.log.length=undo.logLen;undo=null;
+  restoreSnap(cur,undo.data);cur.log.length=undo.logLen;undo=null;
   touch();renderCtx();renderLog();renderSuggest();return true;
 }
 
@@ -1722,7 +1844,7 @@ function openStory(id){
   for(const f of cur.inv.schema){const d=cur.inv.data;if(f.type==='list'&&Array.isArray(d[f.key]))d[f.key]=d[f.key].map(normItem)}
   undo=null;cloudDirty=cloudDirty||(cur.updated>(cur.cloudAt||0))||needsV42Migration;cardQ='';cardType='';cardOpen=null;cardExp=new Set();
   if(needsV42Migration){cur.updated=Date.now();flushSave();}
-  $('#rTitle').textContent=cur.title;
+  $('#rTitle').textContent=cur.title;renderClock();
   show('v-read');syncDeep();renderCtx();renderLog();renderSuggest();setStatus();renderQuota();
 }
 async function closeStory(){
@@ -1818,13 +1940,21 @@ setInterval(async()=>{
 },30000);
 
 /* ---------- Drawer ---------- */
+const DRAWER_GROUPS={
+  sesi:[['sum','Ringkasan'],['cards','Kartu'],['inv','Status']],
+  dunia:[['world','Dunia'],['lib','Pustaka']],
+  sistem:[['set','Pengaturan'],['quota','Kuota'],['save','Simpan'],['help','Bantuan']]
+};
+let drawerGroup='sesi';
 function tabsFor(){
-  return view==='v-read'
-    ?[['sum','Ringkasan'],['cards','Kartu'],['inv','Status'],['world','Dunia'],['quota','Kuota'],['lib','Pustaka'],['set','Pengaturan'],['save','Simpan'],['help','Bantuan']]
-    :[['set','Pengaturan'],['lib','Pustaka'],['quota','Kuota'],['save','Simpan'],['help','Bantuan']];
+  const all=Object.values(DRAWER_GROUPS).flat();
+  return view==='v-read'?all:DRAWER_GROUPS.sistem;
+}
+function groupForTab(t){
+  return Object.keys(DRAWER_GROUPS).find(g=>DRAWER_GROUPS[g].some(x=>x[0]===t))||'sistem';
 }
 function openDrawer(t){
-  const ts=tabsFor();tab=ts.some(x=>x[0]===t)?t:ts[0][0];
+  const ts=tabsFor();tab=ts.some(x=>x[0]===t)?t:ts[0][0];drawerGroup=groupForTab(tab);
   $('#drawer').classList.add('on');$('#scrim').classList.add('on');renderTab();
 }
 function closeDrawer(){
@@ -1835,9 +1965,15 @@ function closeDrawer(){
   if(view==='v-home')renderHome();
 }
 function renderTab(){
-  $('#tabs').innerHTML=tabsFor().map(([k,n])=>`<button data-act="tab" data-tab="${k}" class="${k===tab?'on':''}">${n}</button>`).join('');
+  const groups=view==='v-read'?DRAWER_GROUPS:{sistem:DRAWER_GROUPS.sistem};
+  if(!groups[drawerGroup])drawerGroup=Object.keys(groups)[0];
+  const names={sesi:'Sesi',dunia:'Dunia',sistem:'Sistem'};
+  $('#drawerGroups').innerHTML=Object.keys(groups).map(g=>`<button data-act="drawer-group" data-group="${g}" class="${g===drawerGroup?'on':''}">${names[g]}</button>`).join('');
+  const items=groups[drawerGroup];
+  if(!items.some(x=>x[0]===tab))tab=items[0][0];
+  $('#tabs').innerHTML=items.map(([k,n])=>`<button data-act="tab" data-tab="${k}" class="${k===tab?'on':''}">${n}</button>`).join('');
   const fn={sum:tabSum,cards:tabCards,inv:tabInv,world:tabWorld,quota:tabQuota,lib:tabLib,set:tabSet,save:tabSave,help:tabHelp}[tab];
-  const sc=$('#dbody').scrollTop;$('#dbody').innerHTML=fn();$('#dbody').scrollTop=sc;
+  $('#dbody').innerHTML=fn();
   if(tab==='cards')renderCardList();
 }
 
@@ -1945,7 +2081,7 @@ function tabInv(){
     const v=d[f.key],k=esc(f.key);
     if(f.type==='number')return `<input type="number" data-bind="inv-num" data-key="${k}" value="${esc(v)}">${f.max!=null?`<small>maksimal ${f.max}</small>`:''}`;
     if(f.type==='text')return `<input data-bind="inv-text" data-key="${k}" value="${esc(v)}">`;
-    if(f.type==='list')return v.map((it,i)=>`<div class="irow"><input data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="name" value="${esc(it.name)}" aria-label="Nama"><input type="number" data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="qty" value="${it.qty}" aria-label="Jumlah"><select data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="kind" aria-label="Jenis"><option value="tetap" ${it.kind!=='habis'?'selected':''}>Barang tetap</option><option value="habis" ${it.kind==='habis'?'selected':''}>Habis pakai</option></select><button class="x" data-act="inv-delitem" data-key="${k}" data-i="${i}" aria-label="Hapus">&#10005;</button><input class="inote" data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="note" value="${esc(it.note)}" placeholder="catatan, durasi, kondisi" aria-label="Catatan"></div>`).join('')+`<button class="btn sm" data-act="inv-additem" data-key="${k}">Tambah</button>`;
+    if(f.type==='list')return v.map((it,i)=>`<div class="irow item-card"><input data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="name" value="${esc(it.name)}" aria-label="Nama"><input type="number" data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="qty" value="${it.qty}" aria-label="Jumlah"><select data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="kind" aria-label="Jenis"><option value="tetap" ${it.kind!=='habis'?'selected':''}>Barang tetap</option><option value="habis" ${it.kind==='habis'?'selected':''}>Habis pakai</option></select><button class="x" data-act="inv-delitem" data-key="${k}" data-i="${i}" aria-label="Hapus">&#10005;</button><input class="inote" data-bind="inv-item" data-key="${k}" data-i="${i}" data-f="note" value="${esc(it.note)}" placeholder="catatan, durasi, kondisi" aria-label="Catatan"></div>`).join('')+`<button class="btn sm" data-act="inv-additem" data-key="${k}">Tambah</button>`;
     return Object.entries(v).map(([a,b])=>`<div class="mrow"><input data-bind="inv-mapk" data-key="${k}" data-old="${esc(a)}" value="${esc(a)}" aria-label="Nama"><input type="number" data-bind="inv-mapv" data-key="${k}" data-name="${esc(a)}" value="${b}" aria-label="Nilai"><button class="x" data-act="inv-delmap" data-key="${k}" data-name="${esc(a)}" aria-label="Hapus">&#10005;</button></div>`).join('')+`<button class="btn sm" data-act="inv-addmap" data-key="${k}">Tambah</button>`;
   };
   const tools=`<div class="field"><b>Ubah status dengan kalimat</b><textarea id="stCmd" rows="2" placeholder="mis. level jadi 5, STR +3, tambah item Pedang Besi, HP penuh"></textarea><div class="row"><button class="btn pri sm" data-act="st-cmd">Terapkan</button><button class="btn sm" data-act="st-sync">Selaraskan dengan narasi terakhir</button><button class="btn sm" data-act="st-rpg">Tambah set status RPG</button></div></div>`;
@@ -1953,20 +2089,34 @@ function tabInv(){
     +(st.inv.schema.map(f=>`<div class="field"><b>${esc(f.label)}<button class="x" data-act="inv-delfield" data-key="${esc(f.key)}" aria-label="Hapus field ${esc(f.label)}">&#10005;</button></b>${body(f)}</div>`).join('')||'<p class="empty">Belum ada field status.</p>')
     +`<h3>Tambah field</h3><div class="row"><input id="nfK" placeholder="Nama field, mis. Mana" style="flex:2"><select id="nfT" style="flex:1"><option value="number">Angka</option><option value="text">Teks</option><option value="list">Daftar</option><option value="map">Nama dan angka</option></select></div><button class="btn" data-act="inv-addfield">Tambah field</button>`;
 }
+function dirPanel(st){
+  const ws=st.worldState||{},d=st.director,loc=ws.location;
+  let h=`<details class="card" open><summary>Waktu fiktif dan Hidden Director</summary>
+  <p><b>Hari ${Math.max(1,num(ws.day_count,1))}</b>, ${esc(ws.time_of_day||ws.time||'waktu belum ditentukan')}${loc?' di '+esc(loc):''}</p>
+  <p class="hint">Berlalu sejak awal cerita: ${esc(fmtElapsed(ws.elapsed_minutes))}. Analis memperkirakan durasi dari narasi setiap giliran; angka ini menjadi gerbang kapan event rahasia boleh berjalan.</p>`;
+  if(d&&d.enabled){
+    const q=Array.isArray(d.queue)?d.queue:[],c=s=>q.filter(e=>e.status===s).length,m=d.macro;
+    const done=q.filter(e=>['resolved','canceled','failed'].includes(e.status)).length;
+    h+=`<p class="hint">Hidden Director aktif. Event menunggu: ${c('pending')}, berjalan: ${c('active')}, selesai: ${done}. Plot makro: ${m&&m.arc&&m.arc.length?`tahap ${Math.min(m.arc.length,(m.current_stage||0)+1)} dari ${m.arc.length}`:'belum dibuat'}. Terakhir bekerja di giliran ${num(d.lastRunTurn,0)}.</p>`;
+    if(d.lastError)h+=`<p class="hint" style="color:var(--warn,#b3261e)">Gangguan terakhir (giliran ${num(d.lastError.turn,0)}): ${esc(d.lastError.msg||'')}</p>`;
+    h+=`<div class="row"><button class="btn sm" data-act="dir-rebuild">Susun ulang plot makro</button></div>`;
+  }else h+=`<p class="hint">Hidden Director mati untuk cerita ini. Aktifkan di bagian Konfigurasi teknis di bawah.</p>`;
+  return h+`</details>`;
+}
 function tabWorld(){
   const st=cur,w=st.world;
   const f=(l,k,v,rows)=>`<label>${l}<textarea rows="${rows}" data-bind="world" data-f="${k}">${esc(v)}</textarea></label>`;
-  return `<p class="hint">Perubahan di sini langsung dipakai mulai giliran berikutnya. Umur, ras, gender, dan sifat tokoh utama diubah di tab Kartu (kartu bertanda Pemain).</p>
-  <label>Judul<input data-bind="world" data-f="title" value="${esc(st.title)}"></label>
+  return dirPanel(st)+`<p class="hint">Perubahan di sini langsung dipakai mulai giliran berikutnya. Umur, ras, gender, dan sifat tokoh utama diubah di tab Kartu (kartu bertanda Pemain).</p>
+  <details class="card" open><summary>Elemen kreatif cerita</summary><label>Judul<input data-bind="world" data-f="title" value="${esc(st.title)}"></label>
   <label>Nama tokoh utama<input data-bind="world" data-f="mc" value="${esc(w.mc)}"></label>
-  ${f('Genre','genre',w.genre,3)}${f('Gaya bahasa','style',w.style,3)}${f('Aturan dan penekanan','rules',w.rules,4)}${f('Dunia dan latar','text',w.text,6)}
+  ${f('Genre','genre',w.genre,3)}${f('Gaya bahasa','style',w.style,3)}${f('Dunia dan latar','text',w.text,6)}</details><details class="card"><summary>Aturan dan penekanan</summary>${f('Aturan dan penekanan','rules',w.rules,4)}</details><details class="card"><summary>Konfigurasi teknis dan model AI</summary>
   <label class="chk"><input type="checkbox" data-bind="world" data-f="useCustomModels" ${st.models&&(st.models.narrator||st.models.main)?'checked':''}> Sesuaikan model khusus untuk dunia ini</label>
   <div id="worldModelFields" ${st.models&&(st.models.narrator||st.models.main)?'':'hidden'}>
   <label>Model narator<input list="models" data-bind="world" data-f="narrator" value="${esc(M(st).narrator)}"></label>
   <label>Model analis<input list="models" data-bind="world" data-f="analyzer" value="${esc(M(st).analyzer)}"></label></div>
   <label class="chk"><input type="checkbox" data-bind="world" data-f="directorEnabled" ${st.director&&st.director.enabled?'checked':''}> Aktifkan Hidden Director untuk cerita ini</label>
   <label>Model Inisialisasi & Perencana Makro<input list="models" data-bind="world" data-f="directorInitModel" value="${esc((st.director&&st.director.initModel)||S.directorModel)}"></label>
-  <label>Model Hidden Director Runtime<input list="models" data-bind="world" data-f="directorRuntimeModel" value="${esc((st.director&&st.director.runtimeModel)||(st.director&&st.director.model)||S.directorRuntimeModel)}"></label>`;
+  <label>Model Hidden Director Runtime<input list="models" data-bind="world" data-f="directorRuntimeModel" value="${esc((st.director&&st.director.runtimeModel)||(st.director&&st.director.model)||S.directorRuntimeModel)}"></label></details>`;
 }
 
 /* --- Kuota --- */
@@ -2085,6 +2235,8 @@ const acts={
   close:closeDrawer,
   quota:()=>openDrawer('quota'),
   tab:el=>{tab=el.dataset.tab;renderTab()},
+  'drawer-group':el=>{drawerGroup=el.dataset.group;tab=DRAWER_GROUPS[drawerGroup][0][0];renderTab();},
+  'drawer-save':()=>{if(cur)flushSave();saveSettings();saveLib();toast('Perubahan disimpan di perangkat.');},
   new:openNew,
   'auto-gen': autoGenerateWorldFromTitle,
   'new-cancel':()=>{show('v-home');renderHome()},
@@ -2112,6 +2264,16 @@ const acts={
   send:()=>{if(busy){abortCtl&&abortCtl.abort();return}sendTurn($('#inp').value,mode)},
   start:()=>sendTurn('Mulai cerita','alur'),
   undo:()=>{undoLast()},
+  'dir-rebuild':async()=>{
+    if(busy||!cur)return;
+    if(!S.apiKey){toast('Isi API Key dulu.');return}
+    if(!cur.director||!cur.director.enabled){toast('Aktifkan Hidden Director dulu.');return}
+    if(!confirm('Susun ulang plot makro dan antrean event rahasia? Antrean lama diganti. Waktu, status, dan kartu cerita tidak berubah.'))return;
+    const st=cur;abortCtl=new AbortController();setBusy(true);Tok.begin();Tok.stage='Plot makro';toast('Hidden Director menyusun ulang plot makro…',4000);
+    try{await initializeDirector(st,true);toast('Plot makro dan antrean event disusun ulang.')}
+    catch(e){if(st.director)st.director.lastError={turn:st.turn,msg:friendly(e)};err(e,'Gagal menyusun ulang.')}
+    finally{if(Tok.finish(st))touch();setBusy(false);if(view==='v-read'&&$('#drawer').classList.contains('on'))renderTab()}
+  },
   regen:()=>{
     const u=cur.log.slice(-2)[0];if(!u||!undo)return;
     const {text,mode:m}=u;if(undoLast())sendTurn(text,m);
