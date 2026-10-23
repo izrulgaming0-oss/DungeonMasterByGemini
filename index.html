@@ -655,20 +655,28 @@ function parseJSON(t){
 const kws=s=>String(s||'').toLowerCase().split(',').map(x=>x.trim()).filter(Boolean);
 const mainKw=c=>String(c.keyword).split(',')[0].trim();
 const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-function clip3(t){const m=String(t||'').trim().match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];return m.slice(0,3).join(' ').trim()}
+/* v4.3: tanpa batas kalimat; teks kartu disimpan utuh */
+const fullTxt=t=>String(t==null?'':t).trim();
 const cleanTxt=v=>{v=v==null?'':String(v).trim();return /^(null|-|tidak diketahui|unknown|n\/a)$/i.test(v)?'':v};
 function findCard(st,kw){const k=kws(kw)[0];if(!k)return null;return Object.values(st.cards).find(c=>kws(c.keyword).includes(k))||null}
 function wouldCycle(st,childId,parentId){let p=parentId,g=0;while(p&&g++<30){if(p===childId)return true;p=st.cards[p]&&st.cards[p].parent}return false}
 const PROF_LONG=['look','persona','rel'];
+/* v4.3: tingkat dikenali karakter (Belum Dikenali -> Cukup Dikenali -> Sangat Dikenali) */
+const FAM={belum:'Belum Dikenali',cukup:'Cukup Dikenali',sangat:'Sangat Dikenali'};
+const FAM_ORDER=['belum','cukup','sangat'];
+const normFam=v=>{v=String(v==null?'':v).toLowerCase().trim();if(FAM[v])return v;if(/^belum/.test(v))return'belum';if(/^cukup/.test(v))return'cukup';if(/^sangat/.test(v))return'sangat';return''};
+const famOf=c=>c.isPlayer?'sangat':(normFam(c.fam)||'belum');
+/* slow burn: bergerak paling banyak SATU tingkat per pembaruan */
+function stepFam(curF,target){const a=Math.max(0,FAM_ORDER.indexOf(curF||'belum')),b=FAM_ORDER.indexOf(target);if(b<0)return FAM_ORDER[a];return FAM_ORDER[a+Math.sign(b-a)]}
 const STATUSES=['terbuka','terpenuhi','dilanggar','rahasia','terbongkar'];
 const normStatus=v=>{v=String(v||'').toLowerCase().trim();return STATUSES.includes(v)?v:''};
-function clipN(t,n){const m=String(t||'').trim().match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];return m.slice(0,n).join(' ').trim()}
 /* Terapkan hanya field yang diisi; kolom karakter hanya untuk tipe karakter, status hanya untuk janji */
 function patchCard(ex,c){
-  if(c.text&&String(c.text).trim())ex.text=clip3(c.text)||ex.text;
+  if(c.text&&String(c.text).trim())ex.text=fullTxt(c.text)||ex.text;
   if(ex.type==='karakter'){
     for(const f of ['age','race','gender']){const v=cleanTxt(c[f]);if(v)ex[f]=v}
-    for(const f of PROF_LONG){const v=cleanTxt(c[f]);if(v)ex[f]=clipN(v,4)}
+    for(const f of PROF_LONG){const v=cleanTxt(c[f]);if(v)ex[f]=v}
+    if(!ex.isPlayer){const f=normFam(c.fam);if(f)ex.fam=stepFam(famOf(ex),f)}
   }
   if(ex.type==='janji'){const st=normStatus(c.status);if(st)ex.status=st}
 }
@@ -680,15 +688,16 @@ function addCards(st,list){
     const kw=String(c.keyword).trim(),type=normType(c.type);
     const ex=findCard(st,kw);
     if(ex){
-      ex.text=clip3(c.text);
+      ex.text=fullTxt(c.text);
       const have=ex.keyword.toLowerCase();
       kw.split(',').map(s=>s.trim()).forEach(a=>{if(a&&!have.includes(a.toLowerCase()))ex.keyword+=', '+a});
       if((ex.type||'pengetahuan')==='pengetahuan'&&type!=='pengetahuan')ex.type=type;
       patchCard(ex,c);
       made.push([ex,c.parent]);continue;
     }
-    const n={id:uid(),keyword:kw,type,age:'',race:'',gender:'',look:'',persona:'',rel:'',status:'',text:clip3(c.text),parent:null,pin:!!c.pin,isPlayer:false};
+    const n={id:uid(),keyword:kw,type,age:'',race:'',gender:'',look:'',persona:'',rel:'',fam:'',status:'',text:fullTxt(c.text),parent:null,pin:!!c.pin,isPlayer:false};
     patchCard(n,c);if(type==='janji'&&!n.status)n.status='terbuka';
+    if(type==='karakter'){n.fam=(st.log&&st.log.length)?'belum':(normFam(c.fam)||'belum')}
     st.cards[n.id]=n;made.push([n,c.parent]);
   }
   for(const [card,p] of made){
@@ -729,7 +738,7 @@ function expandCards(st,ids){
 function profLine(c){
   const t=c.type||'pengetahuan';
   if(t==='karakter'){
-    const p=['karakter',c.age?(/^\d+$/.test(String(c.age))?c.age+' tahun':c.age):'',c.race,c.gender].filter(Boolean);
+    const p=['karakter',c.age?(/^\d+$/.test(String(c.age))?c.age+' tahun':c.age):'',c.race,c.gender,c.isPlayer?'':FAM[famOf(c)]].filter(Boolean);
     return ` [${p.join(', ')}]`;
   }
   if(t==='janji')return ` [janji/rahasia${c.status?', '+c.status:''}]`;
@@ -760,7 +769,12 @@ function directionText(d){
   if(d.avoid.length)L.push('Hindari pengulangan dari adegan terakhir:\n'+d.avoid.map(b=>'  - '+b).join('\n'));
   return L.join('\n');
 }
-const cardIndex=st=>Object.values(st.cards).map(c=>mainKw(c)+` <${c.type||'pengetahuan'}>`+(c.parent&&st.cards[c.parent]?` (induk: ${mainKw(st.cards[c.parent])})`:'')).join('; ')||'(belum ada)';
+function activeProfiles(st){
+  const ids=(st.active&&st.active.ids)||[];
+  const out=ids.map(id=>st.cards[id]).filter(c=>c&&c.type==='karakter'&&!c.isPlayer).map(c=>`• ${mainKw(c)} [${FAM[famOf(c)]}]: ${c.text||'-'}${c.look?`\n   Penampilan: ${c.look}`:''}${c.persona?`\n   Kepribadian dan gaya bicara: ${c.persona}`:''}${c.rel?`\n   Hubungan: ${c.rel}`:''}`);
+  return out.join('\n')||'(tidak ada karakter aktif)';
+}
+const cardIndex=st=>Object.values(st.cards).map(c=>mainKw(c)+` <${c.type||'pengetahuan'}${(c.type==='karakter'&&!c.isPlayer)?', '+FAM[famOf(c)]:''}>`+(c.parent&&st.cards[c.parent]?` (induk: ${mainKw(st.cards[c.parent])})`:'')).join('; ')||'(belum ada)';
 
 /* ---------- Dynamic Inventory ---------- */
 function normField(f){
@@ -889,16 +903,16 @@ function recentScene(st){return recentTurnsRaw(st,4)}
 
 /* ---------- Prompt: Analis (model ringan) ---------- */
 const ANALYZER_SYS='Kamu adalah mesin analis memori untuk game cerita teks. Jawab HANYA dengan JSON valid sesuai skema, tanpa markdown, dalam bahasa Indonesia yang ringkas dan akurat. Jangan mengarang fakta yang tidak ada di teks.';
-const CARD_RULES=`Aturan kartu: "keyword" = nama utama diikuti alias dipisah koma (contoh "Rina, Nona Rina"). "type" = salah satu dari: tempat | karakter | mob | item | perlengkapan | skill | pengetahuan. "text" = fakta penting, MAKSIMAL 3 kalimat, isinya mengikuti tipe:
+const CARD_RULES=`Aturan kartu: "keyword" = nama utama diikuti alias dipisah koma (contoh "Rina, Nona Rina"). "type" = salah satu dari: tempat | karakter | mob | item | perlengkapan | skill | pengetahuan. "text" = fakta penting selengkap yang dibutuhkan, TANPA batas jumlah kalimat (ringkas tapi lengkap, berkembang seiring informasi baru), isinya mengikuti tipe:
 - tempat: informasi tempat itu. Jadikan SUB-KARTU (isi "parent") bila tempat tersebut bagian dari wilayah/tempat yang sudah ada.
-- karakter: "text" = informasi dasar (peran dan latar singkat, maks 3 kalimat). Isi KOLOM TERPISAH: "age" (umur), "race" (ras/spesies, opsional), "gender" (null bila tidak diketahui, jangan menebak); "look" = penampilan fisik dari ujung kepala sampai ujung kaki (rambut, wajah, mata, kulit, tinggi dan bentuk tubuh, pakaian khas, bekas luka, ciri khusus), maks 4 kalimat; "persona" = kepribadian: sifat dasar, gaya bicara (nada, pilihan kata, kebiasaan ucap), pola perilaku dan reaksi khas, maks 4 kalimat; "rel" = hubungan dengan karakter lain (contoh "Rina: sahabat sejak kecil; Pak Joko: atasan yang tidak dipercaya"), maks 4 kalimat. Kolom yang belum diketahui dikosongkan (null), jangan menebak.
+- karakter: "text" = informasi dasar (peran dan latar). Isi KOLOM TERPISAH: "age" (umur), "race" (ras/spesies, opsional), "gender" (null bila tidak diketahui, jangan menebak); "look" = penampilan fisik dari ujung kepala sampai ujung kaki (rambut, wajah, mata, kulit, tinggi dan bentuk tubuh, pakaian khas, bekas luka, ciri khusus); "persona" = kepribadian: sifat dasar, gaya bicara (nada, pilihan kata, kebiasaan ucap), pola perilaku dan reaksi khas; "rel" = hubungan dengan karakter lain (contoh "Rina: sahabat sejak kecil; Pak Joko: atasan yang tidak dipercaya"). "fam" = tingkat tokoh utama mengenal karakter ini: "belum" (Belum Dikenali: orang asing atau baru bertemu), "cukup" (Cukup Dikenali: sudah beberapa kali berinteraksi, saling tahu hal dasar), "sangat" (Sangat Dikenali: dekat, saling memahami latar dan rahasia). Karakter yang baru muncul di tengah cerita SELALU "belum"; hanya karakter yang jelas sudah lama dikenal tokoh utama sejak awal dunia (keluarga, sahabat) boleh dimulai lebih tinggi. Naikkan paling banyak SATU tingkat per pembaruan dan hanya bila log percakapan menunjukkan interaksi nyata yang cukup (bukan sekadar disebut namanya); kolom "rel" juga diperbarui bertahap (slow burn) sesuai tingkat itu, tanpa lompatan kedekatan yang tidak masuk akal. Kolom yang belum diketahui dikosongkan (null), jangan menebak.
 - mob: ciri tubuh fisik, informasi dasar, perilaku.
 - item (termasuk item konsumsi): tampilan, kegunaan atau informasi dasar.
 - perlengkapan: jenis perlengkapan, tampilan, informasi dasar; tambahan status/kemampuan HANYA bila genre RPG atau sejenisnya.
 - skill: informasi kemampuan; syarat pengaktifan HANYA bila genre memiliki MP/level.
 - pengetahuan: informasi dasar pengetahuan itu (aturan dunia, sejarah, organisasi, dan sejenisnya).
 - janji: janji, kesepakatan, utang budi, ancaman, atau rahasia penting yang masih berpengaruh. Isi "status": terbuka | terpenuhi | dilanggar | rahasia | terbongkar.
-"parent" = keyword utama kartu induk (yang sudah ada atau dibuat di respons yang sama) atau null. Pecah entitas turunan (tempat di dalam wilayah, anggota organisasi, skill milik tokoh) menjadi sub-kartu dengan parent. Jangan duplikasi kartu yang sudah ada: perbarui lewat update_cards.`;
+"parent" = keyword utama kartu induk (yang sudah ada atau dibuat di respons yang sama) atau null. Pecah entitas turunan (tempat di dalam wilayah, anggota organisasi, skill milik tokoh) menjadi sub-kartu dengan parent. Jangan duplikasi kartu yang sudah ada: perbarui lewat update_cards. Saat memperbarui "text", "look", "persona", atau "rel" kartu yang sudah ada, tulis ulang isinya LENGKAP: pertahankan fakta lama yang masih berlaku, tambahkan hal baru, dan koreksi yang berubah; jangan menghapus informasi lama tanpa alasan.`;
 const FIELD_RULES=`Tipe field: number (angka, "max" opsional, "value" angka awal), text (teks pendek), list (benda/skill/pet; "value" array {name,qty,note,kind}; kind = "tetap" untuk barang/perlengkapan/skill yang disimpan, "habis" untuk stok habis-pakai; note dipakai untuk durasi/cooldown/kondisi), map (nama -> angka, untuk afinitas/reputasi; "value" objek).`;
 const OPS_RULES=`"inventory_ops" = daftar perubahan status akibat narasi baru ([] bila tidak ada). Bentuk operasi:
 {"op":"set","key":"lokasi","value":"Hutan Kelam"} (number/text)
@@ -930,7 +944,7 @@ ${w.text}
 
 Keluarkan JSON:
 {"summary":"rangkuman awal 1-5 kalimat",
- "cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"status":null,"text":"maks 3 kalimat","parent":null,"pin":false}],
+ "cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null,"pin":false}],
  "inventory_schema":[{"key":"snake_case","label":"Nama tampil","type":"number|text|list|map","max":null,"value":0}],
  "suggestions":["aksi pembuka singkat (maks 8 kata)", "..."]}
 
@@ -1233,7 +1247,7 @@ async function preAnalyze(st,text,m){
   const line=(c,full)=>{
     const par=c.parent&&st.cards[c.parent];
     let s=`- ${mainKw(c)}${c.isPlayer?' (tokoh utama)':''} [${CT[c.type]||CT.pengetahuan}${par?', bagian dari '+mainKw(par):''}${c.type==='janji'&&c.status?', '+c.status:''}]: ${full?c.text:c.text.slice(0,110)}`;
-    if(full&&c.type==='karakter'){if(c.persona)s+=` | Kepribadian: ${c.persona}`;if(c.rel)s+=` | Hubungan: ${c.rel}`}
+    if(full&&c.type==='karakter'){if(!c.isPlayer)s+=` | Tingkat dikenali: ${FAM[famOf(c)]}`;if(c.look)s+=` | Penampilan: ${c.look}`;if(c.persona)s+=` | Kepribadian: ${c.persona}`;if(c.rel)s+=` | Hubungan: ${c.rel}`}
     return s;
   };
   const activeTxt=all.filter(c=>act.has(c.id)).map(c=>line(c,true)).join('\n')||'(belum ada)';
@@ -1261,9 +1275,9 @@ Keluarkan JSON:
 {"focus":"1-2 kalimat: situasi dan arah adegan saat ini (di mana, siapa terlibat, tujuan atau ketegangan yang sedang berjalan)",
  "active_cards":["keyword utama kartu yang dipakai giliran ini, maksimal ${S.maxCards}"],
  "in_scene":["keyword utama karakter dan mob yang hadir atau berinteraksi di adegan ini"],
- "card_updates":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru maks 3 kalimat atau null","look":null,"persona":null,"rel":null,"status":null}],
+ "card_updates":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru lengkap (pertahankan fakta lama yang masih berlaku) atau null","look":null,"persona":null,"rel":null,"status":null}],
  "guidance":"catatan singkat untuk narator bila input bermasalah, atau string kosong"${S.useDirection?`,
- "direction":{"tone":"nada dan suasana adegan, mis. tegang, hangat tapi canggung","pace":"lambat|sedang|cepat","length":"pendek|sedang|panjang","beats":["1-3 kejadian atau reaksi kecil yang wajar"],"voices":[{"name":"keyword karakter","note":"kondisi emosi saat ini dan cara bicara atau bereaksi, maks 25 kata"}],"avoid":["pola yang terlalu sering di narasi terakhir"]}`:''}}
+ "direction":{"tone":"nada dan suasana adegan, mis. tegang, hangat tapi canggung","pace":"lambat|sedang|cepat","length":"pendek|sedang|panjang","beats":["1-3 kejadian atau reaksi kecil yang wajar"],"voices":[{"name":"keyword karakter","note":"kondisi emosi saat ini, cara bicara atau bereaksi, dan satu hal penting yang BELUM mereka ketahui atau saksikan, maks 40 kata"}],"avoid":["pola yang terlalu sering di narasi terakhir"]}`:''}}
 
 ATURAN:
 1. Pilih kartu yang RELEVAN dengan percakapan terakhir dan input baru. Lepas kartu yang pembahasannya sudah tidak relevan. Pertahankan tempat saat ini, karakter dan mob yang terlibat, serta item, perlengkapan, skill, janji, atau rahasia yang sedang berperan. Kartu induk dan kartu tokoh utama ditambahkan otomatis oleh sistem.
@@ -1272,7 +1286,7 @@ ATURAN:
 4. "guidance": isi bila input pemain bertentangan dengan STATUS atau fakta (memakai benda yang tidak dimiliki, melampaui kemampuan atau level, berada di tempat yang salah). Tulis arahan netral tentang cara narator menanganinya. Jangan menulis ulang input pemain.${S.useDirection?`
 5. "direction.length": adegan santai, transisi, atau jawaban singkat boleh "pendek"; konflik, penemuan penting, atau emosi besar boleh "panjang"; selebihnya "sedang".
 6. "beats": hal kecil yang wajar terjadi di dunia (reaksi tokoh lain sesuai agenda dan kepribadiannya, perubahan lingkungan, gangguan kecil). JANGAN menentukan keputusan, ucapan, atau pikiran tokoh utama, dan jangan menyelesaikan konflik besar sekaligus.
-7. "voices": untuk tiap karakter di "in_scene" (maks 4), tulis suasana hati saat ini dan cara bicara atau bereaksi yang sesuai kepribadian serta hubungannya dengan tokoh lain yang hadir.
+7. "voices": untuk tiap karakter di "in_scene" (maks 4), tulis suasana hati saat ini dan cara bicara atau bereaksi yang sesuai kepribadian serta hubungannya dengan tokoh lain yang hadir. Tulis hanya apa yang secara wajar mereka ketahui dari yang benar-benar mereka saksikan, dengar, atau alami di adegan ini; jangan membuat mereka mengetahui kejadian yang tidak mereka saksikan.
 8. "avoid": 1-4 pola yang sudah terlalu sering muncul di narasi terakhir (pembuka paragraf serupa, gestur atau klise yang berulang, frasa yang sama, cara menutup adegan). Kosongkan bila tidak ada.`:''}`;
   return parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
 }
@@ -1329,15 +1343,16 @@ ${text}
 [DRAF NARASI]
 ${narr}
 
-Keluarkan JSON: {"violations":[{"kind":"fakta|status|kontrol|karakter|kontinuitas","severity":"major|minor","detail":"1 kalimat, sebut bagian yang bermasalah","fix":"instruksi perbaikan singkat"}]}
+Keluarkan JSON: {"violations":[{"kind":"fakta|status|kontrol|karakter|kontinuitas|pov","severity":"major|minor","detail":"1 kalimat, sebut bagian yang bermasalah","fix":"instruksi perbaikan singkat"}]}
 
 Jenis pelanggaran:
 - fakta: bertentangan dengan ringkasan atau kartu (nama, tempat, hubungan, kejadian yang sudah terjadi).
 - status: memakai benda yang tidak dimiliki, melampaui kemampuan/level/stamina, lokasi atau waktu tidak sesuai STATUS.
 - kontrol: narasi memutuskan tindakan, ucapan, atau pikiran BARU tokoh utama di luar input pemain.
 - karakter: perilaku atau cara bicara tokoh bertentangan dengan umur, ras, gender, atau sifat pada kartunya.
+- pov: NPC yang baru ditemui, tidak hadir, atau berada di tempat lain menyinggung/mengetahui kejadian, rahasia, nama, atau pikiran tokoh utama yang tidak ia saksikan dan tidak diungkap pemain secara lisan di adegan; atau kedekatan NPC melampaui tingkat dikenali dan interaksi yang tercatat (misalnya orang asing langsung bersikap akrab).
 - kontinuitas: mengulang atau menghapus kejadian adegan terakhir, tokoh yang sudah pergi atau mati muncul lagi tanpa alasan, kronologi melompat tanpa dasar.
-Aturan: "major" bila jelas bertentangan dengan fakta atau merampas kendali pemain; "minor" untuk kejanggalan ringan. Perkembangan cerita yang wajar BUKAN pelanggaran. Maksimal 4 temuan. Jika tidak ada, kembalikan {"violations":[]}.`;
+Aturan: "major" bila jelas bertentangan dengan fakta, merampas kendali pemain, atau NPC jelas maha tahu (pov); "minor" untuk kejanggalan ringan. Perkembangan cerita yang wajar BUKAN pelanggaran. Maksimal 4 temuan. Jika tidak ada, kembalikan {"violations":[]}.`;
   const r=parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.2}));
   return (Array.isArray(r.violations)?r.violations:[]).filter(v=>v&&v.detail).slice(0,4)
     .map(v=>({kind:String(v.kind||''),severity:v.severity==='major'?'major':'minor',detail:String(v.detail).trim(),fix:String(v.fix||'').trim()}));
@@ -1356,6 +1371,8 @@ ${JSON.stringify({worldState:ensureWorldState(st),queue:(st.director&&st.directo
 ${recentTurnsRaw(st,4,2)||'(tidak ada)'}
 [KARTU YANG SUDAH ADA]
 ${cardIndex(st)}
+[PROFIL KARAKTER AKTIF SAAT INI (isi kolom sekarang; tulis ulang LENGKAP bila memperbarui)]
+${activeProfiles(st)}
 [SKEMA STATUS]
 ${invSchemaText(st)}
 [STATUS SAAT INI]
@@ -1370,8 +1387,8 @@ Keluarkan JSON:
  "time_passed_minutes":0,
  "new_time_of_day":"HH:MM atau label waktu baru; string kosong bila tidak berubah/tidak diketahui",
  "new_location":"lokasi terkini bila narasi mengubah lokasi; string kosong bila tidak berubah/tidak diketahui",
- "new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"status":null,"text":"maks 3 kalimat","parent":null}],
- "update_cards":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru maks 3 kalimat (boleh dikosongkan)","look":null,"persona":null,"rel":null,"status":null}],
+ "new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null}],
+ "update_cards":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru lengkap (boleh dikosongkan)","look":null,"persona":null,"rel":null,"fam":null,"status":null}],
  "new_fields":[],
  "inventory_ops":[],
  "status_sync":{},
@@ -1382,7 +1399,7 @@ Keluarkan JSON:
 TAHAP INI ADALAH SINKRONISASI PASCA-NARASI. Narasi sudah selesai ditulis; jangan mengubah prosa yang ditampilkan. Estimasikan durasi fiktif yang benar-benar berlalu HANYA dari narasi baru: dialog singkat 0-2 menit, percakapan/aktivitas pendek beberapa menit, perjalanan/latihan sesuai petunjuk eksplisit, tidur atau jeda panjang sesuai teks. Jangan hitung ulang kejadian lama. Berikan time_passed_minutes sebagai bilangan bulat 0-10080; bila durasi tidak jelas gunakan 0-1. new_time_of_day hanya diisi bila waktu dapat ditentukan secara masuk akal; jangan menebak jam spesifik dari label seperti "sore". Evaluasi NARASI BARU dengan membandingkannya terhadap input pemain, log mentah empat giliran terakhir, ringkasan jangka panjang, kartu, dan STATUS SAAT INI. Perbarui lokasi, waktu, angka, kondisi fisik, EXP, relasi, dan inventaris hanya jika perubahan benar-benar terjadi dalam narasi. Status adalah catatan permanen yang harus sesuai dengan kejadian; jangan memberikan hadiah, item, EXP, atau pemulihan yang tidak terjadi di narasi.
 ${CARD_RULES}
 Antrean event bersifat privat. Setelah memperhitungkan time_passed_minutes pada giliran ini, evaluasi event mana yang memenuhi gerbang waktu dan prasyarat; jangan aktifkan event yang belum memenuhi syarat. Event yang selesai karena narasi harus diberi resolved; akar masalah yang hilang boleh canceled/failed. Tambahkan event adaptif hanya bila perkembangan narasi secara kausal membuka konsekuensi baru; maksimal 2 tambahan per giliran. Gunakan queue_updates dan queue_additions sebagai perubahan, jangan menyalin seluruh antrean.
-Buat kartu baru hanya untuk entitas/fakta penting yang BARU muncul dan perlu diingat jangka panjang. Perbarui kartu lama hanya bila narasi mengubah faktanya. Untuk karakter: perbarui "rel" bila hubungan berubah, "persona" bila kebiasaan atau sifat baru terlihat jelas, "look" bila ciri fisik baru muncul (luka, pakaian khas, dan sebagainya). Kartu janji: buat bila ada janji, kesepakatan, utang budi, ancaman, atau rahasia penting; ubah "status" saat ditepati (terpenuhi), dilanggar, atau terbongkar.
+Buat kartu baru hanya untuk entitas/fakta penting yang BARU muncul dan perlu diingat jangka panjang. Perbarui kartu lama hanya bila narasi mengubah faktanya. Untuk karakter: tentukan "fam" (tingkat dikenali) dan perbarui "rel" HANYA berdasarkan interaksi nyata di PERCAKAPAN dan NARASI BARU; naikkan paling banyak satu tingkat per giliran dan jangan melompat dari Belum Dikenali ke Sangat Dikenali. Perbarui "rel" bila hubungan berubah, "persona" bila kebiasaan atau sifat baru terlihat jelas, "look" bila ciri fisik baru muncul (luka, pakaian khas, dan sebagainya). Kartu janji: buat bila ada janji, kesepakatan, utang budi, ancaman, atau rahasia penting; ubah "status" saat ditepati (terpenuhi), dilanggar, atau terbongkar.
 ${OPS_RULES}
 "new_fields" = tambahan field status baru bila narasi memperkenalkan mekanik baru yang belum ada di SKEMA ([] bila tidak perlu). ${FIELD_RULES}\n"status_sync" (PENTING): bila NARASI BARU menampilkan jendela atau papan status, atau menyebut nilai terkini (level, EXP, HP, MP, STR, AGI, ATK, DEF, dan sebagainya), salin SEMUA nilainya ke "status_sync" sebagai {"nama":nilai}, contoh {"level":5,"str":12,"hp":80}. Field yang belum ada dibuat otomatis, jadi jangan lewatkan. Kosongkan {} bila narasi tidak menyebut nilai apa pun.`;
   return parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
@@ -1420,7 +1437,7 @@ ${s.entries.map(e=>`(${e.turn}) ${e.text}`).join('\n')}
 ${cardIndex(st)}
 
 Gabungkan menjadi SATU ringkasan kronologis maksimal 8 kalimat yang menjaga alur utama dan kondisi terkini. Pindahkan fakta detail (tokoh, tempat, aturan, hubungan, janji, utang) ke kartu memori baru atau perbarui kartu lama.
-Keluarkan JSON: {"summary":"...","new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"status":null,"text":"maks 3 kalimat","parent":null}],"update_cards":[{"keyword":"...","text":"..."}]}
+Keluarkan JSON: {"summary":"...","new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null}],"update_cards":[{"keyword":"...","text":"..."}]}
 ${CARD_RULES}`;
   const r=parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
   if(!r.summary||!String(r.summary).trim())throw new Error('Hasil pemadatan kosong.');
@@ -1458,16 +1475,24 @@ ATURAN DASAR:
 - RESOLUSI AKSI BERISIKO: untuk aksi yang hasilnya belum pasti, tentukan hasil berdasarkan kemampuan, persiapan, kondisi, tingkat kesulitan, dan konsekuensi yang masuk akal; jangan otomatis memberi keberhasilan. Jika dunia memakai mekanik RPG/DND atau dadu yang tercatat, ikuti mekanik dan angka yang benar-benar tersedia; jangan mengarang lemparan dadu atau bonus yang tidak tercatat.\n- STATUS ADALAH HUKUM MUTLAK. Jangan membuat tokoh memakai item/perlengkapan/skill yang tidak tercatat dimiliki, menggunakan kemampuan tanpa syarat, atau mengeluarkan HP/MP/stamina/uang melebihi nilai yang tersedia. Jika tindakan pemain melampaui status, narasikan kegagalan, keterbatasan, atau konsekuensi yang masuk akal; jangan diam-diam mengubah status.
 - Jangan bertentangan dengan fakta kartu, ringkasan, atau status. Angka status hanya ditampilkan bila genre atau aturan memakai jendela status, dan angkanya harus sama persis dengan STATUS SAAT INI.
 - Karakter NPC wajib mengikuti kolom persona (sifat dan gaya bicara) serta rel (hubungan). Hubungan tidak boleh langsung akrab atau berubah drastis tanpa interaksi dan sebab yang tercatat; bangun kedekatan secara bertahap (slow burn).
+- TINGKAT DIKENALI (tertera pada kartu karakter): Belum Dikenali = orang asing bagi tokoh utama; NPC bersikap seperti pada orang asing (waspada, sopan, canggung, atau acuh sesuai kepribadiannya), tidak akrab, dan tidak tahu apa pun tentang masa lalu tokoh utama. Cukup Dikenali = sudah beberapa kali berinteraksi; boleh lebih santai dan saling tahu hal dasar yang pernah benar-benar terjadi di antara mereka. Sangat Dikenali = dekat dan saling memahami; boleh akrab, menebak suasana hati, dan memakai kenangan bersama yang tercatat. Jangan membuat kedekatan melompat melampaui tingkat yang tercatat.
+- BATAS PENGETAHUAN NPC (POV): Ringkasan, kartu, status, dan log hanyalah pengetahuan NARATOR, bukan pengetahuan NPC. Seorang NPC hanya tahu apa yang (a) ia saksikan atau alami langsung di lokasi dan adegan aktif sekarang, (b) ia dengar langsung di hadapannya, (c) dikatakan pemain secara lisan di dalam adegan, atau (d) pengetahuan umum dunia dan bidangnya yang wajar. NPC yang baru ditemui, tidak hadir saat suatu kejadian, atau berada di tempat lain DILARANG KERAS menyinggung, menyindir, atau bereaksi pada kejadian, rahasia, janji, nama, kekuatan, riwayat, atau isi pikiran tokoh utama, kecuali pemain sendiri mengungkapkannya secara verbal di dalam adegan. Kabar dari pihak ketiga hanya boleh bila jalur penyebarannya wajar dan sudah tampak di cerita (ada saksi, ada waktu yang cukup berlalu). Bila ragu apakah seorang NPC tahu sesuatu, anggap ia TIDAK tahu.
+- SUDUT PANDANG: utamakan sudut pandang tokoh utama. Pikiran dan niat tersembunyi NPC hanya diungkap lewat tindakan, ucapan, dan ekspresi yang bisa dilihat atau didengar, kecuali GAYA BAHASA dari pemain meminta sebaliknya.
 - Pikiran tokoh, bila dipakai: potongan singkat 1-2 kalimat berbahasa lisan yang muncul spontan sebagai reaksi saat itu, bukan penjelasan, rangkuman pengalaman, atau analisis.
 - Ceritakan lewat kejadian, tindakan, dan dialog. Jangan menambah penjelasan demi panjang.
 - Panjang minimal ${mw} kata, diisi dengan kejadian dan dialog. Bahasa Indonesia.`;
   const cards=opening?openingCards(st):plan.cards;
   const inc=new Set(cards.map(c=>c.id));
   const parts=[];
-  parts.push('[RINGKASAN CERITA SEJAUH INI]\n'+(summaryText(st)||'(cerita belum dimulai)'));
+  parts.push('[RINGKASAN CERITA SEJAUH INI (pengetahuan narator, BUKAN pengetahuan NPC)]\n'+(summaryText(st)||'(cerita belum dimulai)'));
   if(plan.focus&&!opening)parts.push('[FOKUS ADEGAN SAAT INI]\n'+plan.focus);
   if(cards.length)parts.push('[KARTU LATAR AKTIF (catatan konsistensi, jangan dijelaskan semuanya)]\n'+cards.map(c=>cardLine(st,c,inc,plan.full.has(c.id)||(opening&&c.isPlayer))).join('\n'));
-  if(!opening){const th=openThreads(st);if(th)parts.push('[JANJI DAN RAHASIA YANG MASIH BERLAKU (jangan diselesaikan atau dibongkar kecuali alurnya wajar)]\n'+th)}
+  if(!opening){
+    const present=(plan.active&&plan.active.scene)||[];
+    const absent=cards.filter(c=>c.type==='karakter'&&!c.isPlayer&&!plan.full.has(c.id)).map(mainKw);
+    if(present.length||absent.length)parts.push('[KEHADIRAN DI ADEGAN (batas pengetahuan NPC)]\n'+(present.length?'Hadir dan dapat melihat/mendengar adegan ini: '+present.join(', ')+'.':'Belum ada NPC bernama yang hadir.')+(absent.length?'\nTidak hadir (hanya catatan; jangan dimunculkan, dan mereka tidak tahu isi adegan ini): '+absent.join(', ')+'.':''));
+  }
+  if(!opening){const th=openThreads(st);if(th)parts.push('[JANJI DAN RAHASIA YANG MASIH BERLAKU (jangan diselesaikan atau dibongkar kecuali alurnya wajar; NPC yang tidak terlibat atau tidak menyaksikannya tidak tahu)]\n'+th)}
   if(st.worldState){
     const clock=ensureWorldState(st);
     const ws=[clock.location?'Lokasi dunia: '+clock.location:'',clock.time_of_day?'Waktu dunia: '+clock.time_of_day:'',`Hari fiktif: ${clock.day_count}; waktu berlalu sejak awal: ${clock.elapsed_minutes} menit`].filter(Boolean);
@@ -1841,7 +1866,7 @@ function openStory(id){
   if(!cur.director.runtimeModel)cur.director.runtimeModel=cur.director.model||S.directorRuntimeModel;
   cur.worldState=ensureWorldState(cur);
   cur.cards=cur.cards||{};cur.suggestions=cur.suggestions||[];cur.world.mcProfile=cur.world.mcProfile||{};cur.active=cur.active||{ids:[],focus:'',guidance:'',added:[],dropped:[]};
-  Object.values(cur.cards).forEach(c=>{c.type=normType(c.type);c.age=c.age||'';c.race=c.race||'';c.gender=c.gender||'';c.look=c.look||'';c.persona=c.persona||'';c.rel=c.rel||'';c.status=c.status||''});
+  Object.values(cur.cards).forEach(c=>{c.type=normType(c.type);c.age=c.age||'';c.race=c.race||'';c.gender=c.gender||'';c.look=c.look||'';c.persona=c.persona||'';c.rel=c.rel||'';c.status=c.status||'';c.fam=(c.type==='karakter'&&!c.isPlayer)?(normFam(c.fam)||(c.rel?'cukup':'belum')):''});
   for(const f of cur.inv.schema){const d=cur.inv.data;if(f.type==='list'&&Array.isArray(d[f.key]))d[f.key]=d[f.key].map(normItem)}
   undo=null;cloudDirty=cloudDirty||(cur.updated>(cur.cloudAt||0))||needsV42Migration;cardQ='';cardType='';cardOpen=null;cardExp=new Set();
   if(needsV42Migration){cur.updated=Date.now();flushSave();}
@@ -1993,14 +2018,14 @@ function cardEditor(c){
   const b=f=>`data-bind="card" data-id="${c.id}" data-f="${f}"`;
   const prof=(c.type==='karakter')?`<div class="row"><label>Umur<input ${b('age')} value="${esc(c.age)}"></label><label>Ras<input ${b('race')} value="${esc(c.race)}"></label><label>Gender<input ${b('gender')} list="genders" value="${esc(c.gender)}"></label></div>`:'';
   const prof2=c.type==='karakter'
-    ?`<label>Penampilan fisik (ujung kepala sampai ujung kaki, ciri khusus)<textarea rows="3" ${b('look')}>${esc(c.look||'')}</textarea></label><label>Kepribadian (sifat dasar, gaya bicara, pola perilaku)<textarea rows="3" ${b('persona')}>${esc(c.persona||'')}</textarea></label><label>Hubungan dengan karakter lain<textarea rows="3" ${b('rel')}>${esc(c.rel||'')}</textarea></label>`
+    ?`${c.isPlayer?'':`<label>Tingkat dikenali tokoh utama<select ${b('fam')}>${FAM_ORDER.map(x=>`<option value="${x}" ${famOf(c)===x?'selected':''}>${FAM[x]}</option>`).join('')}</select></label>`}<label>Penampilan fisik (ujung kepala sampai ujung kaki, ciri khusus)<textarea rows="3" ${b('look')}>${esc(c.look||'')}</textarea></label><label>Kepribadian (sifat dasar, gaya bicara, pola perilaku)<textarea rows="3" ${b('persona')}>${esc(c.persona||'')}</textarea></label><label>Hubungan dengan karakter lain<textarea rows="3" ${b('rel')}>${esc(c.rel||'')}</textarea></label>`
     :(c.type==='janji'?`<label>Status<select ${b('status')}>${STATUSES.map(x=>`<option value="${x}" ${(c.status||'terbuka')===x?'selected':''}>${x}</option>`).join('')}</select></label>`:'');
   return `<div class="ced">
     <label>Kata kunci (pisahkan dengan koma)<input ${b('keyword')} value="${esc(c.keyword)}"></label>
     <label>Jenis<select ${b('type')}>${typeOpts}</select></label>
     ${prof}
     ${prof2}
-    <label>Isi (${TYPE_HINT[c.type]||'maksimal 3 kalimat'}; maksimal 3 kalimat)<textarea rows="4" ${b('text')}>${esc(c.text)}</textarea></label>
+    <label>Isi (${TYPE_HINT[c.type]||'informasi dasar kartu'}; tanpa batas kalimat)<textarea rows="4" ${b('text')}>${esc(c.text)}</textarea></label>
     <label>Induk<select ${b('parent')}>${opts}</select></label>
     <label class="chk"><input type="checkbox" ${b('pin')} ${c.pin?'checked':''}> Selalu sertakan di prompt</label>
     <div class="row"><button class="btn warn sm" data-act="card-del" data-id="${c.id}">Hapus kartu</button></div>
@@ -2017,7 +2042,7 @@ function renderCardList(){
   const row=(c,d,flat)=>{
     const k=kids(c.id),exp=cardExp.has(c.id);
     const tg=(!flat&&k.length)?`<button class="tg" data-act="card-toggle" data-id="${c.id}" aria-expanded="${exp}" aria-label="${exp?'Sembunyikan':'Tampilkan'} sub-kartu ${esc(mainKw(c))}">${exp?'&#9662;':'&#9656;'}</button>`:'<span class="tg"></span>';
-    const meta=[c.type==='karakter'?[c.age,c.race,c.gender].filter(Boolean).join(', '):'',flat&&path(c)?'dalam '+path(c):'',c.text].filter(Boolean).join(' | ');
+    const meta=[c.type==='karakter'?[c.age,c.race,c.gender,c.isPlayer?'':FAM[famOf(c)]].filter(Boolean).join(', '):'',flat&&path(c)?'dalam '+path(c):'',c.text].filter(Boolean).join(' | ');
     return `<div class="crow" style="margin-left:${flat?0:d*16}px">${tg}<button class="cmain ${cardOpen===c.id?'on':''}" data-act="card-edit" data-id="${c.id}"><span class="cname">${esc(mainKw(c))}</span>${c.isPlayer?'<span class="badge me">Pemain</span>':''}<span class="badge">${CT[c.type||'pengetahuan']}</span>${actSet.has(c.id)?'<span class="badge on">aktif</span>':''}${k.length?`<span class="badge">${k.length} sub</span>`:''}<small>${esc(meta)}</small></button></div>${cardOpen===c.id?cardEditor(c):''}`;
   };
   let html='',shown=0;
@@ -2294,7 +2319,7 @@ const acts={
     }catch(e){err(e)}finally{setBusy(false)}
   },
   'ctx-card':()=>openDrawer('cards'),
-  'card-add':()=>{const id=uid();cur.cards[id]={id,keyword:'Kartu baru',type:'pengetahuan',age:'',race:'',gender:'',look:'',persona:'',rel:'',status:'',text:'Isi kartu.',parent:null,pin:false,isPlayer:false};cardOpen=id;cardQ='';cardType='';touch();renderTab()},
+  'card-add':()=>{const id=uid();cur.cards[id]={id,keyword:'Kartu baru',type:'pengetahuan',age:'',race:'',gender:'',look:'',persona:'',rel:'',fam:'',status:'',text:'Isi kartu.',parent:null,pin:false,isPlayer:false};cardOpen=id;cardQ='';cardType='';touch();renderTab()},
   'card-del':el=>{
     const c=cur.cards[el.dataset.id];if(!c)return;
     if(c.isPlayer&&!confirm('Ini kartu tokoh utama. Tetap hapus?'))return;
@@ -2398,9 +2423,10 @@ $('#dbody').addEventListener('change',e=>{
   switch(D.bind){
     case 'card':{
       const c=st.cards[D.id];if(!c)return;
-      if(D.f==='text')c.text=clip3(v)||String(v);
+      if(D.f==='text')c.text=String(v);
       else if(D.f==='parent')c.parent=v&&!wouldCycle(st,c.id,v)?v:null;
       else if(D.f==='pin')c.pin=v;
+      else if(D.f==='fam')c.fam=normFam(v)||'belum';
       else if(['type','age','race','gender','look','persona','rel','status'].includes(D.f))c[D.f]=String(v).trim();
       else c.keyword=String(v).trim()||c.keyword;
       touch();renderCardList();return}
