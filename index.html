@@ -1967,7 +1967,7 @@ setInterval(async()=>{
 
 /* ---------- Drawer ---------- */
 const DRAWER_GROUPS={
-  sesi:[['sum','Ringkasan'],['cards','Kartu'],['inv','Status']],
+  sesi:[['sum','Ringkasan'],['cards','Kartu'],['inv','Status'],['spoiler', 'Spoiler Plot']],
   dunia:[['world','Dunia'],['lib','Pustaka']],
   sistem:[['set','Pengaturan'],['quota','Kuota'],['save','Simpan'],['help','Bantuan']]
 };
@@ -1990,6 +1990,60 @@ function closeDrawer(){
   if(view==='v-new')renderChips();
   if(view==='v-home')renderHome();
 }
+function tabSpoiler() {
+  const st = cur;
+  if (!st || !st.director || !st.director.enabled) {
+    return `<div class="empty">
+      <p><b>Hidden Director belum diaktifkan</b> untuk cerita ini.</p>
+      <p class="hint">Anda bisa mengaktifkannya melalui menu <b>Dunia &gt; Konfigurasi teknis dan model AI</b>.</p>
+    </div>`;
+  }
+  
+  const d = st.director;
+  const queue = Array.isArray(d.queue) ? d.queue : [];
+  const history = Array.isArray(d.history) ? d.history : [];
+  const ws = ensureWorldState(st);
+
+  const statusBadge = stt => {
+    const map = { pending: 'Menunggu', active: 'Aktif / Berjalan', resolved: 'Selesai', canceled: 'Dibatalkan', failed: 'Gagal' };
+    return `<span class="badge ${stt === 'active' ? 'on' : ''}">${map[stt] || stt}</span>`;
+  };
+
+  const queueHtml = queue.length ? queue.map((e, i) => `
+    <div class="field" style="border-left: 3px solid ${e.status === 'active' ? 'var(--accent)' : 'var(--line)'}; margin-bottom: 12px;">
+      <b>${esc(e.title || 'Event ' + (i + 1))} ${statusBadge(e.status)}</b>
+      <p style="margin: 6px 0;"><small><b>Rencana Plot:</b> ${esc(e.description || '-')}</small></p>
+      <p style="margin: 4px 0;"><small><b>Lokasi Target:</b> ${esc(e.location || 'Bebas / Seluruh Dunia')} | <b>Gerbang Waktu:</b> Min. ${e.min_elapsed_days || 0} hari, ${e.min_elapsed_hours || 0} jam</small></p>
+      <p style="margin: 4px 0;"><small><b>Konsekuensi Potensial:</b> ${esc(e.consequences || '-')}</small></p>
+      <p style="margin: 4px 0;"><small><b>Petunjuk Halus (Foreshadowing):</b> <i>${esc(e.foreshadowing || '-')}</i></small></p>
+      ${e.lastNote ? `<p style="margin: 4px 0; color: var(--accent);"><small><b>Catatan Terakhir Direktur:</b> ${esc(e.lastNote)}</small></p>` : ''}
+    </div>
+  `).join('') : '<p class="empty">Antrean plot rahasia sedang kosong.</p>';
+
+  const historyHtml = history.length ? history.slice(-6).reverse().map(h => `
+    <div class="tag" style="margin-bottom: 6px;">
+      <small><b>Giliran ${h.turn}:</b> ${esc(h.note)}</small>
+    </div>
+  `).join('') : '<p class="empty">Belum ada catatan simulasi riwayat.</p>';
+
+  return `
+    <p class="hint"><b>Fitur Spoiler:</b> Mengintip rencana makro, antrean event privat, dan catatan balik layar yang dikendalikan oleh Hidden Director.</p>
+    
+    <div class="field" style="background: var(--surface2);">
+      <b>Status Simulasi Dunia</b>
+      <p style="margin: 4px 0;"><small><b>Waktu Fiktif:</b> ${clockLabel(ws)}</small></p>
+      <p style="margin: 4px 0;"><small><b>Lokasi Aktif Sesuai Sistem:</b> ${esc(ws.location || 'Belum diatur')}</small></p>
+      <p style="margin: 4px 0;"><small><b>Flags / Variabel Faksi Aktif:</b> ${Object.keys(ws.flags || {}).length ? JSON.stringify(ws.flags) : 'Tidak ada'}</small></p>
+    </div>
+
+    <h3>Antrean Plot &amp; Event Rahasia (${queue.length})</h3>
+    ${queueHtml}
+
+    <h3>Riwayat Evaluasi Di Balik Layar</h3>
+    ${historyHtml}
+  `;
+}
+
 function renderTab(){
   const groups=view==='v-read'?DRAWER_GROUPS:{sistem:DRAWER_GROUPS.sistem};
   if(!groups[drawerGroup])drawerGroup=Object.keys(groups)[0];
@@ -1998,7 +2052,7 @@ function renderTab(){
   const items=groups[drawerGroup];
   if(!items.some(x=>x[0]===tab))tab=items[0][0];
   $('#tabs').innerHTML=items.map(([k,n])=>`<button data-act="tab" data-tab="${k}" class="${k===tab?'on':''}">${n}</button>`).join('');
-  const fn={sum:tabSum,cards:tabCards,inv:tabInv,world:tabWorld,quota:tabQuota,lib:tabLib,set:tabSet,save:tabSave,help:tabHelp}[tab];
+  const fn={sum:tabSum,cards:tabCards,inv:tabInv,spoiler: tabSpoiler,world:tabWorld,quota:tabQuota,lib:tabLib,set:tabSet,save:tabSave,help:tabHelp}[tab];
   $('#dbody').innerHTML=fn();
   if(tab==='cards')renderCardList();
 }
