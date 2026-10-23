@@ -2267,7 +2267,7 @@ $('#dbody').addEventListener('change',e=>{
 /* ---------- Input, swipe, impor ---------- */
 function resizeInp(){const t=$('#inp');t.style.height='auto';t.style.height=Math.min(t.scrollHeight,140)+'px'}
 $('#inp').addEventListener('input',resizeInp);
-$('#nfUseCustom').addEventListener('change',e=>{$('#nfCustomModels').hidden=!e.target.checked});
+if($('#nfUseCustom')&&$('#nfCustomModels'))$('#nfUseCustom').addEventListener('change',e=>{$('#nfCustomModels').hidden=!e.target.checked});
 $('#inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();sendTurn($('#inp').value,mode)}});
 let tx=0,ty=0;
 $('#log').addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
