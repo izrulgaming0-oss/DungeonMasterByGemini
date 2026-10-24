@@ -221,6 +221,26 @@ details.card[open]{padding-bottom:12px}
 .cname{font-weight:600}
 .badge{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:0 7px;margin-left:6px;color:var(--muted);font-weight:400}
 .badge.me{border-color:var(--accent);color:var(--accent)}
+:root{--fam-belum:#6b7684;--fam-cukup:#2f7d4f;--fam-sangat:#a4630c}
+@media (prefers-color-scheme:dark){:root{--fam-belum:#8d99a6;--fam-cukup:#6fcf97;--fam-sangat:#f0bd5a}}
+.fam{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;line-height:1.5;border:1px solid currentColor;border-radius:999px;padding:0 7px;margin-left:6px;font-weight:600;white-space:nowrap;cursor:help}
+.fam b{font-weight:700}
+.fam.belum{color:var(--fam-belum);opacity:.85}
+.fam.cukup{color:var(--fam-cukup)}
+.fam.sangat{color:var(--fam-sangat);background:color-mix(in srgb,var(--fam-sangat) 14%,transparent)}
+.kc .fam{margin-left:4px;padding:0 5px}
+.kcinfo{border:1px solid var(--line);background:var(--surface2);border-radius:10px;padding:8px 12px;margin:4px 0 8px}
+.kcinfo p{margin:4px 0}
+.relbox{border-left:3px solid var(--fam-belum);background:var(--surface);border-radius:8px;padding:8px 12px;margin:10px 0 4px}
+.relbox.cukup{border-left-color:var(--fam-cukup)}.relbox.sangat{border-left-color:var(--fam-sangat)}
+.relbox p{margin:3px 0}
+.hier{margin:8px 0 2px}.hier p{margin:4px 0}.hier small{margin-right:6px}
+.hier .kc{cursor:pointer;font:inherit;font-size:13px;color:inherit}
+.sent{border-left:3px solid var(--accent);padding:6px 0 6px 12px;margin:0 0 10px}
+.sent p{margin:3px 0}
+.sent .sbad{display:inline-block;font-size:11.5px;font-weight:600;color:var(--accent);margin-right:8px}
+.sent.short{border-left-color:var(--line);opacity:.55}
+.sent.short .sbad{color:var(--muted)}
 .cmain small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ced{margin:0 0 10px 32px;background:var(--surface2);border-radius:10px;padding:2px 12px 12px}
 
@@ -665,6 +685,20 @@ const PROF_LONG=['look','persona','rel'];
 const FAM={belum:'Belum Dikenali',cukup:'Cukup Dikenali',sangat:'Sangat Dikenali'};
 const FAM_ORDER=['belum','cukup','sangat'];
 const normFam=v=>{v=String(v==null?'':v).toLowerCase().trim();if(FAM[v])return v;if(/^belum/.test(v))return'belum';if(/^cukup/.test(v))return'cukup';if(/^sangat/.test(v))return'sangat';return''};
+/* v5.2.1: kolom Hubungan (rel) hanya dikirim ke narator bila karakter sudah cukup dikenal; ubah daftar ini untuk memperketat (misal hanya ['sangat']) */
+const REL_VISIBLE=['cukup','sangat'];
+const relVisible=c=>!!c.isPlayer||REL_VISIBLE.includes(normFam(c.fam)||'belum');
+let ctxInfo='';
+const FAM_UI={
+  belum:{icon:'?',desc:'Orang asing atau baru bertemu. Informasi hubungan belum dibuka untuk narator.'},
+  cukup:{icon:'\u25C6',desc:'Sudah beberapa kali berinteraksi; saling tahu hal dasar.'},
+  sangat:{icon:'\u2605',desc:'Dekat dan saling memahami; relasi mendalam sudah terbuka.'}
+};
+function famBadge(c,compact){
+  if(!c||c.type!=='karakter'||c.isPlayer)return'';
+  const f=famOf(c),u=FAM_UI[f];
+  return `<span class="fam ${f}" title="${esc(FAM[f]+': '+u.desc)}" role="img" aria-label="Tingkat dikenali: ${esc(FAM[f])}"><b aria-hidden="true">${u.icon}</b>${compact?'':esc(FAM[f])}</span>`;
+}
 const famOf=c=>c.isPlayer?'sangat':(normFam(c.fam)||'belum');
 /* slow burn: bergerak paling banyak SATU tingkat per pembaruan */
 function stepFam(curF,target){const a=Math.max(0,FAM_ORDER.indexOf(curF||'belum')),b=FAM_ORDER.indexOf(target);if(b<0)return FAM_ORDER[a];return FAM_ORDER[a+Math.sign(b-a)]}
@@ -677,6 +711,10 @@ function patchCard(ex,c){
     for(const f of ['age','race','gender']){const v=cleanTxt(c[f]);if(v)ex[f]=v}
     for(const f of PROF_LONG){const v=cleanTxt(c[f]);if(v)ex[f]=v}
     if(!ex.isPlayer){const f=normFam(c.fam);if(f)ex.fam=stepFam(famOf(ex),f)}
+    /* v5.5: rahasia dipisah dari kolom publik. Terungkap lisan ke semua orang -> pindah ke teks publik; ke orang tertentu -> catat siapa yang tahu */
+    if(c.reveal_secret===true&&ex.secret){ex.text=(ex.text?ex.text+' ':'')+'Terungkap: '+ex.secret;ex.secret='';ex.knownBy=[]}
+    else{const sv=cleanTxt(c.secret);if(sv)ex.secret=sv}
+    if(Array.isArray(c.known_by)){const kb=c.known_by.map(cleanTxt).filter(Boolean);if(kb.length)ex.knownBy=[...new Set([...(Array.isArray(ex.knownBy)?ex.knownBy:[]),...kb])].slice(0,12)}
   }
   if(ex.type==='janji'){const st=normStatus(c.status);if(st)ex.status=st}
 }
@@ -695,7 +733,7 @@ function addCards(st,list){
       patchCard(ex,c);
       made.push([ex,c.parent]);continue;
     }
-    const n={id:uid(),keyword:kw,type,age:'',race:'',gender:'',look:'',persona:'',rel:'',fam:'',status:'',text:fullTxt(c.text),parent:null,pin:!!c.pin,isPlayer:false};
+    const n={id:uid(),keyword:kw,type,age:'',race:'',gender:'',look:'',persona:'',rel:'',fam:'',secret:'',knownBy:[],status:'',text:fullTxt(c.text),parent:null,pin:!!c.pin,isPlayer:false};
     patchCard(n,c);if(type==='janji'&&!n.status)n.status='terbuka';
     if(type==='karakter'){n.fam=(st.log&&st.log.length)?'belum':(normFam(c.fam)||'belum')}
     st.cards[n.id]=n;made.push([n,c.parent]);
@@ -745,14 +783,32 @@ function profLine(c){
   return ` [${(CT[t]||t).toLowerCase()}]`;
 }
 /* full=true: karakter ikut membawa penampilan, kepribadian (gaya bicara), dan hubungan */
+/* v5.5: karakter yang tidak sedang hadir hanya dikirim sebagai gambaran singkat (kalimat pertama), bukan seluruh isi kartu */
+function briefText(t,max=220){t=String(t||'').trim();const m=t.match(/^[^.!?]+[.!?]?/);let b=m?m[0].trim():t;return b.length>max?b.slice(0,max).replace(/\s+\S*$/,'')+'…':b}
+/* Rahasia hanya dikirim bila pemilik atau orang yang sudah tahu sedang hadir; selebihnya TIDAK ADA di prompt sama sekali */
+function secretBlock(st,plan){
+  const kwOf=c=>String(c.keyword||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+  const present=new Set();
+  for(const id of plan.full){const c=st.cards[id];if(c)kwOf(c).forEach(k=>present.add(k))}
+  const out=[];
+  for(const c of Object.values(st.cards)){
+    if(c.type!=='karakter'||!c.secret)continue;
+    const kb=Array.isArray(c.knownBy)?c.knownBy:[];
+    const ownerHere=plan.full.has(c.id)||!!c.isPlayer;
+    const knowerHere=kb.some(n=>present.has(String(n).trim().toLowerCase()));
+    if(!ownerHere&&!knowerHere)continue;
+    out.push(`- ${mainKw(c)} menyimpan: ${c.secret}\n  Yang TAHU: ${[mainKw(c),...kb].join(', ')}. Semua karakter lain TIDAK tahu, termasuk yang sedang hadir.`);
+  }
+  return out.length?'[RAHASIA TERSEMBUNYI (hanya untuk menjaga konsistensi pemilik rahasia; JANGAN diucapkan, disindir, atau diketahui karakter lain yang tidak tercantum \"Yang TAHU\")]\n'+out.join('\n'):'';
+}
 function cardLine(st,c,included,full){
   const par=c.parent&&st.cards[c.parent];
   const kids=Object.values(st.cards).filter(k=>k.parent===c.id&&!included.has(k.id)).map(mainKw);
-  let s=`• ${mainKw(c)}${c.isPlayer?' (tokoh utama/pemain)':''}${profLine(c)}${par?` (bagian dari ${mainKw(par)})`:''}: ${c.text}${kids.length?` [sub-kartu: ${kids.slice(0,8).join(', ')}]`:''}`;
+  let s=`• ${mainKw(c)}${c.isPlayer?' (tokoh utama/pemain)':''}${profLine(c)}${par?` (bagian dari ${mainKw(par)})`:''}: ${(c.type==='karakter'&&!c.isPlayer&&!full)?briefText(c.text):c.text}${kids.length?` [sub-kartu: ${kids.slice(0,8).join(', ')}]`:''}`;
   if(full&&c.type==='karakter'){
     if(c.look)s+=`\n   Penampilan: ${c.look}`;
     if(c.persona)s+=`\n   Kepribadian dan gaya bicara: ${c.persona}`;
-    if(c.rel)s+=`\n   Hubungan: ${c.rel}`;
+    if(c.rel&&relVisible(c))s+=`\n   Hubungan: ${c.rel}`;
   }
   return s;
 }
@@ -771,7 +827,7 @@ function directionText(d){
 }
 function activeProfiles(st){
   const ids=(st.active&&st.active.ids)||[];
-  const out=ids.map(id=>st.cards[id]).filter(c=>c&&c.type==='karakter'&&!c.isPlayer).map(c=>`• ${mainKw(c)} [${FAM[famOf(c)]}]: ${c.text||'-'}${c.look?`\n   Penampilan: ${c.look}`:''}${c.persona?`\n   Kepribadian dan gaya bicara: ${c.persona}`:''}${c.rel?`\n   Hubungan: ${c.rel}`:''}`);
+  const out=ids.map(id=>st.cards[id]).filter(c=>c&&c.type==='karakter'&&!c.isPlayer).map(c=>`• ${mainKw(c)} [${FAM[famOf(c)]}]: ${c.text||'-'}${c.look?`\n   Penampilan: ${c.look}`:''}${c.persona?`\n   Kepribadian dan gaya bicara: ${c.persona}`:''}${c.rel?`\n   Hubungan: ${c.rel}`:''}${c.secret?`\n   Rahasia (hanya narator): ${c.secret}${(c.knownBy&&c.knownBy.length)?` | sudah tahu: ${c.knownBy.join(', ')}`:''}`:''}`);
   return out.join('\n')||'(tidak ada karakter aktif)';
 }
 const cardIndex=st=>Object.values(st.cards).map(c=>mainKw(c)+` <${c.type||'pengetahuan'}${(c.type==='karakter'&&!c.isPlayer)?', '+FAM[famOf(c)]:''}>`+(c.parent&&st.cards[c.parent]?` (induk: ${mainKw(st.cards[c.parent])})`:'')).join('; ')||'(belum ada)';
@@ -941,7 +997,8 @@ const CARD_RULES=`Aturan kartu: "keyword" = nama utama diikuti alias dipisah kom
 - skill: informasi kemampuan; syarat pengaktifan HANYA bila genre memiliki MP/level.
 - pengetahuan: informasi dasar pengetahuan itu (aturan dunia, sejarah, organisasi, dan sejenisnya).
 - janji: janji, kesepakatan, utang budi, ancaman, atau rahasia penting yang masih berpengaruh. Isi "status": terbuka | terpenuhi | dilanggar | rahasia | terbongkar.
-"parent" = keyword utama kartu induk (yang sudah ada atau dibuat di respons yang sama) atau null. Pecah entitas turunan (tempat di dalam wilayah, anggota organisasi, skill milik tokoh) menjadi sub-kartu dengan parent. Jangan duplikasi kartu yang sudah ada: perbarui lewat update_cards. Saat memperbarui "text", "look", "persona", atau "rel" kartu yang sudah ada, tulis ulang isinya LENGKAP: pertahankan fakta lama yang masih berlaku, tambahkan hal baru, dan koreksi yang berubah; jangan menghapus informasi lama tanpa alasan.`;
+"parent" = keyword utama kartu induk (yang sudah ada atau dibuat di respons yang sama) atau null. Pecah entitas turunan (tempat di dalam wilayah, anggota organisasi, skill milik tokoh) menjadi sub-kartu dengan parent. RAHASIA: "secret" berisi hal yang HANYA diketahui karakter itu dan belum diketahui karakter lain (identitas asli, nama panggilan rahasia, status masa lalu, niat tersembunyi). JANGAN menaruh hal seperti itu di "text", "persona", "rel", "look", maupun ringkasan; kolom itu hanya boleh berisi hal yang terlihat atau diketahui umum. "known_by" berisi nama karakter lain yang sudah tahu rahasia itu. Bila rahasia diucapkan secara lisan di adegan: kepada semua yang hadir atau diumumkan, isi "reveal_secret":true; kepada karakter tertentu saja, tambahkan namanya di "known_by". Jangan menandai terungkap hanya karena narasi menyiratkan atau pemain menebak.
+Jangan duplikasi kartu yang sudah ada: perbarui lewat update_cards. Saat memperbarui "text", "look", "persona", atau "rel" kartu yang sudah ada, tulis ulang isinya LENGKAP: pertahankan fakta lama yang masih berlaku, tambahkan hal baru, dan koreksi yang berubah; jangan menghapus informasi lama tanpa alasan.`;
 const FIELD_RULES=`Tipe field: number (angka, "max" opsional, "value" angka awal), text (teks pendek), list (benda/skill/pet; "value" array {name,qty,note,kind}; kind = "tetap" untuk barang/perlengkapan/skill yang disimpan, "habis" untuk stok habis-pakai; note dipakai untuk durasi/cooldown/kondisi), map (nama -> angka, untuk afinitas/reputasi; "value" objek).`;
 const OPS_RULES=`"inventory_ops" = daftar perubahan status akibat narasi baru ([] bila tidak ada). Bentuk operasi:
 {"op":"set","key":"lokasi","value":"Hutan Kelam"} (number/text)
@@ -973,7 +1030,7 @@ ${w.text}
 
 Keluarkan JSON:
 {"summary":"rangkuman awal 1-5 kalimat",
- "cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null,"pin":false}],
+ "cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"secret":null,"known_by":null,"reveal_secret":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null,"pin":false}],
  "inventory_schema":[{"key":"snake_case","label":"Nama tampil","type":"number|text|list|map","max":null,"value":0}],
  "suggestions":["aksi pembuka singkat (maks 8 kata)", "..."]}
 
@@ -1276,7 +1333,7 @@ async function preAnalyze(st,text,m){
   const line=(c,full)=>{
     const par=c.parent&&st.cards[c.parent];
     let s=`- ${mainKw(c)}${c.isPlayer?' (tokoh utama)':''} [${CT[c.type]||CT.pengetahuan}${par?', bagian dari '+mainKw(par):''}${c.type==='janji'&&c.status?', '+c.status:''}]: ${full?c.text:c.text.slice(0,110)}`;
-    if(full&&c.type==='karakter'){if(!c.isPlayer)s+=` | Tingkat dikenali: ${FAM[famOf(c)]}`;if(c.look)s+=` | Penampilan: ${c.look}`;if(c.persona)s+=` | Kepribadian: ${c.persona}`;if(c.rel)s+=` | Hubungan: ${c.rel}`}
+    if(full&&c.type==='karakter'){if(!c.isPlayer)s+=` | Tingkat dikenali: ${FAM[famOf(c)]}`;if(c.look)s+=` | Penampilan: ${c.look}`;if(c.persona)s+=` | Kepribadian: ${c.persona}`;if(c.rel&&relVisible(c))s+=` | Hubungan: ${c.rel}`}
     return s;
   };
   const activeTxt=all.filter(c=>act.has(c.id)).map(c=>line(c,true)).join('\n')||'(belum ada)';
@@ -1330,7 +1387,8 @@ B. "tension_level": damai (dialog, interaksi sosial, keseharian) | investigasi (
 C. "spatial_presence": untuk tiap karakter atau mob yang relevan, tulis posisi fisiknya terhadap tokoh utama saat ini. Status: "di ruangan yang sama", "di luar (keterangan, misalnya bisa mendengar bila berteriak)", "tersembunyi", atau "jauh (lokasi lain)". Hanya yang di ruangan yang sama (atau tersembunyi tetapi menyaksikan) yang dapat mendengar percakapan pelan atau melihat tindakan diam-diam.
 D. "relevant_memories": dari CATATAN MEMORI MASA LALU BER-TAG, pilih HANYA catatan yang punya hubungan sebab-akibat langsung dengan situasi dan input saat ini, lalu salin atau padatkan faktanya. Hormati POV: ambil catatan yang tag pov atau characters_involved-nya sesuai POV AKTIF (atau karakter yang disorot giliran ini); catatan tanpa tag boleh dipakai sebagai pengetahuan umum. Jangan memasukkan rahasia yang tidak diketahui sudut pandang itu, dan jangan menyalin isi log mentah. Kosongkan [] bila tidak ada yang relevan.
 E. "pov": ganti dari POV AKTIF hanya bila pemain jelas beralih mengendalikan atau menyorot karakter lain.
-F. "npc_emotions": lacak emosi NPC yang hadir. Lihat EMOSI NPC DARI GILIRAN SEBELUMNYA: emosi itu harus bertahan atau berubah bertahap (misalnya marah, lalu ragu, lalu tenang) selama sekitar 2-3 giliran, bukan reset ke netral, kecuali ada pemicu kuat di input.${S.useDirection?`
+F. "npc_emotions": lacak emosi NPC yang hadir. Lihat EMOSI NPC DARI GILIRAN SEBELUMNYA: emosi itu harus bertahan atau berubah bertahap (misalnya marah, lalu ragu, lalu tenang) selama sekitar 2-3 giliran, bukan reset ke netral, kecuali ada pemicu kuat di input.
+G. ZERO-KNOWLEDGE: saat menulis catatan tokoh, jangan membuat NPC mengetahui nama panggilan rahasia, status masa lalu, atau identitas tersembunyi karakter lain yang hanya tertulis di kartu atau ringkasan, kecuali sudah diucapkan secara lisan di adegan aktif.${S.useDirection?`
 5. "direction.length": adegan santai, transisi, atau jawaban singkat boleh "pendek"; konflik, penemuan penting, atau emosi besar boleh "panjang"; selebihnya "sedang".
 6. "creative_beats": kejadian kecil yang kreatif sebagai pengganti klise (contoh: angin tiba-tiba mematikan separuh lilin; seseorang mengetuk pintu tiga kali secara ritmis), yaitu hal kecil yang wajar terjadi di dunia (reaksi tokoh lain sesuai agenda dan kepribadiannya, perubahan lingkungan, gangguan kecil). JANGAN menentukan keputusan, ucapan, atau pikiran tokoh utama, dan jangan menyelesaikan konflik besar sekaligus.
 7. "voices": untuk tiap karakter di "in_scene" (maks 4), tulis suasana hati saat ini dan cara bicara atau bereaksi yang sesuai kepribadian serta hubungannya dengan tokoh lain yang hadir. Tulis hanya apa yang secara wajar mereka ketahui dari yang benar-benar mereka saksikan, dengar, atau alami di adegan ini; jangan membuat mereka mengetahui kejadian yang tidak mereka saksikan.
@@ -1383,6 +1441,28 @@ function makePlan(st,text,r){
 }
 
 /* TAHAP 2b (model ringan): periksa draf narasi terhadap fakta cerita */
+/* Pemindai kebocoran lokal: kata khas (nama, istilah) dari kolom rahasia yang belum pernah muncul di mana pun lalu tiba-tiba ada di narasi */
+const LEAK_STOP=new Set('dia ia ternyata sebenarnya namun tetapi karena sejak dulu dahulu saat ketika aslinya kini mereka kami kita aku saya kamu anda ini itu yang dan atau dengan untuk dari pada seorang sebuah salah satu mantan bekas sebagai setelah sebelum selama bahwa jika bila meski walau tidak belum pernah akan sedang telah sudah masih hanya juga lebih sangat sekali semua setiap beberapa banyak bukan bahkan dalam oleh kepada tentang antara bagi seperti sampai hingga tapi lalu kemudian maka sehingga agar supaya demi tanpa'.split(' '));
+function leakScan(st,text,plan,narr){
+  const esc2=t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const known=[st.world.mc,st.world.title,text,...st.log.map(e=>e.text),...Object.values(st.cards).flatMap(k=>[k.keyword,k.text,k.look,k.persona,k.rel])].join(' ').toLowerCase();
+  const sents=String(narr).split(/(?<=[.!?\u2026])\s+|\n+/);
+  const out=[];
+  for(const c of Object.values(st.cards)){
+    if(c.type!=='karakter'||!c.secret)continue;
+    const names=[...String(c.keyword||'').split(','),...(Array.isArray(c.knownBy)?c.knownBy:[])].map(x=>x.trim().toLowerCase()).filter(Boolean);
+    const toks=[...new Set((String(c.secret).match(/[A-Z\u00C0-\u00DD][\p{L}'\u2019-]{2,}/gu)||[]).map(t=>t.toLowerCase()))].filter(t=>!LEAK_STOP.has(t)&&!known.includes(t));
+    for(const t of toks){
+      const re=new RegExp('(^|[^\\p{L}])'+esc2(t)+'(?![\\p{L}])','iu');
+      const hit=sents.find(x=>re.test(x));
+      if(!hit)continue;
+      const byKnower=names.some(n=>hit.toLowerCase().includes(n));
+      out.push({kind:'pov',severity:byKnower?'minor':'major',detail:`Kemungkinan bocor: "${t}" (rahasia ${mainKw(c)}) muncul di narasi padahal belum pernah disebut${byKnower?' (dalam kalimat yang menyebut pemilik atau orang yang tahu)':''}.`,fix:`Hapus atau ganti penyebutan "${t}"; karakter lain tidak boleh tahu kecuali sudah diucapkan lisan di adegan.`});
+      if(out.length>=3)return out;
+    }
+  }
+  return out;
+}
 async function checkConsistency(st,text,m,plan,narr){
   const n=S.contextTurns,inc=new Set(plan.cards.map(c=>c.id));
   const prompt=`TUGAS (Pemeriksa konsistensi): Periksa DRAF NARASI terhadap fakta cerita. Cari HANYA pelanggaran yang jelas. Jangan menilai gaya, selera, atau kualitas tulisan.
@@ -1396,6 +1476,8 @@ ${plan.cards.map(c=>cardLine(st,c,inc,true)).join('\n')||'(tidak ada)'}
 ${clockLabel(ensureWorldState(st))}; day_count=${ensureWorldState(st).day_count}
 [POSISI KARAKTER]
 ${(plan.spatial||[]).map(x=>`- ${x.name}: ${x.status}`).join('\n')||'(tidak dicatat)'}
+[RAHASIA KARAKTER (hanya diketahui pemilik dan yang tercantum)]
+${Object.values(st.cards).filter(c=>c.type==='karakter'&&c.secret).map(c=>`- ${mainKw(c)}: ${c.secret} | tahu: ${[mainKw(c),...(c.knownBy||[])].join(', ')}`).join('\n')||'(tidak ada)'}
 [STATUS SAAT INI]
 ${invCompact(st)||'(kosong)'}
 [PERCAKAPAN SEBELUMNYA (${n} giliran)]
@@ -1412,7 +1494,7 @@ Jenis pelanggaran:
 - status: memakai benda yang tidak dimiliki, melampaui kemampuan/level/stamina, lokasi atau waktu tidak sesuai STATUS.
 - kontrol: narasi memutuskan tindakan, ucapan, atau pikiran BARU tokoh utama di luar input pemain.
 - karakter: perilaku atau cara bicara tokoh bertentangan dengan umur, ras, gender, atau sifat pada kartunya.
-- pov: NPC yang baru ditemui, tidak hadir, atau berada di tempat lain menyinggung/mengetahui kejadian, rahasia, nama, atau pikiran tokoh utama yang tidak ia saksikan dan tidak diungkap pemain secara lisan di adegan; atau kedekatan NPC melampaui tingkat dikenali dan interaksi yang tercatat (misalnya orang asing langsung bersikap akrab).
+- pov (rahasia): karakter yang TIDAK tercantum pada \"tahu\" menyebut, menyindir, atau bereaksi pada isi RAHASIA KARAKTER = major.\n- pov: NPC yang baru ditemui, tidak hadir, atau berada di tempat lain menyinggung/mengetahui kejadian, rahasia, nama, atau pikiran tokoh utama yang tidak ia saksikan dan tidak diungkap pemain secara lisan di adegan; atau kedekatan NPC melampaui tingkat dikenali dan interaksi yang tercatat (misalnya orang asing langsung bersikap akrab).
 - kontinuitas (waktu): selama day_count masih 1, NPC atau narasi menyinggung kejadian DALAM cerita yang terjadi "kemarin" atau "tadi malam" (latar sebelum cerita yang tercatat di kartu atau ringkasan boleh) = major. Karakter yang berstatus di luar, tersembunyi, atau jauh ikut menanggapi percakapan pelan atau tindakan diam-diam tokoh utama = major (pov).
 - kontinuitas: mengulang atau menghapus kejadian adegan terakhir, tokoh yang sudah pergi atau mati muncul lagi tanpa alasan, kronologi melompat tanpa dasar.
 Aturan: "major" bila jelas bertentangan dengan fakta, merampas kendali pemain, atau NPC jelas maha tahu (pov); "minor" untuk kejanggalan ringan. Perkembangan cerita yang wajar BUKAN pelanggaran. Maksimal 4 temuan. Jika tidak ada, kembalikan {"violations":[]}.`;
@@ -1452,8 +1534,8 @@ Keluarkan JSON:
  "time_passed_minutes":0,
  "new_time_of_day":"HH:MM atau label waktu baru; string kosong bila tidak berubah/tidak diketahui",
  "new_location":"lokasi terkini bila narasi mengubah lokasi; string kosong bila tidak berubah/tidak diketahui",
- "new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null}],
- "update_cards":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru lengkap (boleh dikosongkan)","look":null,"persona":null,"rel":null,"fam":null,"status":null}],
+ "new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"secret":null,"known_by":null,"reveal_secret":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null}],
+ "update_cards":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru lengkap (boleh dikosongkan)","look":null,"persona":null,"rel":null,"fam":null,"secret":null,"known_by":null,"reveal_secret":null,"status":null}],
  "new_fields":[],
  "inventory_ops":[],
  "status_sync":{},
@@ -1465,7 +1547,7 @@ TAHAP INI ADALAH SINKRONISASI PASCA-NARASI. Narasi sudah selesai ditulis; jangan
 ${CARD_RULES}
 Antrean event bersifat privat. Setelah memperhitungkan time_passed_minutes pada giliran ini, evaluasi event mana yang memenuhi gerbang waktu dan prasyarat; jangan aktifkan event yang belum memenuhi syarat. Event yang selesai karena narasi harus diberi resolved; akar masalah yang hilang boleh canceled/failed. Tambahkan event adaptif hanya bila perkembangan narasi secara kausal membuka konsekuensi baru; maksimal 2 tambahan per giliran. Gunakan queue_updates dan queue_additions sebagai perubahan, jangan menyalin seluruh antrean.
 Buat kartu baru hanya untuk entitas/fakta penting yang BARU muncul dan perlu diingat jangka panjang. Perbarui kartu lama hanya bila narasi mengubah faktanya. Untuk karakter: tentukan "fam" (tingkat dikenali) dan perbarui "rel" HANYA berdasarkan interaksi nyata di PERCAKAPAN dan NARASI BARU; naikkan paling banyak satu tingkat per giliran dan jangan melompat dari Belum Dikenali ke Sangat Dikenali. Perbarui "rel" bila hubungan berubah, "persona" bila kebiasaan atau sifat baru terlihat jelas, "look" bila ciri fisik baru muncul (luka, pakaian khas, dan sebagainya). Kartu janji: buat bila ada janji, kesepakatan, utang budi, ancaman, atau rahasia penting; ubah "status" saat ditepati (terpenuhi), dilanggar, atau terbongkar.
-"pov" dan "characters_involved" memakai nama karakter. Bila suatu informasi hanya diketahui sebagian karakter, tulis di "summary" siapa yang mengetahuinya. Jangan menulis ringkasan seolah semua karakter tahu semuanya.
+"pov" dan "characters_involved" memakai nama karakter. Bila suatu informasi hanya diketahui sebagian karakter, tulis di "summary" siapa yang mengetahuinya. Jangan menulis ringkasan seolah semua karakter tahu semuanya. Ringkasan TIDAK BOLEH memuat isi rahasia yang belum terungkap; tulis netral (misalnya \"Miko menyembunyikan identitasnya\") dan simpan isinya di \"secret\" kartu.
 ${OPS_RULES}
 "new_fields" = tambahan field status baru bila narasi memperkenalkan mekanik baru yang belum ada di SKEMA ([] bila tidak perlu). ${FIELD_RULES}\n"status_sync" (PENTING): bila NARASI BARU menampilkan jendela atau papan status, atau menyebut nilai terkini (level, EXP, HP, MP, STR, AGI, ATK, DEF, dan sebagainya), salin SEMUA nilainya ke "status_sync" sebagai {"nama":nilai}, contoh {"level":5,"str":12,"hp":80}. Field yang belum ada dibuat otomatis, jadi jangan lewatkan. Kosongkan {} bila narasi tidak menyebut nilai apa pun.`;
   return parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
@@ -1509,8 +1591,8 @@ ${s.entries.map(e=>`(${e.turn}${e.pov?', POV '+e.pov:''}${e.location?', di '+e.l
 [KARTU YANG SUDAH ADA]
 ${cardIndex(st)}
 
-Gabungkan menjadi SATU ringkasan kronologis maksimal 8 kalimat yang menjaga alur utama dan kondisi terkini. Tulis ringkasan netral dan sebutkan siapa yang mengetahui suatu rahasia bila catatan berasal dari POV berbeda. Pindahkan fakta detail (tokoh, tempat, aturan, hubungan, janji, utang) ke kartu memori baru atau perbarui kartu lama.
-Keluarkan JSON: {"summary":"...","new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null}],"update_cards":[{"keyword":"...","text":"..."}]}
+Gabungkan menjadi SATU ringkasan kronologis maksimal 8 kalimat yang menjaga alur utama dan kondisi terkini. Tulis ringkasan netral dan sebutkan siapa yang mengetahui suatu rahasia bila catatan berasal dari POV berbeda. Jangan menuliskan isi rahasia yang belum terungkap (cukup \"menyimpan rahasia\"); isinya tetap di kolom secret kartu. Pindahkan fakta detail (tokoh, tempat, aturan, hubungan, janji, utang) ke kartu memori baru atau perbarui kartu lama.
+Keluarkan JSON: {"summary":"...","new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"secret":null,"known_by":null,"reveal_secret":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null}],"update_cards":[{"keyword":"...","text":"..."}]}
 ${CARD_RULES}`;
   const r=parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
   if(!r.summary||!String(r.summary).trim())throw new Error('Hasil pemadatan kosong.');
@@ -1550,6 +1632,7 @@ ATURAN DASAR:
 - Karakter NPC wajib mengikuti kolom persona (sifat dan gaya bicara) serta rel (hubungan). Hubungan tidak boleh langsung akrab atau berubah drastis tanpa interaksi dan sebab yang tercatat; bangun kedekatan secara bertahap (slow burn).
 - TINGKAT DIKENALI (tertera pada kartu karakter): Belum Dikenali = orang asing bagi tokoh utama; NPC bersikap seperti pada orang asing (waspada, sopan, canggung, atau acuh sesuai kepribadiannya), tidak akrab, dan tidak tahu apa pun tentang masa lalu tokoh utama. Cukup Dikenali = sudah beberapa kali berinteraksi; boleh lebih santai dan saling tahu hal dasar yang pernah benar-benar terjadi di antara mereka. Sangat Dikenali = dekat dan saling memahami; boleh akrab, menebak suasana hati, dan memakai kenangan bersama yang tercatat. Jangan membuat kedekatan melompat melampaui tingkat yang tercatat.
 - BATAS PENGETAHUAN NPC (POV): Ringkasan, kartu, status, dan log hanyalah pengetahuan NARATOR, bukan pengetahuan NPC. Seorang NPC hanya tahu apa yang (a) ia saksikan atau alami langsung di lokasi dan adegan aktif sekarang, (b) ia dengar langsung di hadapannya, (c) dikatakan pemain secara lisan di dalam adegan, atau (d) pengetahuan umum dunia dan bidangnya yang wajar. NPC yang baru ditemui, tidak hadir saat suatu kejadian, atau berada di tempat lain DILARANG KERAS menyinggung, menyindir, atau bereaksi pada kejadian, rahasia, janji, nama, kekuatan, riwayat, atau isi pikiran tokoh utama, kecuali pemain sendiri mengungkapkannya secara verbal di dalam adegan. Kabar dari pihak ketiga hanya boleh bila jalur penyebarannya wajar dan sudah tampak di cerita (ada saksi, ada waktu yang cukup berlalu). Bila ragu apakah seorang NPC tahu sesuatu, anggap ia TIDAK tahu.
+- BATAS PENGETAHUAN MUTLAK (ZERO-KNOWLEDGE NPC): NPC DILARANG KERAS mengetahui nama panggilan rahasia, status masa lalu, atau identitas tersembunyi dari kartu karakter lain KECUALI pemain atau karakter bersangkutan telah menyebutkannya secara lisan di dalam adegan aktif saat ini. Teks kartu dan ringkasan adalah catatan narator, bukan pengetahuan NPC. Bila informasi itu hanya ada di ringkasan atau kartu latar, anggap NPC sama sekali tidak mengetahuinya. Kolom Hubungan hanya tertera untuk karakter yang sudah cukup dikenal; jangan menebak hubungan yang tidak tertulis. Blok [RAHASIA TERSEMBUNYI] berisi hal yang hanya diketahui pemiliknya dan karakter yang tercantum \"Yang TAHU\"; selain mereka, tidak seorang pun tahu, meskipun hadir.
 - ATURAN PENGAMAN DASAR (selalu berlaku, juga saat tidak ada analisis awal): patuhi jam fiktif pada KEADAAN DUNIA TERKINI. Selama hari fiktif masih 1, kejadian "kemarin" atau "tadi malam" di dalam cerita belum ada, jadi jangan membuat NPC menyinggungnya (latar sebelum cerita yang tercatat boleh). Jangan membuat NPC yang tidak hadir di lokasi ikut berbicara atau mengetahui rahasia yang belum diungkap. Bila posisi karakter tidak jelas, pertahankan logika kehadiran yang wajar.
 - SUDUT PANDANG: utamakan sudut pandang tokoh utama. Pikiran dan niat tersembunyi NPC hanya diungkap lewat tindakan, ucapan, dan ekspresi yang bisa dilihat atau didengar, kecuali GAYA BAHASA dari pemain meminta sebaliknya.
 - Pikiran tokoh, bila dipakai: potongan singkat 1-2 kalimat berbahasa lisan yang muncul spontan sebagai reaksi saat itu, bukan penjelasan, rangkuman pengalaman, atau analisis.
@@ -1569,6 +1652,7 @@ ATURAN DASAR:
   }
   if(plan.focus&&!opening)parts.push('[FOKUS ADEGAN SAAT INI]\n'+plan.focus);
   if(cards.length)parts.push('[KARTU LATAR AKTIF (catatan konsistensi, jangan dijelaskan semuanya)]\n'+cards.map(c=>cardLine(st,c,inc,plan.full.has(c.id)||(opening&&c.isPlayer))).join('\n'));
+  {const sb=secretBlock(st,plan);if(sb)parts.push(sb)}
   if(!opening){
     /* Bagian ini null-safe: tanpa pra-analisis (mode standar) semua bernilai kosong dan memakai aturan dasar */
     const sp=plan.spatial||[];
@@ -1598,7 +1682,7 @@ ATURAN DASAR:
 - Perkenalkan paling banyak satu atau dua hal baru sekaligus. Jangan membeberkan riwayat, asal-usul, kekuatan, atau aturan dunia secara langsung; biarkan terungkap pelan lewat kejadian berikutnya.
 - Jangan membuka dengan dialog atau pikiran tokoh yang mengandaikan pembaca sudah tahu latar belakangnya. Dialog baru boleh muncul setelah pembaca tahu siapa yang bicara dan di mana.
 - Tahan rahasia. Akhiri pada situasi terbuka yang mengundang pemain bertindak. Minimal ${mw} kata.`
-    :`Lanjutkan ceritanya. Satu kejadian utama, fokus, tanpa penjelasan berlebih. Minimal ${mw} kata.`);
+    :`Lanjutkan ceritanya. Satu kejadian utama, fokus, tanpa penjelasan berlebih. Minimal ${mw} kata.\nSebelum menulis ucapan atau reaksi NPC, pastikan setiap hal yang ia sebut atau ia anggap benar berasal dari: apa yang ia saksikan atau dengar di adegan ini, pengetahuan umum dunia, atau yang tercatat ia ketahui. Bila tidak, ia tidak tahu dan tidak boleh menyinggungnya.`);
   return{system,prompt:parts.join('\n\n')};
 }
 
@@ -1669,7 +1753,8 @@ function renderCtx(){
   $('#ctxF').textContent=a.focus||'';
   const line=(l,v)=>v?`<p><small>${l}: ${esc(v)}</small></p>`:'';
   $('#ctxB').innerHTML=(a.focus?`<p>${esc(a.focus)}</p>`:'')
-    +'<div>'+cs.map(c=>`<button class="kc ${c.pin?'pin':''}" data-act="ctx-card"><small>${esc(CT[c.type]||CT.pengetahuan)}</small>${esc(mainKw(c))}</button>`).join('')+'</div>'
+    +'<div>'+cs.map(c=>`<button class="kc ${c.pin?'pin':''}" data-act="ctx-card" data-id="${c.id}" ${(c.type==='karakter'&&!c.isPlayer)?`title="${esc(FAM[famOf(c)])}"`:''}><small>${esc(CT[c.type]||CT.pengetahuan)}</small>${esc(mainKw(c))}${famBadge(c,true)}</button>`).join('')+'</div>'
+    +(()=>{const ic=ctxInfo&&st.cards[ctxInfo];return(ic&&cs.includes(ic))?`<div class="kcinfo"><p><b>${esc(mainKw(ic))}</b> ${famBadge(ic)}</p><p><small>${esc(FAM_UI[famOf(ic)].desc)}</small></p>${ic.rel?`<p><small>Hubungan</small> ${esc(ic.rel)}</p>`:''}<button class="btn sm" data-act="ctx-open" data-id="${ic.id}">Buka kartu</button></div>`:''})()
     +line('Hadir',(a.scene||[]).join(', '))
     +line('Ketegangan',a.tension||'')+line('Posisi',(a.spatial||[]).map(x=>x.name+': '+x.status).join('; '))
     +(d?line('Nada dan tempo',[d.tone,d.pace?'tempo '+d.pace:'',d.length?'panjang '+d.length:''].filter(Boolean).join(', '))+line('Kemungkinan kejadian',d.beats.join('; '))+line('Dihindari',d.avoid.join('; ')):'')
@@ -1710,13 +1795,14 @@ async function sendTurn(text,m){
     Tok.stage='Narasi';
     let narr=(await gemini({chain:chainMain(st),system,prompt,temperature:S.temperature,stream:true,onChunk:updateLive})).trim();
     let note=null;
+    const leak=leakScan(st,text,plan,narr);
     if(S.consistency!=='off'){
       // Tahap 2b: pemeriksa konsistensi (model ringan)
       setStatus('2/3 Memeriksa konsistensi narasi…');
       $('#log').insertAdjacentHTML('beforeend',waitHtml('2/3 Memeriksa konsistensi narasi…','waitBox3'));toBottom();
       startWait(['2/3 Memeriksa konsistensi narasi…','Membandingkan dengan kartu, status, dan percakapan…']);
-      let vs=[];Tok.stage='Pemeriksa konsistensi';
-      try{vs=await checkConsistency(st,text,m,plan,narr)}
+      let vs=leak.slice();Tok.stage='Pemeriksa konsistensi';
+      try{vs=vs.concat(await checkConsistency(st,text,m,plan,narr))}
       catch(e){if(e&&e.name==='AbortError')throw e;console.warn('Pemeriksa konsistensi gagal',e)}
       const w3=$('#waitBox3');if(w3)w3.remove();
       const majors=vs.filter(v=>v.severity==='major');
@@ -1735,7 +1821,7 @@ async function sendTurn(text,m){
           err(e,'Penulisan ulang gagal, memakai narasi pertama.');
         }
       }
-    }
+    }else if(leak.length)note={fixed:false,items:leak.map(v=>v.detail)};
     undo=snapshot;
     st.turn++;
     st.log.push({role:'user',text,mode:m,turn:st.turn},{role:'ai',text:narr,turn:st.turn,note});
@@ -1954,7 +2040,7 @@ function openStory(id){
   if(!cur.director.runtimeModel)cur.director.runtimeModel=cur.director.model||S.directorRuntimeModel;
   cur.worldState=ensureWorldState(cur);
   cur.cards=cur.cards||{};cur.moods=cur.moods||{};cur.pov=cur.pov||'';cur.suggestions=cur.suggestions||[];cur.world.mcProfile=cur.world.mcProfile||{};cur.active=cur.active||{ids:[],focus:'',guidance:'',added:[],dropped:[]};
-  Object.values(cur.cards).forEach(c=>{c.type=normType(c.type);c.age=c.age||'';c.race=c.race||'';c.gender=c.gender||'';c.look=c.look||'';c.persona=c.persona||'';c.rel=c.rel||'';c.status=c.status||'';c.fam=(c.type==='karakter'&&!c.isPlayer)?(normFam(c.fam)||(c.rel?'cukup':'belum')):''});
+  Object.values(cur.cards).forEach(c=>{c.type=normType(c.type);c.age=c.age||'';c.race=c.race||'';c.gender=c.gender||'';c.look=c.look||'';c.persona=c.persona||'';c.rel=c.rel||'';c.status=c.status||'';c.secret=c.secret||'';c.knownBy=Array.isArray(c.knownBy)?c.knownBy:[];c.fam=(c.type==='karakter'&&!c.isPlayer)?(normFam(c.fam)||(c.rel?'cukup':'belum')):''});
   for(const f of cur.inv.schema){const d=cur.inv.data;if(f.type==='list'&&Array.isArray(d[f.key]))d[f.key]=d[f.key].map(normItem)}
   undo=null;cloudDirty=cloudDirty||(cur.updated>(cur.cloudAt||0))||needsV42Migration;cardQ='';cardType='';cardOpen=null;cardExp=new Set();
   if(needsV42Migration){cur.updated=Date.now();flushSave();}
@@ -2092,13 +2178,32 @@ function renderTab(){
 }
 
 function tabSum(){
-  const st=cur;
-  return `<p class="hint">Ringkasan ini dikirim ke narator setiap giliran. Catatan sejak pemadatan terakhir: ${st.summary.entries.length} dari ${S.compressEvery}. Boleh diedit bila ada yang keliru.</p>
-  <textarea id="sumTa" rows="14">${esc(summaryText(st))}</textarea>
-  <div class="row"><button class="btn pri" data-act="sum-save">Simpan ringkasan</button><button class="btn" data-act="sum-compress">Padatkan sekarang</button></div>`;
+  const st=cur,n=recentN(),es=st.summary.entries||[];
+  const isShort=e=>num(e.turn,0)>st.turn-n;
+  const shortN=es.filter(isShort).length,longN=es.length-shortN;
+  const list=es.map(e=>{
+    const sh=isShort(e);
+    const lab=sh?'Short-term · belum masuk ringkasan utama':(S.deepMode?'Long-term · arsip, dikurasi pra-analisis':'Long-term · dikirim ke narator');
+    const meta=['giliran '+(e.turn!=null?e.turn:'?'),e.pov?'POV '+e.pov:'',e.location||'',(Array.isArray(e.characters_involved)&&e.characters_involved.length)?e.characters_involved.join(', '):''].filter(Boolean).join(' · ');
+    return `<div class="sent ${sh?'short':'long'}"><span class="sbad">${esc(lab)}</span><small>${esc(meta)}</small><p>${esc(e.text)}</p></div>`;
+  }).join('');
+  return `<p class="hint">Ringkasan inti (jangka panjang) dikirim ke narator setiap giliran. Boleh diedit bila ada yang keliru.</p>
+  <textarea id="sumTa" rows="9">${esc(st.summary.base||'')}</textarea>
+  <div class="row"><button class="btn pri" data-act="sum-save">Simpan ringkasan</button><button class="btn" data-act="sum-compress">Padatkan sekarang</button></div>
+  <p class="hint">Catatan per giliran sejak pemadatan terakhir: ${es.length} dari ${S.compressEvery} (${shortN} redup = short-term, ${longN} menyala = long-term). Catatan redup tidak dikirim ke narator karena ${n} giliran terakhir sudah terbaca utuh dari riwayat percakapan.</p>
+  ${list||'<p class="empty">Belum ada catatan per giliran.</p>'}`;
 }
 
 /* --- Kartu memori --- */
+function expandTo(id){const st=cur;let p=st.cards[id],g=0;while(p&&p.parent&&st.cards[p.parent]&&g++<8){cardExp.add(p.parent);p=st.cards[p.parent]}}
+function hierBlock(c){
+  const st=cur,chain=[];let p=c,g=0;
+  while(p.parent&&st.cards[p.parent]&&g++<8){p=st.cards[p.parent];chain.unshift(p)}
+  const kids=Object.values(st.cards).filter(x=>x.parent===c.id);
+  if(!chain.length&&!kids.length)return'';
+  const chip=x=>`<button type="button" class="kc" data-act="card-goto" data-id="${x.id}">${esc(mainKw(x))}${famBadge(x,true)}</button>`;
+  return `<div class="hier">${chain.length?`<p><small>Induk</small>${chain.map(chip).join(' \u203A ')}</p>`:''}${kids.length?`<p><small>Turunan</small>${kids.slice(0,24).map(chip).join('')}</p>`:''}</div>`;
+}
 function cardEditor(c){
   const st=cur,cs=Object.values(st.cards);
   const opts=['<option value="">(tidak ada, kartu utama)</option>'].concat(cs.filter(x=>x.id!==c.id&&!wouldCycle(st,c.id,x.id)).map(x=>`<option value="${x.id}" ${x.id===c.parent?'selected':''}>${esc(mainKw(x))}</option>`)).join('');
@@ -2106,9 +2211,11 @@ function cardEditor(c){
   const b=f=>`data-bind="card" data-id="${c.id}" data-f="${f}"`;
   const prof=(c.type==='karakter')?`<div class="row"><label>Umur<input ${b('age')} value="${esc(c.age)}"></label><label>Ras<input ${b('race')} value="${esc(c.race)}"></label><label>Gender<input ${b('gender')} list="genders" value="${esc(c.gender)}"></label></div>`:'';
   const prof2=c.type==='karakter'
-    ?`${c.isPlayer?'':`<label>Tingkat dikenali tokoh utama<select ${b('fam')}>${FAM_ORDER.map(x=>`<option value="${x}" ${famOf(c)===x?'selected':''}>${FAM[x]}</option>`).join('')}</select></label>`}<label>Penampilan fisik (ujung kepala sampai ujung kaki, ciri khusus)<textarea rows="3" ${b('look')}>${esc(c.look||'')}</textarea></label><label>Kepribadian (sifat dasar, gaya bicara, pola perilaku)<textarea rows="3" ${b('persona')}>${esc(c.persona||'')}</textarea></label><label>Hubungan dengan karakter lain<textarea rows="3" ${b('rel')}>${esc(c.rel||'')}</textarea></label>`
+    ?`${c.isPlayer?'':`<label>Tingkat dikenali tokoh utama<select ${b('fam')}>${FAM_ORDER.map(x=>`<option value="${x}" ${famOf(c)===x?'selected':''}>${FAM[x]}</option>`).join('')}</select></label>`}<label>Penampilan fisik (ujung kepala sampai ujung kaki, ciri khusus)<textarea rows="3" ${b('look')}>${esc(c.look||'')}</textarea></label><label>Kepribadian (sifat dasar, gaya bicara, pola perilaku)<textarea rows="3" ${b('persona')}>${esc(c.persona||'')}</textarea></label><label>Hubungan dengan karakter lain<textarea rows="3" ${b('rel')}>${esc(c.rel||'')}</textarea></label><label>Rahasia (hanya narator; karakter lain tidak tahu sampai terungkap lisan)<textarea rows="3" ${b('secret')}>${esc(c.secret||'')}</textarea></label><label>Karakter yang sudah tahu rahasia ini (pisahkan dengan koma)<input ${b('knownBy')} value="${esc((c.knownBy||[]).join(', '))}"></label><div class="row"><button class="btn sm" data-act="secret-split" data-id="${c.id}">Pisahkan rahasia otomatis dari isi kartu</button></div>`
     :(c.type==='janji'?`<label>Status<select ${b('status')}>${STATUSES.map(x=>`<option value="${x}" ${(c.status||'terbuka')===x?'selected':''}>${x}</option>`).join('')}</select></label>`:'');
+  const relbox=(c.type==='karakter'&&!c.isPlayer)?`<div class="relbox ${famOf(c)}"><p><small>Tingkat dikenali</small> ${famBadge(c)}</p><p><small>Status relasi</small> ${c.rel?esc(c.rel):'<em>Belum dicatat</em>'}</p>${relVisible(c)?'':'<p><small>Kolom hubungan belum dikirim ke narator sampai karakter ini cukup dikenali.</small></p>'}</div>`:'';
   return `<div class="ced">
+    ${relbox}${hierBlock(c)}
     <label>Kata kunci (pisahkan dengan koma)<input ${b('keyword')} value="${esc(c.keyword)}"></label>
     <label>Jenis<select ${b('type')}>${typeOpts}</select></label>
     ${prof}
@@ -2130,8 +2237,8 @@ function renderCardList(){
   const row=(c,d,flat)=>{
     const k=kids(c.id),exp=cardExp.has(c.id);
     const tg=(!flat&&k.length)?`<button class="tg" data-act="card-toggle" data-id="${c.id}" aria-expanded="${exp}" aria-label="${exp?'Sembunyikan':'Tampilkan'} sub-kartu ${esc(mainKw(c))}">${exp?'&#9662;':'&#9656;'}</button>`:'<span class="tg"></span>';
-    const meta=[c.type==='karakter'?[c.age,c.race,c.gender,c.isPlayer?'':FAM[famOf(c)]].filter(Boolean).join(', '):'',flat&&path(c)?'dalam '+path(c):'',c.text].filter(Boolean).join(' | ');
-    return `<div class="crow" style="margin-left:${flat?0:d*16}px">${tg}<button class="cmain ${cardOpen===c.id?'on':''}" data-act="card-edit" data-id="${c.id}"><span class="cname">${esc(mainKw(c))}</span>${c.isPlayer?'<span class="badge me">Pemain</span>':''}<span class="badge">${CT[c.type||'pengetahuan']}</span>${actSet.has(c.id)?'<span class="badge on">aktif</span>':''}${k.length?`<span class="badge">${k.length} sub</span>`:''}<small>${esc(meta)}</small></button></div>${cardOpen===c.id?cardEditor(c):''}`;
+    const meta=[c.type==='karakter'?[c.age,c.race,c.gender].filter(Boolean).join(', '):'',flat&&path(c)?'dalam '+path(c):'',c.text].filter(Boolean).join(' | ');
+    return `<div class="crow" style="margin-left:${flat?0:d*16}px">${tg}<button class="cmain ${cardOpen===c.id?'on':''}" data-act="card-edit" data-id="${c.id}"><span class="cname">${esc(mainKw(c))}</span>${c.isPlayer?'<span class="badge me">Pemain</span>':''}<span class="badge">${CT[c.type||'pengetahuan']}</span>${famBadge(c)}${c.secret?'<span class="badge" title="Rahasia tersimpan; hanya dikirim ke narator bila pemilik atau yang tahu sedang hadir">rahasia</span>':''}${actSet.has(c.id)?'<span class="badge on">aktif</span>':''}${k.length?`<span class="badge">${k.length} sub</span>`:''}<small>${esc(meta)}</small></button></div>${cardOpen===c.id?cardEditor(c):''}`;
   };
   let html='',shown=0;
   if(q||cardType){
@@ -2397,17 +2504,20 @@ const acts={
     if(busy)return;abortCtl=new AbortController();setBusy(true);renderSuggest();Tok.begin();
     try{await runAnalysis(cur)}finally{if(Tok.finish(cur))touch();setBusy(false);renderSuggest();renderLog()}
   },
-  'sum-save':()=>{cur.summary={base:$('#sumTa').value.trim(),entries:[]};touch();toast('Ringkasan disimpan.');renderTab()},
+  'sum-save':()=>{cur.summary.base=$('#sumTa').value.trim();touch();toast('Ringkasan disimpan.');renderTab()},
   'sum-compress':async()=>{
     if(busy)return;if(!S.apiKey){toast('Isi API Key dulu.');return}
     abortCtl=new AbortController();setBusy(true);toast('Memadatkan ringkasan…');
     try{
-      if(!cur.summary.entries.length){cur.summary.base=$('#sumTa').value.trim()}
+      cur.summary.base=$('#sumTa').value.trim();
       await compress(cur);touch();toast('Ringkasan dipadatkan.');renderTab();
     }catch(e){err(e)}finally{setBusy(false)}
   },
-  'ctx-card':()=>openDrawer('cards'),
-  'card-add':()=>{const id=uid();cur.cards[id]={id,keyword:'Kartu baru',type:'pengetahuan',age:'',race:'',gender:'',look:'',persona:'',rel:'',fam:'',status:'',text:'Isi kartu.',parent:null,pin:false,isPlayer:false};cardOpen=id;cardQ='';cardType='';touch();renderTab()},
+  'ctx-card':el=>{const id=el.dataset.id,c=id&&cur&&cur.cards[id];
+    if(c&&c.type==='karakter'&&!c.isPlayer){ctxInfo=ctxInfo===id?'':id;renderCtx();return}
+    openDrawer('cards')},
+  'ctx-open':el=>{const id=el.dataset.id;if(cur&&cur.cards[id]){expandTo(id);cardOpen=id;cardQ='';cardType=''}openDrawer('cards')},
+  'card-add':()=>{const id=uid();cur.cards[id]={id,keyword:'Kartu baru',type:'pengetahuan',age:'',race:'',gender:'',look:'',persona:'',rel:'',fam:'',secret:'',knownBy:[],status:'',text:'Isi kartu.',parent:null,pin:false,isPlayer:false};cardOpen=id;cardQ='';cardType='';touch();renderTab()},
   'card-del':el=>{
     const c=cur.cards[el.dataset.id];if(!c)return;
     if(c.isPlayer&&!confirm('Ini kartu tokoh utama. Tetap hapus?'))return;
@@ -2415,6 +2525,32 @@ const acts={
     delete cur.cards[c.id];cardOpen=null;touch();renderCardList();
   },
   'card-toggle':el=>{const id=el.dataset.id;cardExp.has(id)?cardExp.delete(id):cardExp.add(id);renderCardList()},
+  'secret-split':async el=>{
+    const c=cur&&cur.cards[el.dataset.id];if(!c||busy)return;
+    if(!S.apiKey){toast('Isi API Key dulu.');return}
+    abortCtl=new AbortController();setBusy(true);toast('Memisahkan rahasia…');
+    try{
+      const prompt=`TUGAS: Pisahkan informasi RAHASIA dari kartu karakter. Rahasia = hal yang hanya diketahui karakter ini dan tidak diketahui karakter lain: identitas asli, nama panggilan rahasia, status masa lalu, niat tersembunyi.
+Kolom publik ("text", "persona", "rel") hanya boleh berisi hal yang terlihat atau diketahui umum. Pindahkan SEMUA rahasia ke "secret" tanpa menghilangkan informasi apa pun; jangan menambah fakta baru. Bila tidak ada rahasia, kembalikan "secret":"".
+[KARTU] ${c.keyword}
+text: ${c.text||'-'}
+look: ${c.look||'-'}
+persona: ${c.persona||'-'}
+rel: ${c.rel||'-'}
+Keluarkan JSON: {"text":"isi publik","persona":"persona publik atau kosong","rel":"hubungan publik atau kosong","secret":"semua rahasia atau kosong","known_by":["nama karakter yang sudah tahu, bila tertulis"]}`;
+      const r=parseJSON(await gemini({chain:chainAn(cur),system:ANALYZER_SYS,prompt,json:true,temperature:.2}));
+      const sv=cleanTxt(r.secret),t=cleanTxt(r.text);
+      if(!sv||!t){toast('Tidak ditemukan rahasia pada kartu ini.')}
+      else{
+        c.text=t;
+        for(const f of ['persona','rel']){const v=cleanTxt(r[f]);if(v)c[f]=v}
+        c.secret=c.secret?c.secret+' '+sv:sv;
+        if(Array.isArray(r.known_by))c.knownBy=[...new Set([...(c.knownBy||[]),...r.known_by.map(cleanTxt).filter(Boolean)])].slice(0,12);
+        touch();renderTab();toast('Rahasia dipisahkan. Periksa isi kartu.',4200);
+      }
+    }catch(e){err(e)}finally{setBusy(false)}
+  },
+  'card-goto':el=>{const id=el.dataset.id;if(!cur||!cur.cards[id])return;expandTo(id);cardOpen=id;cardQ='';cardType='';renderTab()},
   'card-edit':el=>{const id=el.dataset.id;cardOpen=cardOpen===id?null:id;renderCardList()},
   'card-expall':()=>{cardExp=new Set(Object.values(cur.cards).filter(c=>c.parent).map(c=>c.parent));renderCardList()},
   'card-colall':()=>{cardExp=new Set();cardOpen=null;renderCardList()},
@@ -2515,7 +2651,8 @@ $('#dbody').addEventListener('change',e=>{
       else if(D.f==='parent')c.parent=v&&!wouldCycle(st,c.id,v)?v:null;
       else if(D.f==='pin')c.pin=v;
       else if(D.f==='fam')c.fam=normFam(v)||'belum';
-      else if(['type','age','race','gender','look','persona','rel','status'].includes(D.f))c[D.f]=String(v).trim();
+      else if(D.f==='knownBy')c.knownBy=String(v).split(',').map(x=>x.trim()).filter(Boolean).slice(0,12);
+      else if(['type','age','race','gender','look','persona','rel','secret','status'].includes(D.f))c[D.f]=String(v).trim();
       else c.keyword=String(v).trim()||c.keyword;
       touch();renderCardList();return}
     case 'inv-num':d[D.key]=clampN(num(v),st.inv.schema.find(f=>f.key===D.key));break;
