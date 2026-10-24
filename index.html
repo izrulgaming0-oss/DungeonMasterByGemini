@@ -890,6 +890,27 @@ const invSchemaText=st=>st.inv.schema.map(f=>`${f.key} (${f.type}${f.max!=null?'
 
 /* ---------- Memori: long-term (ringkasan) dan short-term (log mentah) ---------- */
 const summaryText=st=>[st.summary.base,...st.summary.entries.map(e=>e.text)].filter(Boolean).join('\n');
+/* v5.1: memori jangka panjang (base + catatan lama ber-tag) dipisah dari memori jangka pendek (log mentah) */
+const RECENT_N=4;
+const recentN=()=>S.deepMode?RECENT_N:3;
+const povOf=st=>st.pov||(st.world&&st.world.mc)||'tokoh utama';
+/* catatan per-giliran yang sudah keluar dari jendela log mentah (yang di dalam jendela sudah ada di recentScene, jadi tidak diulang) */
+const olderEntries=st=>(st.summary.entries||[]).filter(e=>!(num(e.turn,0)>st.turn-recentN()));
+function taggedMemoryText(st){
+  return olderEntries(st).map(e=>{
+    const tg=['giliran '+(e.turn!=null?e.turn:'?'),e.pov?'POV '+e.pov:'',e.location?'di '+e.location:'',(Array.isArray(e.characters_involved)&&e.characters_involved.length)?'melibatkan '+e.characters_involved.join(', '):'',e.elapsed_minutes!=null?'waktu cerita '+fmtElapsed(e.elapsed_minutes):''].filter(Boolean).join('; ');
+    return `- (${tg}) ${e.text}`;
+  }).join('\n');
+}
+function moodText(st){
+  const m=st.moods||{};
+  return Object.values(m).filter(x=>x&&x.emotion&&st.turn-num(x.turn,0)<=2).map(x=>`- ${x.name}: ${x.emotion} (tercatat giliran ${x.turn})`).join('\n');
+}
+const TENSION_TXT={
+  damai:'DAMAI: fokus pada dialog, interaksi sosial, dan suasana; tempo boleh santai dan kaya detail.',
+  investigasi:'INVESTIGASI: ketegangan terkontrol; tonjolkan petunjuk, kejanggalan, dan reaksi yang terukur; tempo sedang.',
+  bahaya:'BAHAYA: percepat tempo; kalimat pendek dan tegas, aksi beruntun, minim basa-basi. NPC dilarang bersikap santai, bercanda, atau bertele-tele (kecuali kepribadiannya memang membuatnya bereaksi tidak wajar, misalnya panik atau syok).'
+};
 const lastAI=st=>{for(let i=st.log.length-1;i>=0;i--)if(st.log[i].role==='ai')return st.log[i].text;return''};
 /* Short-term memory: empat giliran terakhir secara utuh, tanpa pemotongan karakter.
    Long-term memory tetap disediakan terpisah melalui summaryText(). */
@@ -899,7 +920,15 @@ function recentTurnsRaw(st,n=4,skipLast=0){
     (e.role==='user'?`[Pemain, ${MODE[e.mode]||'Aksi'}] `:'[Narasi] ')+e.text
   ).join('\n\n');
 }
-function recentScene(st){return recentTurnsRaw(st,4)}
+function recentScene(st){
+  if(S.deepMode)return recentTurnsRaw(st,RECENT_N);
+  /* Mode standar: giliran terbaru utuh, giliran yang lebih lama dibatasi agar konteks tidak menumpuk */
+  const end=st.log.length,start=Math.max(0,end-recentN()*2),slice=st.log.slice(start,end);
+  return slice.map((e,i)=>{
+    let t=e.text;if(i<slice.length-2&&t.length>1200)t='…'+t.slice(-1200);
+    return (e.role==='user'?`[Pemain, ${MODE[e.mode]||'Aksi'}] `:'[Narasi] ')+t;
+  }).join('\n\n');
+}
 
 /* ---------- Prompt: Analis (model ringan) ---------- */
 const ANALYZER_SYS='Kamu adalah mesin analis memori untuk game cerita teks. Jawab HANYA dengan JSON valid sesuai skema, tanpa markdown, dalam bahasa Indonesia yang ringkas dan akurat. Jangan mengarang fakta yang tidak ada di teks.';
@@ -1256,8 +1285,16 @@ async function preAnalyze(st,text,m){
   const prompt=`TUGAS (Tahap 1: sutradara adegan). Kamu menyiapkan bahan agar narator menulis lanjutan cerita yang konsisten, alami, dan terasa ditulis manusia. Evaluasi input pemain, kelola kartu memori, dan beri arahan adegan.
 
 [TOKOH UTAMA] ${st.world.mc||'-'}
-[RINGKASAN CERITA]
-${summaryText(st)||'(kosong)'}
+[RINGKASAN JANGKA PANJANG (makro)]
+${st.summary.base||'(kosong)'}
+[CATATAN MEMORI MASA LALU BER-TAG (di luar log mentah di bawah)]
+${taggedMemoryText(st)||'(tidak ada)'}
+[JAM FIKTIF]
+${clockLabel(ensureWorldState(st))}; day_count=${ensureWorldState(st).day_count}; elapsed_minutes=${ensureWorldState(st).elapsed_minutes}
+[POV AKTIF]
+${povOf(st)}
+[EMOSI NPC DARI GILIRAN SEBELUMNYA]
+${moodText(st)||'(tidak ada)'}
 [STATUS SAAT INI]
 ${invCompact(st)||'(kosong)'}
 [JANJI DAN RAHASIA YANG MASIH BERLAKU]
@@ -1273,19 +1310,29 @@ ${text}
 
 Keluarkan JSON:
 {"focus":"1-2 kalimat: situasi dan arah adegan saat ini (di mana, siapa terlibat, tujuan atau ketegangan yang sedang berjalan)",
+ "tension_level":"damai|investigasi|bahaya",
+ "pov":"nama karakter yang sudut pandangnya disorot giliran ini (default tokoh utama)",
  "active_cards":["keyword utama kartu yang dipakai giliran ini, maksimal ${S.maxCards}"],
- "in_scene":["keyword utama karakter dan mob yang hadir atau berinteraksi di adegan ini"],
+ "spatial_presence":[{"name":"keyword utama karakter atau mob","status":"di ruangan yang sama | di luar (keterangan) | tersembunyi | jauh (lokasi lain)"}],
+ "relevant_memories":["ringkasan masa lalu yang relevan, dipilih dari CATATAN MEMORI MASA LALU BER-TAG"],
+ "npc_emotions":[{"name":"keyword karakter","emotion":"emosi saat ini dan arah perubahannya, maks 12 kata"}],
  "card_updates":[{"keyword":"keyword kartu yang sudah ada","text":"isi terbaru lengkap (pertahankan fakta lama yang masih berlaku) atau null","look":null,"persona":null,"rel":null,"status":null}],
- "guidance":"catatan singkat untuk narator bila input bermasalah, atau string kosong"${S.useDirection?`,
- "direction":{"tone":"nada dan suasana adegan, mis. tegang, hangat tapi canggung","pace":"lambat|sedang|cepat","length":"pendek|sedang|panjang","beats":["1-3 kejadian atau reaksi kecil yang wajar"],"voices":[{"name":"keyword karakter","note":"kondisi emosi saat ini, cara bicara atau bereaksi, dan satu hal penting yang BELUM mereka ketahui atau saksikan, maks 40 kata"}],"avoid":["pola yang terlalu sering di narasi terakhir"]}`:''}}
+ "guidance":"catatan singkat untuk narator bila input bermasalah, atau peringatan agar tidak melanggar POV, batas pengetahuan NPC, atau logika waktu fiktif; string kosong bila tidak ada"${S.useDirection?`,
+ "direction":{"tone":"nada dan suasana adegan, mis. tegang, hangat tapi canggung","pace":"lambat|sedang|cepat","length":"pendek|sedang|panjang","creative_beats":["1-3 kejadian kecil yang kreatif, segar, dan wajar untuk diselipkan (gangguan lingkungan atau gestur unik), bukan klise"],"voices":[{"name":"keyword karakter","note":"kondisi emosi saat ini (selaras dengan npc_emotions), cara bicara atau bereaksi, dan satu hal penting yang BELUM mereka ketahui atau saksikan, maks 40 kata"}],"avoid":["pola yang terlalu sering di narasi terakhir"]}`:''}}
 
 ATURAN:
 1. Pilih kartu yang RELEVAN dengan percakapan terakhir dan input baru. Lepas kartu yang pembahasannya sudah tidak relevan. Pertahankan tempat saat ini, karakter dan mob yang terlibat, serta item, perlengkapan, skill, janji, atau rahasia yang sedang berperan. Kartu induk dan kartu tokoh utama ditambahkan otomatis oleh sistem.
-2. "active_cards" dan "in_scene" memakai keyword utama kartu yang ADA di daftar. Jangan membuat kartu baru. Hanya yang masuk "in_scene" akan dikirim ke narator dengan profil lengkap (penampilan, kepribadian, hubungan), jadi isi dengan yang benar-benar hadir.
+2. "active_cards" dan "spatial_presence" memakai keyword utama kartu yang ADA di daftar. Jangan membuat kartu baru. Karakter di "spatial_presence" (selain yang berstatus jauh) akan dikirim ke narator dengan profil lengkap (penampilan, kepribadian, hubungan), jadi isi hanya dengan yang benar-benar relevan secara fisik di adegan ini.
 3. "card_updates": hanya untuk kartu yang isinya sudah usang atau bertentangan dengan percakapan terakhir (kondisi tempat berubah, sifat atau hubungan karakter berubah, status janji berubah). Tulis ulang secara ringkas. Kosongkan bila tidak perlu.
-4. "guidance": isi bila input pemain bertentangan dengan STATUS atau fakta (memakai benda yang tidak dimiliki, melampaui kemampuan atau level, berada di tempat yang salah). Tulis arahan netral tentang cara narator menanganinya. Jangan menulis ulang input pemain.${S.useDirection?`
+4. "guidance": isi bila input pemain bertentangan dengan STATUS atau fakta (memakai benda yang tidak dimiliki, melampaui kemampuan atau level, berada di tempat yang salah). Tulis arahan netral tentang cara narator menanganinya. Jangan menulis ulang input pemain. Gunakan juga untuk mengingatkan narator agar tidak melanggar POV atau logika waktu.
+A. VALIDASI WAKTU (time-gate): JAM FIKTIF di atas adalah satu-satunya acuan waktu cerita. Selama day_count masih 1 (belum 24 jam sejak cerita dimulai), konsep "kemarin" atau "tadi malam" untuk kejadian DI DALAM cerita belum ada; tidak boleh ada NPC menyinggungnya (latar sebelum cerita yang tercatat di kartu atau ringkasan inti boleh). Bila input atau situasi berpotensi memicu hal itu, tulis peringatan di "guidance" dan tandai sebagai pelanggaran kontinuitas.
+B. "tension_level": damai (dialog, interaksi sosial, keseharian) | investigasi (mencari petunjuk, misteri, ketegangan terkontrol) | bahaya (ancaman langsung, pertarungan, pelarian, bahaya fisik).
+C. "spatial_presence": untuk tiap karakter atau mob yang relevan, tulis posisi fisiknya terhadap tokoh utama saat ini. Status: "di ruangan yang sama", "di luar (keterangan, misalnya bisa mendengar bila berteriak)", "tersembunyi", atau "jauh (lokasi lain)". Hanya yang di ruangan yang sama (atau tersembunyi tetapi menyaksikan) yang dapat mendengar percakapan pelan atau melihat tindakan diam-diam.
+D. "relevant_memories": dari CATATAN MEMORI MASA LALU BER-TAG, pilih HANYA catatan yang punya hubungan sebab-akibat langsung dengan situasi dan input saat ini, lalu salin atau padatkan faktanya. Hormati POV: ambil catatan yang tag pov atau characters_involved-nya sesuai POV AKTIF (atau karakter yang disorot giliran ini); catatan tanpa tag boleh dipakai sebagai pengetahuan umum. Jangan memasukkan rahasia yang tidak diketahui sudut pandang itu, dan jangan menyalin isi log mentah. Kosongkan [] bila tidak ada yang relevan.
+E. "pov": ganti dari POV AKTIF hanya bila pemain jelas beralih mengendalikan atau menyorot karakter lain.
+F. "npc_emotions": lacak emosi NPC yang hadir. Lihat EMOSI NPC DARI GILIRAN SEBELUMNYA: emosi itu harus bertahan atau berubah bertahap (misalnya marah, lalu ragu, lalu tenang) selama sekitar 2-3 giliran, bukan reset ke netral, kecuali ada pemicu kuat di input.${S.useDirection?`
 5. "direction.length": adegan santai, transisi, atau jawaban singkat boleh "pendek"; konflik, penemuan penting, atau emosi besar boleh "panjang"; selebihnya "sedang".
-6. "beats": hal kecil yang wajar terjadi di dunia (reaksi tokoh lain sesuai agenda dan kepribadiannya, perubahan lingkungan, gangguan kecil). JANGAN menentukan keputusan, ucapan, atau pikiran tokoh utama, dan jangan menyelesaikan konflik besar sekaligus.
+6. "creative_beats": kejadian kecil yang kreatif sebagai pengganti klise (contoh: angin tiba-tiba mematikan separuh lilin; seseorang mengetuk pintu tiga kali secara ritmis), yaitu hal kecil yang wajar terjadi di dunia (reaksi tokoh lain sesuai agenda dan kepribadiannya, perubahan lingkungan, gangguan kecil). JANGAN menentukan keputusan, ucapan, atau pikiran tokoh utama, dan jangan menyelesaikan konflik besar sekaligus.
 7. "voices": untuk tiap karakter di "in_scene" (maks 4), tulis suasana hati saat ini dan cara bicara atau bereaksi yang sesuai kepribadian serta hubungannya dengan tokoh lain yang hadir. Tulis hanya apa yang secara wajar mereka ketahui dari yang benar-benar mereka saksikan, dengar, atau alami di adegan ini; jangan membuat mereka mengetahui kejadian yang tidak mereka saksikan.
 8. "avoid": 1-4 pola yang sudah terlalu sering muncul di narasi terakhir (pembuka paragraf serupa, gestur atau klise yang berulang, frasa yang sama, cara menutup adegan). Kosongkan bila tidak ada.`:''}`;
   return parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
@@ -1297,7 +1344,17 @@ function makePlan(st,text,r){
   if(ok&&Array.isArray(r.card_updates))for(const c of r.card_updates){if(!c||!c.keyword)continue;const ex=findCard(st,c.keyword);if(ex)patchCard(ex,c)}
   const idOf=k=>{const c=findCard(st,k);return c?c.id:null};
   const picks=ok&&Array.isArray(r.active_cards)?r.active_cards.map(idOf).filter(Boolean):[];
-  const scene=ok&&Array.isArray(r.in_scene)?r.in_scene.map(idOf).filter(Boolean):[];
+  const spatial=(ok&&Array.isArray(r.spatial_presence))?r.spatial_presence.map(x=>{const c=(x&&x.name)?findCard(st,x.name):null;return c?{id:c.id,name:mainKw(c),status:String((x&&x.status)||'').trim().slice(0,140)}:null}).filter(Boolean).slice(0,10):[];
+  const scene=spatial.length?spatial.filter(x=>!/^\s*jauh/i.test(x.status)).map(x=>x.id):(ok&&Array.isArray(r.in_scene)?r.in_scene.map(idOf).filter(Boolean):[]);
+  const tension=ok?(['damai','investigasi','bahaya'].find(t=>String(r.tension_level||'').toLowerCase().includes(t))||''):'';
+  const memories=(ok&&Array.isArray(r.relevant_memories))?arr(r.relevant_memories,8):null;
+  const povNow=ok?String(r.pov||'').trim().slice(0,60):'';
+  st.moods=st.moods||{};
+  if(ok&&Array.isArray(r.npc_emotions))for(const e of r.npc_emotions){
+    if(!e||!e.name||!e.emotion)continue;const c=findCard(st,e.name),nm=c?mainKw(c):String(e.name).trim();
+    st.moods[nm.toLowerCase()]={name:nm,emotion:String(e.emotion).trim().slice(0,160),turn:st.turn+1};
+  }
+  for(const k of Object.keys(st.moods))if(st.turn-num(st.moods[k]&&st.moods[k].turn,0)>6)delete st.moods[k];
   const litIn=matchCards(st,text).filter(h=>!h.c.pin).map(h=>h.c.id);
   const pins=Object.values(st.cards).filter(c=>c.pin).map(c=>c.id);
   const prevIds=((st.active&&st.active.ids)||[]).filter(id=>st.cards[id]&&!st.cards[id].pin);
@@ -1316,12 +1373,13 @@ function makePlan(st,text,r){
   const guidance=ok?String(r.guidance||'').trim():'';
   const d=ok&&S.useDirection&&r.direction&&typeof r.direction==='object'?r.direction:null;
   const dir=d?{tone:String(d.tone||'').trim(),pace:String(d.pace||'').trim(),length:String(d.length||'').trim().toLowerCase(),
-    beats:arr(d.beats,3),avoid:arr(d.avoid,4),
+    beats:arr(d.creative_beats||d.beats,3),avoid:arr(d.avoid,4),
     voices:(Array.isArray(d.voices)?d.voices:[]).map(v=>v&&v.name&&v.note?{name:String(v.name).trim(),note:String(v.note).trim()}:null).filter(Boolean).slice(0,4)}:null;
+  if(dir&&tension==='bahaya')dir.pace='cepat';
   const factor={pendek:.5,sedang:1,panjang:1.4}[dir&&dir.length]||1;
   const minWords=(S.varyLength&&dir)?Math.max(60,Math.round(S.minWords*factor/10)*10):S.minWords;
-  return{cards,full,focus,guidance,dir,minWords,
-    active:{ids:cards.map(c=>c.id),focus,guidance,added,dropped,scene:[...full].filter(id=>st.cards[id]&&!st.cards[id].isPlayer).map(id=>mainKw(st.cards[id])),dir}};
+  return{cards,full,focus,guidance,dir,minWords,spatial,tension,memories,pov:povNow,
+    active:{ids:cards.map(c=>c.id),focus,guidance,added,dropped,tension,spatial:spatial.map(x=>({name:x.name,status:x.status})),scene:[...full].filter(id=>st.cards[id]&&!st.cards[id].isPlayer).map(id=>mainKw(st.cards[id])),dir}};
 }
 
 /* TAHAP 2b (model ringan): periksa draf narasi terhadap fakta cerita */
@@ -1334,6 +1392,10 @@ async function checkConsistency(st,text,m,plan,narr){
 ${summaryText(st)||'(kosong)'}
 [KARTU MEMORI AKTIF]
 ${plan.cards.map(c=>cardLine(st,c,inc,true)).join('\n')||'(tidak ada)'}
+[JAM FIKTIF]
+${clockLabel(ensureWorldState(st))}; day_count=${ensureWorldState(st).day_count}
+[POSISI KARAKTER]
+${(plan.spatial||[]).map(x=>`- ${x.name}: ${x.status}`).join('\n')||'(tidak dicatat)'}
 [STATUS SAAT INI]
 ${invCompact(st)||'(kosong)'}
 [PERCAKAPAN SEBELUMNYA (${n} giliran)]
@@ -1351,6 +1413,7 @@ Jenis pelanggaran:
 - kontrol: narasi memutuskan tindakan, ucapan, atau pikiran BARU tokoh utama di luar input pemain.
 - karakter: perilaku atau cara bicara tokoh bertentangan dengan umur, ras, gender, atau sifat pada kartunya.
 - pov: NPC yang baru ditemui, tidak hadir, atau berada di tempat lain menyinggung/mengetahui kejadian, rahasia, nama, atau pikiran tokoh utama yang tidak ia saksikan dan tidak diungkap pemain secara lisan di adegan; atau kedekatan NPC melampaui tingkat dikenali dan interaksi yang tercatat (misalnya orang asing langsung bersikap akrab).
+- kontinuitas (waktu): selama day_count masih 1, NPC atau narasi menyinggung kejadian DALAM cerita yang terjadi "kemarin" atau "tadi malam" (latar sebelum cerita yang tercatat di kartu atau ringkasan boleh) = major. Karakter yang berstatus di luar, tersembunyi, atau jauh ikut menanggapi percakapan pelan atau tindakan diam-diam tokoh utama = major (pov).
 - kontinuitas: mengulang atau menghapus kejadian adegan terakhir, tokoh yang sudah pergi atau mati muncul lagi tanpa alasan, kronologi melompat tanpa dasar.
 Aturan: "major" bila jelas bertentangan dengan fakta, merampas kendali pemain, atau NPC jelas maha tahu (pov); "minor" untuk kejanggalan ringan. Perkembangan cerita yang wajar BUKAN pelanggaran. Maksimal 4 temuan. Jika tidak ada, kembalikan {"violations":[]}.`;
   const r=parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.2}));
@@ -1384,6 +1447,8 @@ ${narr}
 
 Keluarkan JSON:
 {"summary":"1-5 kalimat: HANYA perubahan/perkembangan penting dari narasi baru (dunia, tokoh, hubungan, janji, rahasia)",
+ "pov":"nama karakter yang sudut pandangnya disorot narasi baru (default tokoh utama)",
+ "characters_involved":["nama karakter yang terlibat atau hadir di kejadian ringkasan ini"],
  "time_passed_minutes":0,
  "new_time_of_day":"HH:MM atau label waktu baru; string kosong bila tidak berubah/tidak diketahui",
  "new_location":"lokasi terkini bila narasi mengubah lokasi; string kosong bila tidak berubah/tidak diketahui",
@@ -1400,6 +1465,7 @@ TAHAP INI ADALAH SINKRONISASI PASCA-NARASI. Narasi sudah selesai ditulis; jangan
 ${CARD_RULES}
 Antrean event bersifat privat. Setelah memperhitungkan time_passed_minutes pada giliran ini, evaluasi event mana yang memenuhi gerbang waktu dan prasyarat; jangan aktifkan event yang belum memenuhi syarat. Event yang selesai karena narasi harus diberi resolved; akar masalah yang hilang boleh canceled/failed. Tambahkan event adaptif hanya bila perkembangan narasi secara kausal membuka konsekuensi baru; maksimal 2 tambahan per giliran. Gunakan queue_updates dan queue_additions sebagai perubahan, jangan menyalin seluruh antrean.
 Buat kartu baru hanya untuk entitas/fakta penting yang BARU muncul dan perlu diingat jangka panjang. Perbarui kartu lama hanya bila narasi mengubah faktanya. Untuk karakter: tentukan "fam" (tingkat dikenali) dan perbarui "rel" HANYA berdasarkan interaksi nyata di PERCAKAPAN dan NARASI BARU; naikkan paling banyak satu tingkat per giliran dan jangan melompat dari Belum Dikenali ke Sangat Dikenali. Perbarui "rel" bila hubungan berubah, "persona" bila kebiasaan atau sifat baru terlihat jelas, "look" bila ciri fisik baru muncul (luka, pakaian khas, dan sebagainya). Kartu janji: buat bila ada janji, kesepakatan, utang budi, ancaman, atau rahasia penting; ubah "status" saat ditepati (terpenuhi), dilanggar, atau terbongkar.
+"pov" dan "characters_involved" memakai nama karakter. Bila suatu informasi hanya diketahui sebagian karakter, tulis di "summary" siapa yang mengetahuinya. Jangan menulis ringkasan seolah semua karakter tahu semuanya.
 ${OPS_RULES}
 "new_fields" = tambahan field status baru bila narasi memperkenalkan mekanik baru yang belum ada di SKEMA ([] bila tidak perlu). ${FIELD_RULES}\n"status_sync" (PENTING): bila NARASI BARU menampilkan jendela atau papan status, atau menyebut nilai terkini (level, EXP, HP, MP, STR, AGI, ATK, DEF, dan sebagainya), salin SEMUA nilainya ke "status_sync" sebagai {"nama":nilai}, contoh {"level":5,"str":12,"hp":80}. Field yang belum ada dibuat otomatis, jadi jangan lewatkan. Kosongkan {} bila narasi tidak menyebut nilai apa pun.`;
   return parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
@@ -1420,7 +1486,14 @@ function applyAnalysis(st,r,turn){
   applyWorldClock(st,r,turn);
   applyPostAnalysisQueue(st,r);
   if(r.new_location!=null&&String(r.new_location).trim())ensureWorldState(st).location=String(r.new_location).trim().slice(0,160);
-  if(r.summary&&String(r.summary).trim())st.summary.entries.push({turn,text:String(r.summary).trim()});
+  if(r.pov!=null&&String(r.pov).trim())st.pov=String(r.pov).trim().slice(0,60);
+  else if(!st.pov)st.pov=(st.world&&st.world.mc)||'';
+  if(r.summary&&String(r.summary).trim()){
+    const ws=ensureWorldState(st);
+    const chars=arr(r.characters_involved,8);
+    st.summary.entries.push({turn,pov:st.pov||(st.world&&st.world.mc)||'',location:ws.location||'',elapsed_minutes:ws.elapsed_minutes,
+      characters_involved:chars.length?chars:(((st.active&&st.active.scene)||[]).slice(0,8)),text:String(r.summary).trim()});
+  }
   addCards(st,r.new_cards);updateCards(st,r.update_cards);
   addFields(st,r.new_fields);syncStatus(st,r.status_sync);applyOps(st,r.inventory_ops);
   if(Array.isArray(r.suggestions))st.suggestions=r.suggestions.map(String).filter(Boolean).slice(0,4);
@@ -1432,11 +1505,11 @@ async function compress(st){
 [RINGKASAN INTI]
 ${s.base||'(kosong)'}
 [CATATAN PER-GILIRAN]
-${s.entries.map(e=>`(${e.turn}) ${e.text}`).join('\n')}
+${s.entries.map(e=>`(${e.turn}${e.pov?', POV '+e.pov:''}${e.location?', di '+e.location:''}) ${e.text}`).join('\n')}
 [KARTU YANG SUDAH ADA]
 ${cardIndex(st)}
 
-Gabungkan menjadi SATU ringkasan kronologis maksimal 8 kalimat yang menjaga alur utama dan kondisi terkini. Pindahkan fakta detail (tokoh, tempat, aturan, hubungan, janji, utang) ke kartu memori baru atau perbarui kartu lama.
+Gabungkan menjadi SATU ringkasan kronologis maksimal 8 kalimat yang menjaga alur utama dan kondisi terkini. Tulis ringkasan netral dan sebutkan siapa yang mengetahui suatu rahasia bila catatan berasal dari POV berbeda. Pindahkan fakta detail (tokoh, tempat, aturan, hubungan, janji, utang) ke kartu memori baru atau perbarui kartu lama.
 Keluarkan JSON: {"summary":"...","new_cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null}],"update_cards":[{"keyword":"...","text":"..."}]}
 ${CARD_RULES}`;
   const r=parseJSON(await gemini({chain:chainAn(st),system:ANALYZER_SYS,prompt,json:true,temperature:.3}));
@@ -1477,6 +1550,7 @@ ATURAN DASAR:
 - Karakter NPC wajib mengikuti kolom persona (sifat dan gaya bicara) serta rel (hubungan). Hubungan tidak boleh langsung akrab atau berubah drastis tanpa interaksi dan sebab yang tercatat; bangun kedekatan secara bertahap (slow burn).
 - TINGKAT DIKENALI (tertera pada kartu karakter): Belum Dikenali = orang asing bagi tokoh utama; NPC bersikap seperti pada orang asing (waspada, sopan, canggung, atau acuh sesuai kepribadiannya), tidak akrab, dan tidak tahu apa pun tentang masa lalu tokoh utama. Cukup Dikenali = sudah beberapa kali berinteraksi; boleh lebih santai dan saling tahu hal dasar yang pernah benar-benar terjadi di antara mereka. Sangat Dikenali = dekat dan saling memahami; boleh akrab, menebak suasana hati, dan memakai kenangan bersama yang tercatat. Jangan membuat kedekatan melompat melampaui tingkat yang tercatat.
 - BATAS PENGETAHUAN NPC (POV): Ringkasan, kartu, status, dan log hanyalah pengetahuan NARATOR, bukan pengetahuan NPC. Seorang NPC hanya tahu apa yang (a) ia saksikan atau alami langsung di lokasi dan adegan aktif sekarang, (b) ia dengar langsung di hadapannya, (c) dikatakan pemain secara lisan di dalam adegan, atau (d) pengetahuan umum dunia dan bidangnya yang wajar. NPC yang baru ditemui, tidak hadir saat suatu kejadian, atau berada di tempat lain DILARANG KERAS menyinggung, menyindir, atau bereaksi pada kejadian, rahasia, janji, nama, kekuatan, riwayat, atau isi pikiran tokoh utama, kecuali pemain sendiri mengungkapkannya secara verbal di dalam adegan. Kabar dari pihak ketiga hanya boleh bila jalur penyebarannya wajar dan sudah tampak di cerita (ada saksi, ada waktu yang cukup berlalu). Bila ragu apakah seorang NPC tahu sesuatu, anggap ia TIDAK tahu.
+- ATURAN PENGAMAN DASAR (selalu berlaku, juga saat tidak ada analisis awal): patuhi jam fiktif pada KEADAAN DUNIA TERKINI. Selama hari fiktif masih 1, kejadian "kemarin" atau "tadi malam" di dalam cerita belum ada, jadi jangan membuat NPC menyinggungnya (latar sebelum cerita yang tercatat boleh). Jangan membuat NPC yang tidak hadir di lokasi ikut berbicara atau mengetahui rahasia yang belum diungkap. Bila posisi karakter tidak jelas, pertahankan logika kehadiran yang wajar.
 - SUDUT PANDANG: utamakan sudut pandang tokoh utama. Pikiran dan niat tersembunyi NPC hanya diungkap lewat tindakan, ucapan, dan ekspresi yang bisa dilihat atau didengar, kecuali GAYA BAHASA dari pemain meminta sebaliknya.
 - Pikiran tokoh, bila dipakai: potongan singkat 1-2 kalimat berbahasa lisan yang muncul spontan sebagai reaksi saat itu, bukan penjelasan, rangkuman pengalaman, atau analisis.
 - Ceritakan lewat kejadian, tindakan, dan dialog. Jangan menambah penjelasan demi panjang.
@@ -1484,13 +1558,26 @@ ATURAN DASAR:
   const cards=opening?openingCards(st):plan.cards;
   const inc=new Set(cards.map(c=>c.id));
   const parts=[];
-  parts.push('[RINGKASAN CERITA SEJAUH INI (pengetahuan narator, BUKAN pengetahuan NPC)]\n'+(summaryText(st)||'(cerita belum dimulai)'));
+  parts.push('[RINGKASAN JANGKA PANJANG (pengetahuan narator, BUKAN pengetahuan NPC)]\n'+((st.summary&&st.summary.base)||'(cerita belum dimulai)'));
+  if(!opening){
+    if(Array.isArray(plan.memories)){
+      if(plan.memories.length)parts.push('[MEMORI RELEVAN MASA LALU (dikurasi: hanya yang berhubungan langsung dengan situasi ini; pengetahuan narator)]\n'+plan.memories.map(x=>'- '+x).join('\n'));
+    }else{
+      const old=olderEntries(st).map(e=>e.text);
+      if(old.length)parts.push('[CATATAN KEJADIAN SEBELUM ADEGAN TERAKHIR (urut waktu; pengetahuan narator)]\n'+old.join('\n'));
+    }
+  }
   if(plan.focus&&!opening)parts.push('[FOKUS ADEGAN SAAT INI]\n'+plan.focus);
   if(cards.length)parts.push('[KARTU LATAR AKTIF (catatan konsistensi, jangan dijelaskan semuanya)]\n'+cards.map(c=>cardLine(st,c,inc,plan.full.has(c.id)||(opening&&c.isPlayer))).join('\n'));
   if(!opening){
-    const present=(plan.active&&plan.active.scene)||[];
-    const absent=cards.filter(c=>c.type==='karakter'&&!c.isPlayer&&!plan.full.has(c.id)).map(mainKw);
-    if(present.length||absent.length)parts.push('[KEHADIRAN DI ADEGAN (batas pengetahuan NPC)]\n'+(present.length?'Hadir dan dapat melihat/mendengar adegan ini: '+present.join(', ')+'.':'Belum ada NPC bernama yang hadir.')+(absent.length?'\nTidak hadir (hanya catatan; jangan dimunculkan, dan mereka tidak tahu isi adegan ini): '+absent.join(', ')+'.':''));
+    /* Bagian ini null-safe: tanpa pra-analisis (mode standar) semua bernilai kosong dan memakai aturan dasar */
+    const sp=plan.spatial||[];
+    if(S.deepMode&&sp.length)parts.push('[POSISI KARAKTER (kontrol spasial)]\n'+sp.map(x=>`- ${x.name}: ${x.status||'posisi tidak disebut'}`).join('\n')+'\nHanya karakter di ruangan yang sama (atau tersembunyi tetapi menyaksikan) yang dapat mendengar percakapan pelan atau melihat tindakan diam-diam tokoh utama. Karakter di luar hanya bereaksi pada suara keras atau hal yang mungkin ia indra sesuai keterangannya. Karakter yang jauh tidak tahu dan tidak boleh ikut bicara atau bereaksi. Karakter lain yang tercatat di kartu tetapi tidak disebut di sini dianggap tidak hadir.');
+    else parts.push('[Mode Standar: Pertahankan logika kehadiran karakter secara wajar]');
+    if(S.deepMode&&plan.tension&&TENSION_TXT[plan.tension])parts.push('[TINGKAT KETEGANGAN ADEGAN]\n'+TENSION_TXT[plan.tension]);
+    const mt=S.deepMode?moodText(st):'';
+    if(mt)parts.push('[MOMENTUM EMOSI NPC (pertahankan 2-3 giliran; ubah bertahap, jangan reset ke netral tanpa pemicu kuat)]\n'+mt);
+    if(S.deepMode&&plan.pov&&plan.pov!==st.world.mc)parts.push('[POV GILIRAN INI]\nAdegan menyorot sudut pandang '+plan.pov+'. Batasi pengetahuan dan persepsi pada apa yang ia alami; jangan membocorkan hal yang hanya diketahui sudut pandang lain.');
   }
   if(!opening){const th=openThreads(st);if(th)parts.push('[JANJI DAN RAHASIA YANG MASIH BERLAKU (jangan diselesaikan atau dibongkar kecuali alurnya wajar; NPC yang tidak terlibat atau tidak menyaksikannya tidak tahu)]\n'+th)}
   if(st.worldState){
@@ -1519,7 +1606,7 @@ ATURAN DASAR:
 const paras=t=>String(t).split(/\n{2,}/).filter(p=>p.trim()).map(p=>'<p>'+esc(p.trim()).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>')+'</p>').join('');
 const nearBottom=()=>{const l=$('#log');return l.scrollHeight-l.scrollTop-l.clientHeight<140};
 const toBottom=()=>{const l=$('#log');l.scrollTop=l.scrollHeight};
-function snap(st){return{logLen:st.log.length,data:JSON.stringify({summary:st.summary,cards:st.cards,inv:st.inv,suggestions:st.suggestions,turn:st.turn,pending:st.pending,active:st.active,worldState:st.worldState,director:st.director})}}
+function snap(st){return{logLen:st.log.length,data:JSON.stringify({summary:st.summary,cards:st.cards,inv:st.inv,suggestions:st.suggestions,turn:st.turn,pending:st.pending,active:st.active,worldState:st.worldState,director:st.director,pov:st.pov,moods:st.moods})}}
 /* Pulihkan snapshot, termasuk jam dunia dan antrean Hidden Director; pengaturan Director (aktif, model) tetap memakai yang sekarang */
 function restoreSnap(st,data){
   const o=JSON.parse(data),keep=st.director?{enabled:st.director.enabled,initModel:st.director.initModel,runtimeModel:st.director.runtimeModel}:null;
@@ -1584,6 +1671,7 @@ function renderCtx(){
   $('#ctxB').innerHTML=(a.focus?`<p>${esc(a.focus)}</p>`:'')
     +'<div>'+cs.map(c=>`<button class="kc ${c.pin?'pin':''}" data-act="ctx-card"><small>${esc(CT[c.type]||CT.pengetahuan)}</small>${esc(mainKw(c))}</button>`).join('')+'</div>'
     +line('Hadir',(a.scene||[]).join(', '))
+    +line('Ketegangan',a.tension||'')+line('Posisi',(a.spatial||[]).map(x=>x.name+': '+x.status).join('; '))
     +(d?line('Nada dan tempo',[d.tone,d.pace?'tempo '+d.pace:'',d.length?'panjang '+d.length:''].filter(Boolean).join(', '))+line('Kemungkinan kejadian',d.beats.join('; '))+line('Dihindari',d.avoid.join('; ')):'')
     +line('Baru dipakai',(a.added||[]).join(', '))+line('Dilepas',(a.dropped||[]).join(', '))
     +line('Catatan evaluasi',a.guidance||'');
@@ -1865,7 +1953,7 @@ function openStory(id){
   if(!cur.director.initModel)cur.director.initModel=S.directorModel;
   if(!cur.director.runtimeModel)cur.director.runtimeModel=cur.director.model||S.directorRuntimeModel;
   cur.worldState=ensureWorldState(cur);
-  cur.cards=cur.cards||{};cur.suggestions=cur.suggestions||[];cur.world.mcProfile=cur.world.mcProfile||{};cur.active=cur.active||{ids:[],focus:'',guidance:'',added:[],dropped:[]};
+  cur.cards=cur.cards||{};cur.moods=cur.moods||{};cur.pov=cur.pov||'';cur.suggestions=cur.suggestions||[];cur.world.mcProfile=cur.world.mcProfile||{};cur.active=cur.active||{ids:[],focus:'',guidance:'',added:[],dropped:[]};
   Object.values(cur.cards).forEach(c=>{c.type=normType(c.type);c.age=c.age||'';c.race=c.race||'';c.gender=c.gender||'';c.look=c.look||'';c.persona=c.persona||'';c.rel=c.rel||'';c.status=c.status||'';c.fam=(c.type==='karakter'&&!c.isPlayer)?(normFam(c.fam)||(c.rel?'cukup':'belum')):''});
   for(const f of cur.inv.schema){const d=cur.inv.data;if(f.type==='list'&&Array.isArray(d[f.key]))d[f.key]=d[f.key].map(normItem)}
   undo=null;cloudDirty=cloudDirty||(cur.updated>(cur.cloudAt||0))||needsV42Migration;cardQ='';cardType='';cardOpen=null;cardExp=new Set();
@@ -1967,7 +2055,7 @@ setInterval(async()=>{
 
 /* ---------- Drawer ---------- */
 const DRAWER_GROUPS={
-  sesi:[['sum','Ringkasan'],['cards','Kartu'],['inv','Status'],['spoiler', 'Spoiler Plot']],
+  sesi:[['sum','Ringkasan'],['cards','Kartu'],['inv','Status']],
   dunia:[['world','Dunia'],['lib','Pustaka']],
   sistem:[['set','Pengaturan'],['quota','Kuota'],['save','Simpan'],['help','Bantuan']]
 };
@@ -1990,60 +2078,6 @@ function closeDrawer(){
   if(view==='v-new')renderChips();
   if(view==='v-home')renderHome();
 }
-function tabSpoiler() {
-  const st = cur;
-  if (!st || !st.director || !st.director.enabled) {
-    return `<div class="empty">
-      <p><b>Hidden Director belum diaktifkan</b> untuk cerita ini.</p>
-      <p class="hint">Anda bisa mengaktifkannya melalui menu <b>Dunia &gt; Konfigurasi teknis dan model AI</b>.</p>
-    </div>`;
-  }
-  
-  const d = st.director;
-  const queue = Array.isArray(d.queue) ? d.queue : [];
-  const history = Array.isArray(d.history) ? d.history : [];
-  const ws = ensureWorldState(st);
-
-  const statusBadge = stt => {
-    const map = { pending: 'Menunggu', active: 'Aktif / Berjalan', resolved: 'Selesai', canceled: 'Dibatalkan', failed: 'Gagal' };
-    return `<span class="badge ${stt === 'active' ? 'on' : ''}">${map[stt] || stt}</span>`;
-  };
-
-  const queueHtml = queue.length ? queue.map((e, i) => `
-    <div class="field" style="border-left: 3px solid ${e.status === 'active' ? 'var(--accent)' : 'var(--line)'}; margin-bottom: 12px;">
-      <b>${esc(e.title || 'Event ' + (i + 1))} ${statusBadge(e.status)}</b>
-      <p style="margin: 6px 0;"><small><b>Rencana Plot:</b> ${esc(e.description || '-')}</small></p>
-      <p style="margin: 4px 0;"><small><b>Lokasi Target:</b> ${esc(e.location || 'Bebas / Seluruh Dunia')} | <b>Gerbang Waktu:</b> Min. ${e.min_elapsed_days || 0} hari, ${e.min_elapsed_hours || 0} jam</small></p>
-      <p style="margin: 4px 0;"><small><b>Konsekuensi Potensial:</b> ${esc(e.consequences || '-')}</small></p>
-      <p style="margin: 4px 0;"><small><b>Petunjuk Halus (Foreshadowing):</b> <i>${esc(e.foreshadowing || '-')}</i></small></p>
-      ${e.lastNote ? `<p style="margin: 4px 0; color: var(--accent);"><small><b>Catatan Terakhir Direktur:</b> ${esc(e.lastNote)}</small></p>` : ''}
-    </div>
-  `).join('') : '<p class="empty">Antrean plot rahasia sedang kosong.</p>';
-
-  const historyHtml = history.length ? history.slice(-6).reverse().map(h => `
-    <div class="tag" style="margin-bottom: 6px;">
-      <small><b>Giliran ${h.turn}:</b> ${esc(h.note)}</small>
-    </div>
-  `).join('') : '<p class="empty">Belum ada catatan simulasi riwayat.</p>';
-
-  return `
-    <p class="hint"><b>Fitur Spoiler:</b> Mengintip rencana makro, antrean event privat, dan catatan balik layar yang dikendalikan oleh Hidden Director.</p>
-    
-    <div class="field" style="background: var(--surface2);">
-      <b>Status Simulasi Dunia</b>
-      <p style="margin: 4px 0;"><small><b>Waktu Fiktif:</b> ${clockLabel(ws)}</small></p>
-      <p style="margin: 4px 0;"><small><b>Lokasi Aktif Sesuai Sistem:</b> ${esc(ws.location || 'Belum diatur')}</small></p>
-      <p style="margin: 4px 0;"><small><b>Flags / Variabel Faksi Aktif:</b> ${Object.keys(ws.flags || {}).length ? JSON.stringify(ws.flags) : 'Tidak ada'}</small></p>
-    </div>
-
-    <h3>Antrean Plot &amp; Event Rahasia (${queue.length})</h3>
-    ${queueHtml}
-
-    <h3>Riwayat Evaluasi Di Balik Layar</h3>
-    ${historyHtml}
-  `;
-}
-
 function renderTab(){
   const groups=view==='v-read'?DRAWER_GROUPS:{sistem:DRAWER_GROUPS.sistem};
   if(!groups[drawerGroup])drawerGroup=Object.keys(groups)[0];
@@ -2052,7 +2086,7 @@ function renderTab(){
   const items=groups[drawerGroup];
   if(!items.some(x=>x[0]===tab))tab=items[0][0];
   $('#tabs').innerHTML=items.map(([k,n])=>`<button data-act="tab" data-tab="${k}" class="${k===tab?'on':''}">${n}</button>`).join('');
-  const fn={sum:tabSum,cards:tabCards,inv:tabInv,spoiler: tabSpoiler,world:tabWorld,quota:tabQuota,lib:tabLib,set:tabSet,save:tabSave,help:tabHelp}[tab];
+  const fn={sum:tabSum,cards:tabCards,inv:tabInv,world:tabWorld,quota:tabQuota,lib:tabLib,set:tabSet,save:tabSave,help:tabHelp}[tab];
   $('#dbody').innerHTML=fn();
   if(tab==='cards')renderCardList();
 }
@@ -2266,7 +2300,7 @@ function tabSet(){
   <label>Pemeriksa konsistensi narasi<select data-set="consistency"><option value="fix" ${S.consistency==='fix'?'selected':''}>Perbaiki otomatis (tulis ulang 1x bila ada pelanggaran besar)</option><option value="warn" ${S.consistency==='warn'?'selected':''}>Beri catatan saja</option><option value="off" ${S.consistency==='off'?'selected':''}>Mati (hemat kuota)</option></select></label>
   <p class="hint">Setelah narasi selesai ditulis, model analis memeriksa apakah narasi bertentangan dengan kartu, status, atau percakapan terakhir. Menambah satu panggilan model analis per giliran.</p>
   ${n('Adegan terakhir yang dikirim (karakter)','recentChars',0,6000,100)}
-  <label class="chk"><input type="checkbox" data-set="deepMode" ${S.deepMode?'checked':''}> Mode mendalam: analisis awal sebelum narasi untuk memilih kartu yang relevan. Matikan untuk menghemat token.</label>
+  <label class="chk"><input type="checkbox" data-set="deepMode" ${S.deepMode?'checked':''}> Mode mendalam: analisis awal sebelum narasi (memilih kartu, mengkurasi memori masa lalu, posisi karakter, tingkat ketegangan, emosi NPC). Matikan untuk menghemat token; narator tetap memakai aturan pengaman dasar.</label>
   <label class="chk"><input type="checkbox" data-set="useDirection" ${S.useDirection?'checked':''}> Arahan adegan (nada, tempo, suasana hati tokoh, kejadian kecil). Berlaku bila Mode mendalam aktif. Matikan bila narasi terasa terlalu terarah atau bertele-tele.</label>
   <label class="chk"><input type="checkbox" data-set="varyLength" ${S.varyLength?'checked':''}> Izinkan analis menyesuaikan panjang narasi (50% sampai 140% dari minimum) menurut adegan</label>
   <label class="chk"><input type="checkbox" data-set="scanLast" ${S.scanLast?'checked':''}> Bila evaluasi awal gagal, cari kata kunci kartu juga di narasi terakhir</label></details>
