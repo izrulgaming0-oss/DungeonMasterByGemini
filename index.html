@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#16606a">
-<title>Penutur — Narator AI</title>
+<title>Penutur v5.7.2 — Narator AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&display=swap" rel="stylesheet">
@@ -130,7 +130,8 @@ input[type=checkbox]{width:18px;height:18px}
 .tok th:first-child,.tok td:first-child,.tok th:nth-child(2),.tok td:nth-child(2){text-align:left}
 .nr .chk{margin:-.4em 0 1.1em;padding-left:10px;border-left:2px solid var(--warn);font-family:var(--sans);line-height:1.45}
 .nr .chk small{color:var(--muted)}
-#log{flex:1;overflow-y:auto;padding:22px 18px 28px;scroll-behavior:smooth}
+#log{flex:1;overflow-y:auto;padding:22px 18px 28px;scroll-behavior:auto}
+.jump-bottom{position:fixed;right:16px;bottom:calc(118px + env(safe-area-inset-bottom));z-index:8;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--ink);box-shadow:0 2px 10px #0002;font-size:24px;line-height:1;display:grid;place-items:center;padding:0}.jump-bottom[hidden]{display:none!important}
 #log>*{max-width:38rem;margin-left:auto;margin-right:auto}
 .nr{font:400 var(--fs)/1.8 var(--serif)}
 .nr p{margin:0 0 1.15em}
@@ -394,7 +395,7 @@ details.card[open]{padding-bottom:12px}
 <script>
 'use strict';
 /* =====================================================================
-   PENUTUR v3 — memori berlapis, kartu, dan sinkronisasi status dengan narator AI (Gemini)
+   PENUTUR v5.7.2 — memori berlapis, kartu, dan sinkronisasi status dengan narator AI (Gemini)
    Data tersimpan di browser (localStorage); checkpoint opsional ke Google Drive.
    ===================================================================== */
 
@@ -418,7 +419,7 @@ const store={
 };
 
 /* ---------- pengaturan & pustaka tag ---------- */
-const DEF={apiKey:'',narratorModel:'gemini-flash-lite-latest',analyzerModel:'gemini-flash-lite-latest',preModel:'',
+const DEF={apiKey:'',narratorModel:'gemini-flash-lite-latest',analyzerModel:'gemini-flash-lite-latest',preModel:'',autoGenerateModel:'gemini-flash-lite-latest',
   autoFallback:true,fallbackModel:'gemini-3.1-flash-lite',hiddenDirectorEnabled:false,directorModel:'gemini-3.6-flash',directorRuntimeModel:'gemini-3.1-flash-lite',limits:{},
   minWords:250,temperature:1,compressEvery:30,maxCards:10,recentChars:1800,contextTurns:4,consistency:'warn',deepMode:false,varyLength:false,useDirection:false,cfgVer:2,scanLast:true,tapSend:false,
   fontSize:18,driveClientId:'',driveMinutes:5};
@@ -2141,16 +2142,17 @@ function tokHtml(st){
 const chgHtml=e=>e.chg&&e.chg.length?`<p class="chg"><small>Status: ${esc(e.chg.join('; '))}</small></p>`:'';
 const noteHtml=e=>e.note&&e.note.items&&e.note.items.length?`<p class="chk"><small>${e.note.fixed?'Ditulis ulang untuk memperbaiki: ':'Pemeriksa menemukan: '}${esc(e.note.items.join('; '))}</small></p>`:'';
 function renderLog(){
-  const st=cur,el=$('#log');
+  const st=cur,el=$('#log'),oldScroll=el.scrollTop,wasNear=nearBottom();
   if(!st.log.length){
     el.innerHTML=`<div class="empty"><p>Dunia sudah siap. Mulai dengan adegan pembuka, atau tulis tindakan pertama tokoh utamamu di bawah.</p><button class="btn pri" data-act="start">Mulai cerita</button></div>`;
-    return;
+    el.scrollTop=oldScroll;updateJumpBottom();return;
   }
   el.innerHTML=st.log.map(e=>e.role==='user'?`<div class="pl"><span class="md">${MODE[e.mode]||'Aksi'}</span>${esc(e.text)}</div>`:`<article class="nr">${paras(e.text)}${noteHtml(e)}${chgHtml(e)}</article>`).join('')
     +(busy?'':tokHtml(st))
     +((undo&&!busy)?`<div class="tools"><button data-act="regen">Ulangi giliran</button><button data-act="undo">Urungkan</button></div>`:'');
-  toBottom();
+  el.scrollTop=oldScroll; updateJumpBottom();
 }
+function updateJumpBottom(){const l=$('#log'),b=$('#jumpBottom');if(!l||!b)return; b.hidden=!(view==='v-read'&&l.scrollHeight-l.scrollTop-l.clientHeight>180);}
 function renderSuggest(){
   const st=cur,el=$('#sugg');if(!st)return;
   let h='';
@@ -2169,13 +2171,13 @@ function setBusy(b){
 function appendTemp(text,m){
   const log=$('#log');const e=log.querySelector('.empty');if(e)e.remove();
   log.insertAdjacentHTML('beforeend',`<div class="pl"><span class="md">${MODE[m]}</span>${esc(text)}</div><article class="nr live" id="live">${waitHtml(S.deepMode?'1/3 Mengevaluasi input dan kartu…':'2/3 Narator membaca ingatan dunia…')}</article>`);
-  toBottom();
+  updateJumpBottom();
 }
 let firstChunk=false;
 function updateLive(t){
   const el=$('#live');if(!el)return;
   if(!firstChunk){firstChunk=true;stopWait()}
-  const nb=nearBottom();el.innerHTML=paras(t);if(nb)toBottom();
+  const l=$('#log'),pos=l.scrollTop;el.innerHTML=paras(t);l.scrollTop=pos;updateJumpBottom();
 }
 
 function renderCtx(){
@@ -2273,7 +2275,7 @@ async function sendTurn(text,m){
 async function runAnalysis(st){
   const p=st.pending;if(!p)return;
   setStatus('3/3 Menganalisa narasi…');
-  $('#log').insertAdjacentHTML('beforeend',waitHtml('3/3 Menganalisa narasi: ringkasan, kartu, dan status…','waitBox2'));toBottom();
+  $('#log').insertAdjacentHTML('beforeend',waitHtml('3/3 Menganalisa narasi: ringkasan, kartu, dan status…','waitBox2'));updateJumpBottom();
   startWait(['3/3 Menganalisa narasi: ringkasan, kartu, dan status…','Memperbarui inventaris dan hubungan…','Menyiapkan saran langkah berikutnya…']);
   Tok.stage='Analisis hasil';
   try{
@@ -2375,7 +2377,7 @@ Keluarkan HANYA JSON valid tanpa markdown:
 }`;
 
   // Menggunakan model cepat (analyzerModel / flash-lite) untuk kecepatan tinggi
-  const fastModel = S.analyzerModel || 'gemini-3.1-flash-lite';
+  const fastModel = S.autoGenerateModel || 'gemini-flash-lite-latest';
   
   try {
     startWait(['AI sedang merancang dunia dari judul…', 'Memilih genre dan gaya bahasa yang cocok…']);
@@ -2845,12 +2847,13 @@ function tabSet(){
   <label class="chk"><input type="checkbox" data-set="tapSend" ${S.tapSend?'checked':''}> Ketuk saran langsung mengirim</label></details>
   <details class="card" open><summary>Manajemen Model AI</summary>
   <label>Model Narator (penulis prosa)<input list="models" data-set="narratorModel" value="${esc(S.narratorModel)}"></label>
-  <label>Model Analis & Maintenance<input list="models" data-set="analyzerModel" value="${esc(S.analyzerModel)}"></label>
-  <label>Model Pra-Analisis (Mode Mendalam; kosong = ikut Model Analis)<input list="models" data-set="preModel" value="${esc(S.preModel||'')}" placeholder="ikut Model Analis"></label>
+  <label>Model Generate Otomatis (Auto-Fill dunia dari judul)<input list="models" data-set="autoGenerateModel" value="${esc(S.autoGenerateModel||DEF.autoGenerateModel)}"></label>
+  <label>Model Analis & Maintenance (analisis pasca-narasi)<input list="models" data-set="analyzerModel" value="${esc(S.analyzerModel)}"></label>
+  <label>Model Pra-Analisis (analisis sebelum narasi; kosong = ikut Model Analis)<input list="models" data-set="preModel" value="${esc(S.preModel||'')}" placeholder="ikut Model Analis"></label>
   <label>Model Inisialisasi & Perencana Makro<input list="models" data-set="directorModel" value="${esc(S.directorModel)}"></label>
   <label>Model Hidden Director Runtime<input list="models" data-set="directorRuntimeModel" value="${esc(S.directorRuntimeModel)}"></label>
   <label class="chk"><input type="checkbox" data-set="hiddenDirectorEnabled" ${S.hiddenDirectorEnabled?'checked':''}> Aktifkan Hidden Director untuk dunia baru</label>
-  <p class="hint">Inisialisasi & Perencana Makro merancang antrean rahasia dan struktur awal saat dunia dibuat. Narator menulis prosa. Analis memelihara status, inventaris, konsistensi, dan ringkasan. Pra-analisis (Mode Mendalam) memilih kartu, memori, posisi karakter, dan arahan rahasia bernomor sebelum narasi; modelnya bisa diatur terpisah. Hidden Director Runtime mengevaluasi event dan menggerakkan dunia di balik layar secara berkala.</p>
+  <p class="hint">Inisialisasi & Perencana Makro merancang antrean rahasia dan struktur awal saat dunia dibuat. Narator menulis prosa. Analis memelihara status, inventaris, konsistensi, dan ringkasan. Model Generate Otomatis hanya dipakai untuk Auto-Fill dunia dari judul. Pra-analisis memilih kartu, memori, posisi karakter, dan arahan sebelum narasi; modelnya bisa berbeda dari Analis & Maintenance yang menangani analisis pasca-narasi. Hidden Director Runtime mengevaluasi event dan menggerakkan dunia di balik layar secara berkala.</p>
   <details class="card"><summary>Lanjutan: model cadangan</summary>
   <label>Model cadangan otomatis<input list="models" data-set="fallbackModel" value="${esc(S.fallbackModel)}"></label>
   <label class="chk"><input type="checkbox" data-set="autoFallback" ${S.autoFallback?'checked':''}> Ganti otomatis saat limit tercapai</label>
@@ -2936,6 +2939,7 @@ const acts={
     try{await gemini({chain:[S.analyzerModel,S.fallbackModel],prompt:'Balas hanya dengan: OK',temperature:0});toast('Koneksi berhasil. API Key valid.')}catch(e){err(e)}
   },
   back:closeStory,
+  'jump-bottom':()=>{const l=$('#log');l.scrollTo({top:l.scrollHeight,behavior:'smooth'});setTimeout(updateJumpBottom,250);},
   mode:el=>{mode=el.dataset.mode;$$('.modes button[data-mode]').forEach(b=>b.classList.toggle('on',b===el));
     $('#inp').placeholder={aksi:'Apa yang dilakukan tokoh utama?',ucap:'Apa yang dikatakan tokoh utama?',alur:'Apa yang harus terjadi selanjutnya?'}[mode]},
   send:()=>{if(busy){abortCtl&&abortCtl.abort();return}sendTurn($('#inp').value,mode)},
@@ -3098,6 +3102,8 @@ document.addEventListener('click',e=>{
   const a=e.target.closest('[data-act]');
   if(a&&acts[a.dataset.act])acts[a.dataset.act](a,e);
 });
+$('#log').addEventListener('scroll',updateJumpBottom,{passive:true});
+window.addEventListener('resize',updateJumpBottom);
 
 /* ---------- Event: perubahan input di drawer ---------- */
 $('#dbody').addEventListener('input',e=>{
