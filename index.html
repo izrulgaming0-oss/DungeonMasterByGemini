@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#16606a">
-<title>Penutur v5.7.2 — Narator AI</title>
+<title>Penutur v7.3 — Tempo &amp; Ketegangan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&display=swap" rel="stylesheet">
@@ -131,7 +131,7 @@ input[type=checkbox]{width:18px;height:18px}
 .nr .chk{margin:-.4em 0 1.1em;padding-left:10px;border-left:2px solid var(--warn);font-family:var(--sans);line-height:1.45}
 .nr .chk small{color:var(--muted)}
 #log{flex:1;overflow-y:auto;padding:22px 18px 28px;scroll-behavior:auto}
-.jump-bottom{position:fixed;right:16px;bottom:calc(118px + env(safe-area-inset-bottom));z-index:8;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--ink);box-shadow:0 2px 10px #0002;font-size:24px;line-height:1;display:grid;place-items:center;padding:0}.jump-bottom[hidden]{display:none!important}
+.jump-bottom{position:absolute;right:14px;top:-46px;z-index:8;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--ink);box-shadow:0 2px 10px #0002;font-size:24px;line-height:1;display:grid;place-items:center;padding:0}.jump-bottom[hidden]{display:none!important}
 #log>*{max-width:38rem;margin-left:auto;margin-right:auto}
 .nr{font:400 var(--fs)/1.8 var(--serif)}
 .nr p{margin:0 0 1.15em}
@@ -148,11 +148,11 @@ input[type=checkbox]{width:18px;height:18px}
 .dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
 @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-6px);opacity:1}}
 
-#dock{background:var(--surface);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+#dock{position:relative;background:var(--surface);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
 #sugg{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}
 #sugg .chip{white-space:nowrap;flex:none}
 #sugg::-webkit-scrollbar{display:none}
-.modes{display:flex;gap:6px;margin-bottom:6px}
+.modes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .modes button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:3px 11px;font-size:13px;color:var(--muted)}
 .modes button.on{background:var(--surface2);color:var(--ink);border-color:var(--accent)}
 .inrow{display:flex;gap:8px;align-items:flex-end}
@@ -266,6 +266,21 @@ details.card[open]{padding-bottom:12px}
 .rm b{font-weight:600}.rm.completed{opacity:.65}.rm.failed{border-color:var(--warn)}.rm.active{border-color:var(--accent)}
 #toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:92vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:40;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.on{opacity:1}
+/* Indikator model kecil di tepi kanan bawah header; detail hanya muncul saat diketuk. */
+#modelStatus{position:fixed;top:calc(env(safe-area-inset-top) + 35px);right:8px;z-index:36;display:block;pointer-events:auto}
+#modelStatus[hidden]{display:none}
+#modelStatus .ms-toggle{width:22px;height:22px;display:grid;place-items:center;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);box-shadow:0 2px 8px #0002;cursor:pointer}
+#modelStatus .ms-indicator{position:relative;width:9px;height:9px;border-radius:50%;background:var(--muted);display:block}
+#modelStatus .ms-spin{position:absolute;inset:-4px;border:2px solid transparent;border-top-color:currentColor;border-right-color:currentColor;border-radius:50%;display:none;animation:msSpin .7s linear infinite}
+#modelStatus[data-state="sending"] .ms-indicator,#modelStatus[data-state="waiting"] .ms-indicator{background:#d99a24;color:#d99a24}
+#modelStatus[data-state="receiving"] .ms-indicator,#modelStatus[data-state="processing"] .ms-indicator{background:#3988d6;color:#3988d6}
+#modelStatus[data-state="success"] .ms-indicator{background:#2caa72;color:#2caa72}
+#modelStatus[data-state="error"] .ms-indicator{background:#d94b4b;color:#d94b4b}
+#modelStatus[data-state="sending"] .ms-spin,#modelStatus[data-state="waiting"] .ms-spin,#modelStatus[data-state="receiving"] .ms-spin,#modelStatus[data-state="processing"] .ms-spin{display:block}
+#modelStatus .ms-panel{position:absolute;right:0;top:27px;width:min(300px,calc(100vw - 24px));padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:0 5px 20px #0003;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+#modelStatus .ms-panel[hidden]{display:none}
+#modelStatus .ms-panel strong{display:block;margin-bottom:3px;font-size:12px}
+@keyframes msSpin{to{transform:rotate(360deg)}}
 
 @media (prefers-reduced-motion:reduce){
   #drawer,#scrim,#toast{transition:none}#log{scroll-behavior:auto}
@@ -275,6 +290,7 @@ details.card[open]{padding-bottom:12px}
 </style>
 </head>
 <body>
+<div id="modelStatus" data-state="idle"><button class="ms-toggle" type="button" aria-label="Lihat status model" aria-expanded="false" onclick="toggleModelStatus()"><span class="ms-indicator"><span class="ms-spin"></span></span></button><div class="ms-panel" id="modelStatusPanel" role="status" aria-live="polite" hidden><strong>Status model</strong><span class="ms-label">Model belum diuji pada sesi ini</span></div></div>
 
 <!-- BERANDA -->
 <section id="v-home" class="view">
@@ -356,11 +372,13 @@ details.card[open]{padding-bottom:12px}
   <details id="ctx" hidden><summary><b id="ctxN"></b><span id="ctxF"></span></summary><div class="cb" id="ctxB"></div></details>
   <main id="log" aria-live="polite"></main>
   <footer id="dock">
+    <button id="jumpBottom" class="jump-bottom" data-act="jump-bottom" aria-label="Ke bagian terbaru" title="Ke bagian terbaru" hidden>&#8595;</button>
     <div id="sugg" hidden></div>
     <div class="modes" role="group" aria-label="Jenis input">
       <button data-act="mode" data-mode="aksi" class="on">Aksi</button>
       <button data-act="mode" data-mode="ucap">Ucap</button>
       <button data-act="mode" data-mode="alur">Arahkan alur</button>
+      <button id="btnTension" data-act="tension" title="Ketegangan cerita: ketuk untuk mengganti">Tegang: Sedang</button>
       <button id="btnDeep" data-act="deep" class="on" aria-pressed="true" title="Mode mendalam: analisis awal sebelum narasi. Matikan untuk menghemat token.">Mendalam</button>
     </div>
     <div class="inrow">
@@ -395,7 +413,7 @@ details.card[open]{padding-bottom:12px}
 <script>
 'use strict';
 /* =====================================================================
-   PENUTUR v5.7.2 — memori berlapis, kartu, dan sinkronisasi status dengan narator AI (Gemini)
+   PENUTUR v7.3 — Tempo & Ketegangan; memori berlapis dan narator AI (Gemini)
    Data tersimpan di browser (localStorage); checkpoint opsional ke Google Drive.
    ===================================================================== */
 
@@ -505,7 +523,8 @@ function friendly(e){
   if(s===403)return'Akses ditolak. Pastikan API Key benar dan masih aktif.';
   if(s===404)return'Model tidak ditemukan. Periksa nama model di Pengaturan atau tab Dunia.';
   if(s===429)return'Kuota semua model sedang habis. Tunggu beberapa saat atau coba besok.';
-  if(s>=500)return'Server Gemini sedang sibuk. Coba lagi sebentar lagi.';
+  if(s===503)return'Server Gemini sedang kelebihan beban atau sementara tidak tersedia (503). Tunggu 30–60 detik lalu coba lagi; jika berulang, pilih model cadangan di Pengaturan.';
+  if(s>=500)return'Server Gemini mengalami gangguan sementara ('+s+'). Permintaan sudah dicoba ulang; tunggu sebentar lalu coba lagi atau gunakan model lain.';
   return m;
 }
 function err(e,prefix){
@@ -517,6 +536,18 @@ function setStatus(t){
   const el=$('#rStat');if(!el||!cur)return;
   if(t){el.textContent=lab(t);return}
   el.textContent=S.driveClientId?(cloudDirty?'Belum diunggah ke Drive':'Tersinkron dengan Drive'):'Tersimpan di perangkat';
+}
+/* Status permintaan model: HTTP bukan koneksi persisten; status hanya menggambarkan permintaan terakhir. */
+function toggleModelStatus(){
+  const panel=$('#modelStatusPanel'),btn=$('#modelStatus .ms-toggle');if(!panel||!btn)return;
+  panel.hidden=!panel.hidden;btn.setAttribute('aria-expanded',String(!panel.hidden));
+}
+function setModelStatus(state,detail){
+  const el=$('#modelStatus');if(!el)return;
+  const labels={idle:'Model belum diuji pada sesi ini',sending:'Mengirim input ke model…',waiting:'Input terkirim · menunggu respons model…',receiving:'Respons diterima · menangkap hasil model…',processing:'Hasil diterima · memproses keluaran…',success:'Respons berhasil diterima · API berfungsi',error:'Masalah pada koneksi atau respons model'};
+  el.dataset.state=state;
+  const label=$('.ms-label',el);if(label)label.textContent=detail||labels[state]||labels.idle;
+  const btn=$('.ms-toggle',el);if(btn)btn.setAttribute('aria-label',(detail||labels[state]||labels.idle)+'. Ketuk untuk melihat status model.');
 }
 function applyFont(){document.documentElement.style.setProperty('--fs',S.fontSize+'px')}
 applyFont();
@@ -626,7 +657,13 @@ async function callModel(m,opt,hasNext){
   const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:${opt.stream?'streamGenerateContent?alt=sse':'generateContent'}`;
   for(let a=0;a<3;a++){
     Usage.rec(m);renderQuota();
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.apiKey},body:JSON.stringify(body),signal:opt.signal});
+    setModelStatus('sending','Mengirim input ke '+shortModel(m)+'…');
+    let res;
+    try{
+      const request=fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.apiKey},body:JSON.stringify(body),signal:opt.signal});
+      setModelStatus('waiting','Input terkirim · menunggu respons dari '+shortModel(m)+'…');
+      res=await request;
+    }catch(netErr){setModelStatus('error','Koneksi gagal: '+friendly(netErr));throw netErr}
     if(!res.ok){
       const t=await res.text();let msg=t;try{msg=JSON.parse(t).error.message}catch(e){}
       const er=new Error(msg);er.status=res.status;
@@ -646,6 +683,7 @@ async function callModel(m,opt,hasNext){
       throw er;
     }
     if(!opt.stream){
+      setModelStatus('receiving','Respons diterima dari '+shortModel(m)+' · menangkap hasil…');
       const j=await res.json();const x=extract(j);Tok.add(m,j.usageMetadata);
       if(!x.text)throw new Error('Respons kosong atau diblokir ('+x.reason+').');
       return x.text;
@@ -659,6 +697,7 @@ async function callModel(m,opt,hasNext){
         const ev=buf.slice(0,i);buf=buf.slice(i).replace(/^\r?\n\r?\n/,'');
         const line=ev.split(/\r?\n/).filter(l=>l.startsWith('data:')).map(l=>l.slice(5).trim()).join('');
         if(!line)continue;
+        setModelStatus('receiving','Respons diterima dari '+shortModel(m)+' · menangkap hasil streaming…');
         try{const j=JSON.parse(line);if(j.usageMetadata)usage=j.usageMetadata;const x=extract(j);full+=x.text;if(x.reason)reason=x.reason;opt.onChunk&&opt.onChunk(full)}catch(e){}
       }
     }
@@ -680,14 +719,17 @@ async function gemini(opt){
       if(m!==chain[0])setStatus('Memakai model cadangan: '+shortModel(m));
       const out=await callModel(m,{...opt,signal:opt.signal||(abortCtl&&abortCtl.signal)},i<order.length-1);
       if(m!==chain[0]&&lastModel!==m)toast(`Limit model utama tercapai. Beralih ke ${shortModel(m)}.`,4500);
-      lastModel=m;renderQuota();return out;
+      lastModel=m;renderQuota();setModelStatus('processing','Hasil dari '+shortModel(m)+' diterima · menyelesaikan pemrosesan…');
+      setModelStatus('success','Respons berhasil diterima dari '+shortModel(m)+' · koneksi API berfungsi');
+      return out;
     }catch(e){
-      if(e.name==='AbortError')throw e;
-      if(e.limit||e.notFound){last=e;continue}
+      if(e.name==='AbortError'){setModelStatus('idle','Permintaan model dibatalkan');throw e}
+      if(e.limit||e.notFound){last=e;setModelStatus('waiting','Model '+shortModel(m)+' tidak dapat dipakai; memeriksa model cadangan…');continue}
+      setModelStatus('error',friendly(e));
       throw e;
     }
   }
-  throw last||new Error('Tidak ada model yang tersedia.');
+  const finalErr=last||new Error('Tidak ada model yang tersedia.');setModelStatus('error',friendly(finalErr));throw finalErr;
 }
 function parseJSON(t){
   t=String(t).trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
@@ -1197,6 +1239,7 @@ function makeEvent(st,raw,fallbackId){
     consequences:t(raw.consequences,400),foreshadowing:t(raw.foreshadowing,300),status:'pending',
     min_elapsed_days:n0(raw.min_elapsed_days),min_elapsed_hours:n0(raw.min_elapsed_hours),
     prerequisites:cleanPrereqs(st,raw.prerequisites),queued_at_elapsed_minutes:ws.elapsed_minutes,
+    intensity:normIntensity(raw.intensity),
     plotId:(()=>{const p=String(raw.plot_id||raw.plotId||'').trim();return st.director&&Array.isArray(st.director.roadmap)&&st.director.roadmap.some(n=>n.id===p)?p:''})()};
 }
 const openCount=d=>d.queue.filter(e=>OPEN_ST.includes(e.status)).length;
@@ -1226,6 +1269,7 @@ function cleanMacro(m){
 function fmtElapsed(m){m=Math.max(0,Math.floor(num(m,0)));const d=Math.floor(m/1440),h=Math.floor(m%1440/60),n=m%60;return [d?d+' hr':'',h?h+' j':'',(n||(!d&&!h))?n+' mnt':''].filter(Boolean).join(' ')}
 function renderClock(){
   const el=$('#rClock');if(!el)return;
+  updateTensionBtn();
   const ws=cur&&cur.worldState;
   if(!cur||!ws){el.textContent='';return}
   const parts=['Hari '+Math.max(1,num(ws.day_count,1)),ws.time_of_day||ws.time,ws.location].filter(Boolean);
@@ -1250,6 +1294,111 @@ function applyWorldClock(st,r,turn){
 
 /* ---------- Hidden Director: antrean event privat dan simulasi dunia ---------- */
 /* Queue ini tidak pernah dikirim ke narator secara utuh; hanya petunjuk halus yang lolos. */
+/* ---------- v7.3: tempo cerita, parameter ketegangan, dan masa damai ---------- */
+const PACE_LEVELS={
+  rendah:{label:'Rendah',desc:'santai: konflik jarang, ringan, dan singkat',peaceTurns:6,peaceMinutes:360,maxCrisesPerDay:1,maxDangerStreak:3,calmBoost:14},
+  sedang:{label:'Sedang',desc:'seimbang antara konflik dan masa tenang',peaceTurns:4,peaceMinutes:180,maxCrisesPerDay:2,maxDangerStreak:5,calmBoost:9},
+  tinggi:{label:'Tinggi',desc:'menegangkan, tetapi tetap ada jeda napas',peaceTurns:2,peaceMinutes:60,maxCrisesPerDay:3,maxDangerStreak:8,calmBoost:5}
+};
+const TENSION_RANK={damai:0,investigasi:1,bahaya:2},INTENSITY_RANK={rendah:0,sedang:1,tinggi:2};
+const normIntensity=v=>{v=String(v||'').toLowerCase().trim();return INTENSITY_RANK[v]!=null?v:'sedang'};
+function migratePacing(st){
+  const p=st.pacing&&typeof st.pacing==='object'?st.pacing:{};
+  p.enabled=p.enabled!==false;p.level=PACE_LEVELS[p.level]?p.level:'sedang';p.crisis=!!p.crisis;
+  for(const k of ['crisisTurns','dangerStreak','calmStreak','crisesToday','lastEndTurn','lastEndElapsed','lastTurn'])p[k]=Math.max(0,Math.floor(num(p[k],0)));
+  p.dayKey=Math.max(1,Math.floor(num(p.dayKey,1)));
+  p.lastTension=TENSION_RANK[p.lastTension]!=null?p.lastTension:'damai';
+  st.pacing=p;return p;
+}
+/* Keadaan tempo saat ini, dihitung dari hitungan yang dicatat analisis pasca-narasi */
+function pacingState(st){
+  const p=st.pacing||migratePacing(st),cfg=PACE_LEVELS[p.level],ws=st.worldState||{};
+  const day=Math.max(1,num(ws.day_count,1)),el=num(ws.elapsed_minutes,0),today=p.dayKey===day?p.crisesToday:0;
+  const sinceT=p.lastEndTurn>0?st.turn-p.lastEndTurn:999,sinceM=p.lastEndTurn>0?el-p.lastEndElapsed:99999;
+  // masa damai berakhir bila cukup giliran DAN cukup waktu fiktif (atau giliran sudah dua kali lipat, agar tidak macet bila waktu tidak bergerak)
+  const peaceOver=sinceT>=cfg.peaceTurns&&(sinceM>=cfg.peaceMinutes||sinceT>=cfg.peaceTurns*2);
+  const inPeace=!p.crisis&&p.lastEndTurn>0&&!peaceOver;
+  const breather=p.dangerStreak>=cfg.maxDangerStreak||(p.crisis&&p.crisisTurns>=cfg.maxDangerStreak*2);
+  const dayCap=!p.crisis&&today>=cfg.maxCrisesPerDay;
+  let phase='damai',ceiling='bahaya';
+  if(p.crisis)phase=breather?'jeda':'krisis';
+  else if(inPeace){phase='pasca';ceiling='damai'}
+  else if(dayCap){phase='batas-harian';ceiling='investigasi'}
+  if(breather&&ceiling==='bahaya')ceiling='investigasi';
+  const calmLong=!p.crisis&&!inPeace&&!dayCap&&p.calmStreak>=cfg.calmBoost;
+  return{p,cfg,day,today,sinceT,sinceM,inPeace,breather,dayCap,phase,ceiling,calmLong,peaceLeft:inPeace?Math.max(1,cfg.peaceTurns-sinceT):0};
+}
+/* Boleh dunia memulai node atau event dengan intensitas ini sekarang? Intensitas rendah selalu boleh. */
+function pacingAllows(st,intensity){
+  if(!st.pacing||st.pacing.enabled===false)return true;
+  intensity=normIntensity(intensity);
+  if(intensity==='rendah')return true;
+  const s=pacingState(st);
+  if(s.p.crisis)return false;                  // jangan menumpuk konflik baru selama satu konflik berjalan
+  return INTENSITY_RANK[intensity]<=TENSION_RANK[s.ceiling];
+}
+function updatePacing(st,r,turn){
+  const p=st.pacing||migratePacing(st);
+  if(turn<=p.lastTurn)return;
+  const cfg=PACE_LEVELS[p.level],ws=ensureWorldState(st);
+  const tn=String(r.scene_tension||'').toLowerCase();
+  let tension=['bahaya','investigasi','damai'].find(t=>tn.includes(t))||'';
+  const cs=String(r.conflict_status||'').toLowerCase().trim();
+  let status=['started','ongoing','resolved','none'].find(x=>cs.startsWith(x))||'';
+  if(!status){
+    if(tension==='bahaya')status=p.crisis?'ongoing':'started';
+    else if(tension==='damai'&&p.crisis)status='resolved';
+    else status=p.crisis?'ongoing':'none';
+  }
+  if(!tension)tension=(status==='started'||status==='ongoing')?'investigasi':'damai';
+  if(p.dayKey!==ws.day_count){p.dayKey=ws.day_count;p.crisesToday=0}
+  const endCrisis=()=>{p.crisis=false;p.crisisTurns=0;p.lastEndTurn=turn;p.lastEndElapsed=ws.elapsed_minutes};
+  if(status==='started'){p.crisis=true;p.crisisTurns=1;p.crisesToday++}
+  else if(status==='ongoing'){if(!p.crisis){p.crisis=true;p.crisisTurns=1;p.crisesToday++}else p.crisisTurns++}
+  else if(p.crisis)endCrisis();
+  if(p.crisis&&p.crisisTurns>=cfg.maxDangerStreak*3)endCrisis();   // jaring pengaman: konflik tidak boleh "berjalan" selamanya
+  if(tension==='bahaya'){p.dangerStreak++;p.calmStreak=0}
+  else if(tension==='damai'){p.dangerStreak=0;p.calmStreak++}
+  else{p.dangerStreak=0;p.calmStreak=0}
+  p.lastTension=tension;p.lastTurn=turn;
+}
+function pacingBlock(st){
+  if(!st.pacing||st.pacing.enabled===false)return '';
+  const s=pacingState(st),c=s.cfg,L=[`Pengaturan ketegangan dari pemain: ${c.label} (${c.desc}).`];
+  if(s.phase==='pasca')L.push(`FASE: MASA DAMAI SETELAH KONFLIK (sisa sekitar ${s.peaceLeft} giliran). Jangan memunculkan ancaman, bahaya, pengejaran, musuh baru, kabar buruk, kecelakaan, atau masalah baru dari dunia, NPC, maupun narator. Tulis dampak konflik sebelumnya, pemulihan, percakapan, kemajuan hubungan, persiapan, penjelajahan, humor, dan keseharian. Kekhawatiran lama boleh diingat, tetapi jangan ditambah.`);
+  else if(s.phase==='krisis')L.push(`FASE: KONFLIK BERJALAN (giliran ke-${s.p.crisisTurns}). Fokus pada konflik ini; jangan membuka konflik terpisah atau menambah ancaman baru. Arahkan secara wajar menuju klimaks atau penyelesaian, dan beri ruang bernapas (jeda kecil, pertimbangan, reaksi tokoh) di antara momen paling tegang.`);
+  else if(s.phase==='jeda')L.push('FASE: JEDA NAPAS WAJIB. Ketegangan sudah berlangsung terlalu lama. Pada giliran ini redakan situasi secara wajar (lawan mundur atau kalah, tempat berlindung, malam tiba, kesepakatan sementara, sumber bahaya hilang) tanpa merampas keputusan pemain. Bila pemain jelas memilih melanjutkan, ikuti, tetapi turunkan intensitasnya.');
+  else if(s.phase==='batas-harian')L.push(`FASE: BATAS KONFLIK HARIAN. Hari fiktif ini sudah memuat ${s.today} konflik (batas ${c.maxCrisesPerDay} per hari). Jangan memulai konflik atau ancaman baru hari ini. Ketegangan ringan seperti misteri, rasa penasaran, atau petunjuk kecil masih boleh.`);
+  else L.push('FASE: MASA TENANG. Dunia boleh memberi masalah baru bila wajar, tetapi tidak wajib; tidak perlu ada masalah di setiap giliran.');
+  if(s.calmLong)L.push(`Sudah ${s.p.calmStreak} giliran tenang. Boleh menyelipkan SATU pemantik kecil (desas-desus, tamu tak terduga, kejanggalan, kesempatan) agar cerita bergerak; bukan krisis.`);
+  if(s.p.level==='rendah')L.push('Bila konflik terjadi, buat singkat, tidak berlarut, dan hindari kekerasan yang berlebihan.');
+  if(s.p.level==='tinggi')L.push('Ketegangan boleh terasa pekat, tetapi tetap sisipkan jeda napas di antara momen puncak.');
+  L.push('Batas ini hanya untuk konflik yang dimulai oleh dunia, NPC, atau narator. Konflik yang dimulai pemain lewat tindakannya tetap ditulis sewajarnya. Aturan tempo ini lebih tinggi daripada petunjuk lain yang mendorong ketegangan.');
+  return L.join('\n');
+}
+function paceStatusText(st){
+  if(!st.pacing||st.pacing.enabled===false)return 'Pembatas tempo dimatikan.';
+  const s=pacingState(st);
+  const ph={damai:'masa tenang',pasca:`masa damai setelah konflik (sisa sekitar ${s.peaceLeft} giliran)`,krisis:`konflik berjalan (giliran ke-${s.p.crisisTurns})`,jeda:'jeda napas wajib','batas-harian':'batas konflik harian tercapai'}[s.phase];
+  return `Fase sekarang: ${ph}. Konflik hari ini: ${s.today} dari ${s.cfg.maxCrisesPerDay}. Konflik beruntun berhenti otomatis setelah ${s.cfg.maxDangerStreak} giliran bahaya.`;
+}
+function eventStartable(st,e){return eventEligible(st,e)&&pacingAllows(st,e.intensity)}
+function updateTensionBtn(){
+  const b=$('#btnTension');if(!b)return;
+  if(!cur||!cur.pacing){b.hidden=true;return}
+  b.hidden=false;const p=cur.pacing,s=pacingState(cur);
+  b.textContent='Tegang: '+(p.enabled?PACE_LEVELS[p.level].label:'Bebas');
+  b.title=paceStatusText(cur)+' Ketuk untuk mengganti.';
+  b.classList.toggle('on',p.enabled&&s.phase!=='damai');
+}
+function pacePanel(st){
+  const p=st.pacing||migratePacing(st);
+  return `<details class="card" open><summary>Tempo cerita dan ketegangan</summary>
+  <label>Tingkat ketegangan<select data-bind="world" data-f="tensionLevel">${Object.entries(PACE_LEVELS).map(([k,v])=>`<option value="${k}" ${p.level===k?'selected':''}>${esc(v.label)}: ${esc(v.desc)}</option>`).join('')}</select></label>
+  <label class="chk"><input type="checkbox" data-bind="world" data-f="pacingEnabled" ${p.enabled?'checked':''}> Batasi konflik beruntun (masa damai otomatis)</label>
+  <p class="hint">${esc(paceStatusText(st))}</p>
+  <p class="hint">Setelah sebuah konflik selesai, cerita masuk masa damai: dunia tidak boleh memunculkan masalah baru sampai cukup giliran dan waktu fiktif berlalu. Jumlah konflik baru per hari fiktif juga dibatasi. Konflik yang dimulai pemain tidak dibatasi.</p></details>`;
+}
 /* ---------- v5.7: genre global, roadmap makro bertag (dependency graph), dan Season Finale ---------- */
 const GENRES_GLOBAL={
  action_fantasy:{label:'Action / Fantasy',ladder:['Monster lokal atau bandit desa','Konflik faksi atau guild regional','Perang kerajaan atau ancaman eksistensial'],climax:'Boss fight penentu wilayah; kemenangan mutlak yang memicu ancaman lebih besar di luar peta (cliffhanger sehat).'},
@@ -1284,7 +1433,7 @@ function cleanPlot(raw,seasonNo,fid,keep){
   const tg=raw.tags&&typeof raw.tags==='object'?raw.tags:{},dp=raw.dependencies&&typeof raw.dependencies==='object'?raw.dependencies:{};
   const id=t(raw.id||fid,60).replace(/\s+/g,'_');
   return{id,title:t(raw.title,140)||id,season:Math.max(1,Math.floor(num(keep&&raw.season!=null?raw.season:seasonNo,1))),
-    status:keep&&PLOT_ST.includes(raw.status)?raw.status:'pending',tier:Math.max(0,Math.min(2,Math.floor(num(raw.tier,0)))),
+    status:keep&&PLOT_ST.includes(raw.status)?raw.status:'pending',tier:Math.max(0,Math.min(2,Math.floor(num(raw.tier,0)))),intensity:normIntensity(raw.intensity),
     tags:{location:t(tg.location??raw.location,160),timePeriod:t(tg.timePeriod??tg.time_window??raw.time_period,120),triggerCondition:t(tg.triggerCondition??tg.trigger_condition??raw.trigger_condition,240)},
     dependencies:{dependsOn:ids(dp.dependsOn??raw.dependsOn??raw.depends_on),affects:ids(dp.affects??raw.affects)},
     onFailureBranch:keep?t(raw.onFailureBranch,60):'',branchOf:t(raw.branchOf??raw.branch_of,60).replace(/\s+/g,'_'),
@@ -1339,12 +1488,12 @@ function addPlots(st,list,max,seasonNo,allowStatus){
 }
 function compactRoadmap(st){
   const d=st.director,ws=ensureWorldState(st);
-  return curPlots(st).map(n=>({id:n.id,title:n.title,status:n.status,tier:TIER_NAMES[n.tier],dormant:n.dormant||undefined,tags:n.tags,
+  return curPlots(st).map(n=>({id:n.id,title:n.title,status:n.status,tier:TIER_NAMES[n.tier],intensity:n.intensity,startable:n.status==='pending'&&!n.dormant?pacingAllows(st,n.intensity):undefined,dormant:n.dormant||undefined,tags:n.tags,
     dependsOn:n.dependencies.dependsOn,affects:n.dependencies.affects,onFailureBranch:n.onFailureBranch||undefined,branchOf:n.branchOf||undefined,
     unlocked:n.status==='pending'&&!n.dormant?plotDepsMet(d,n):undefined,
     locationMatch:(n.status==='pending'||n.status==='active')&&!n.dormant?locMatch(ws,n):undefined,note:n.note||undefined}));
 }
-const roadmapLite=st=>curPlots(st).filter(n=>!n.dormant).map(n=>({id:n.id,title:n.title,status:n.status,triggerCondition:n.tags.triggerCondition,dependsOn:n.dependencies.dependsOn,unlocked:n.status==='pending'?plotDepsMet(st.director,n):undefined}));
+const roadmapLite=st=>curPlots(st).filter(n=>!n.dormant).map(n=>({id:n.id,title:n.title,status:n.status,intensity:n.intensity,startable:n.status==='pending'?pacingAllows(st,n.intensity):undefined,triggerCondition:n.tags.triggerCondition,dependsOn:n.dependencies.dependsOn,unlocked:n.status==='pending'?plotDepsMet(st.director,n):undefined}));
 function applyPlotUpdates(st,list,turn){
   const d=st.director,ch=[];
   if(!d||!Array.isArray(list)||!st.season||st.season.status!=='active')return ch;
@@ -1354,6 +1503,7 @@ function applyPlotUpdates(st,list,turn){
     const from=n.status,to=u.status;
     if(from==='completed'||from==='failed'||n.dormant)continue;       // status akhir; cabang tidur hanya bangun lewat kegagalan induk
     if((to==='active'||to==='completed')&&!plotDepsMet(d,n))continue;  // ketergantungan wajib selesai lebih dulu
+    if(to==='active'&&!pacingAllows(st,n.intensity))continue;          // masa damai atau batas konflik harian: plot berat menunggu
     if(to==='pending'&&from!=='active')continue;
     n.status=to;n.statusTurn=turn;if(u.note)n.note=String(u.note).slice(0,300);
     ch.push({id:n.id,from,to});
@@ -1401,6 +1551,7 @@ function migrateV57(st){
   if(d.macro&&d.macro.arc){delete d.macro.arc;delete d.macro.current_stage}
   d.roadmap=d.roadmap.map((n,i)=>cleanPlot(n,n.season||se.number,'plot_'+(i+1),true));
   if(!d.globalGenre||!GENRES_GLOBAL[d.globalGenre.key])d.globalGenre={key:guessGlobalGenre(st),source:'heuristic',reason:''};
+  migratePacing(st);
   st.v=5.7;
   return st;
 }
@@ -1441,6 +1592,7 @@ ATURAN ROADMAP:
 - tags.location = nama tempat yang ada atau wajar di dunia ini; tags.timePeriod = jendela waktu fiktif relatif (mis. "Minggu pertama", "Setelah festival panen"); tags.triggerCondition = syarat naratif konkret yang harus terjadi di lapangan sebelum node ini boleh dimulai.
 - Untuk 1-2 node terpenting tambahkan node CABANG: node terpisah dengan field branch_of berisi id node induknya, berisi jalur alternatif bila induk gagal (tanpa dependsOn). Node cabang tidak dihitung sebagai tujuan musim kecuali induknya gagal.
 - queue: 4-6 event adaptif bergerbang waktu fiktif (min_elapsed_days/hours) yang menggerakkan node, tiap event punya plot_id node yang dilayaninya. Event pertama bisa terjadi dalam 1-6 jam fiktif. Prasyarat boleh kalimat bebas, atau "flag:kunci=nilai" HANYA bila kunci itu kamu tulis di world_state.flags.
+- intensity (rendah = damai, ringan, atau pemulihan; sedang = ketegangan terkontrol; tinggi = bahaya langsung) wajib diisi pada tiap node dan event. Sisipkan node dan event berintensitas rendah (pemulihan, perayaan, persiapan, keseharian) di antara yang berat; jangan menaruh dua node tinggi berurutan tanpa node rendah di antaranya; selain klimaks, usahakan paling banyak sepertiga node bertingkat tinggi. Pemain memilih tingkat ketegangan cerita: ${PACE_LEVELS[(st.pacing||{}).level||'sedang'].label} (${PACE_LEVELS[(st.pacing||{}).level||'sedang'].desc}); sesuaikan komposisinya.
 - Jangan menganggap pemain pasti hadir; event yang diabaikan tetap berjalan. Jangan membocorkan rahasia ke pemain.
 
 Keluarkan JSON saja:
@@ -1448,8 +1600,8 @@ Keluarkan JSON saja:
 "season_title":"judul musim",
 "bible":{"premise":"","central_conflict":"","stakes":"","factions":[{"name":"","goal":""}],"secrets":[""]},
 "world_state":{"location":"","time_of_day":"","day_count":1,"flags":{}},
-"roadmap":[{"id":"plot_1","title":"","tier":0,"tags":{"location":"","timePeriod":"","triggerCondition":""},"dependsOn":[],"affects":["plot_2"],"status":"pending"},{"id":"branch_2","title":"jalur alternatif bila plot_2 gagal","branch_of":"plot_2","tier":1,"tags":{"location":"","timePeriod":"","triggerCondition":""},"dependsOn":[],"affects":[]}],
-"queue":[{"id":"event_1","plot_id":"plot_1","title":"judul privat","description":"rencana rahasia","min_elapsed_days":0,"min_elapsed_hours":2,"prerequisites":[],"location":"tempat","consequences":"akibat bila dibiarkan","foreshadowing":"tanda halus"}]}`;
+"roadmap":[{"id":"plot_1","title":"","tier":0,"intensity":"sedang","tags":{"location":"","timePeriod":"","triggerCondition":""},"dependsOn":[],"affects":["plot_2"],"status":"pending"},{"id":"branch_2","title":"jalur alternatif bila plot_2 gagal","branch_of":"plot_2","tier":1,"tags":{"location":"","timePeriod":"","triggerCondition":""},"dependsOn":[],"affects":[]}],
+"queue":[{"id":"event_1","plot_id":"plot_1","intensity":"sedang","title":"judul privat","description":"rencana rahasia","min_elapsed_days":0,"min_elapsed_hours":2,"prerequisites":[],"location":"tempat","consequences":"akibat bila dibiarkan","foreshadowing":"tanda halus"}]}`;
   const out=parseJSON(await gemini({chain:chainDirectorInit(st),system:'Kamu adalah perancang alur makro dan simulasi dunia. Jaga kebebasan pemain, kausalitas, serta rahasia event. Balas hanya JSON.',prompt,json:true,temperature:.45}));
   const rawR=Array.isArray(out.roadmap)?out.roadmap:(Array.isArray(out.plots)?out.plots:[]);
   if(!rawR.some(x=>x&&typeof x==='object'&&!(x.branch_of||x.branchOf)))throw new Error('Hidden Director tidak menghasilkan roadmap plot. Coba lagi atau ganti model perencana.');
@@ -1658,7 +1810,7 @@ async function runHiddenDirector(st,input){
   }
   const ws=ensureWorldState(st);
   const pending=d.queue.filter(e=>OPEN_ST.includes(e.status));
-  const eligible=pending.filter(e=>eventEligible(st,e));
+  const eligible=pending.filter(e=>e.status==='active'?eventEligible(st,e):eventStartable(st,e));
   const due=eligible.length>0;
   if(!due&&nextTurn-num(d.lastRunTurn,0)<2)return String(d.guidance||'');
   const prompt=`Evaluasi dunia dari balik layar sebelum narator menulis giliran berikutnya.
@@ -1687,6 +1839,8 @@ ${summaryText(st)||'(kosong)'}
 ${input}
 [NARASI TERAKHIR]
 ${lastAI(st)||'(belum ada)'}
+[TEMPO CERITA]
+${JSON.stringify((()=>{const t=pacingState(st);return{enabled:st.pacing.enabled,tingkat:t.p.level,fase:t.phase,batas_memulai:t.ceiling,konflik_hari_ini:t.today,maks_per_hari:t.cfg.maxCrisesPerDay,sisa_giliran_damai:t.peaceLeft,giliran_tenang_beruntun:t.p.calmStreak}})())}
 [RIWAYAT DIREKTUR]
 ${(d.history||[]).slice(-4).map(x=>JSON.stringify(x)).join('\n')||'(kosong)'}
 Aturan:
@@ -1699,11 +1853,12 @@ Aturan:
 - ROADMAP: node boleh menjadi "active" HANYA bila unlocked=true (dependsOn sudah selesai), locationMatch bukan false, jendela waktu (timePeriod) cocok dengan CLOCK, dan triggerCondition sudah terpenuhi di cerita. "completed" HANYA bila hasil node benar-benar tercapai di cerita. "failed" HANYA bila jelas mustahil lagi atau pemain gagal fatal; jangan menghapus node, sistem akan menyiapkan cabang. Ubah paling banyak satu node besar per giliran dan jangan memajukan plot hanya karena menarik.
 - Bila tidak ada node berjalan atau terbuka dan musim belum bisa ditutup, boleh tambah 1-2 node baru (plot_additions) dengan tingkat sesuai tangga eskalasi.
 - Prasyarat event "flag:kunci=nilai" hanya boleh memakai kunci yang sudah ada di WORLD STATE.flags.
+- TEMPO: patuhi TEMPO CERITA. Saat fase pasca, batas-harian, krisis, atau jeda, JANGAN mengaktifkan node atau event berintensitas sedang/tinggi (sistem juga menolaknya) dan JANGAN menambah konflik baru. Pakai node dan event berintensitas rendah (pemulihan, persiapan, keseharian). Guidance pada fase tersebut harus menenangkan, bukan menambah ancaman. Isi field intensity ("rendah|sedang|tinggi") pada setiap node dan event baru.
 Keluarkan JSON:
 {"plot_updates":[{"id":"id node","status":"pending|active|completed|failed","note":"alasan singkat"}],
-"plot_additions":[{"id":"plot_x","title":"","tier":0,"tags":{"location":"","timePeriod":"","triggerCondition":""},"dependsOn":[],"affects":[]}],
+"plot_additions":[{"id":"plot_x","title":"","tier":0,"intensity":"sedang","tags":{"location":"","timePeriod":"","triggerCondition":""},"dependsOn":[],"affects":[]}],
 "queue_updates":[{"id":"id event","status":"pending|active|resolved|canceled|failed","note":"perubahan singkat"}],
-"queue_additions":[{"id":"event_id","plot_id":"","title":"judul privat","description":"rencana","min_elapsed_days":0,"min_elapsed_hours":3,"prerequisites":[],"location":"tempat","consequences":"akibat","foreshadowing":"petunjuk"}],
+"queue_additions":[{"id":"event_id","plot_id":"","intensity":"sedang","title":"judul privat","description":"rencana","min_elapsed_days":0,"min_elapsed_hours":3,"prerequisites":[],"location":"tempat","consequences":"akibat","foreshadowing":"petunjuk"}],
 "world_state_patch":{"location":"","time_of_day":"","flags":{}},
 "guidance":"maksimal 2 kalimat petunjuk halus untuk narator; kosongkan bila tidak ada",
 "history_note":"catatan privat singkat tentang perubahan sebab-akibat"}`;
@@ -1713,12 +1868,13 @@ Keluarkan JSON:
   // jaring pengaman: node terbuka tidak boleh menganggur selamanya bila model terlalu hati-hati
   const live=curPlots(st).filter(n=>!n.dormant);
   if(!live.some(n=>n.status==='active')&&nextTurn-num(d.lastPlotChangeTurn,0)>=8){
-    const nx=live.find(n=>n.status==='pending'&&plotDepsMet(d,n));
+    const nx=live.find(n=>n.status==='pending'&&plotDepsMet(d,n)&&pacingAllows(st,n.intensity));
     if(nx){nx.status='active';nx.statusTurn=nextTurn;d.lastPlotChangeTurn=nextTurn;d.history.push({turn:nextTurn,note:'Plot "'+nx.title+'" dimulai otomatis (tidak ada plot berjalan terlalu lama)'})}
   }
   for(const u of (Array.isArray(r.queue_updates)?r.queue_updates:[])){
     const e=d.queue.find(x=>x.id===u.id);if(!e||!['pending','active','resolved','canceled','failed'].includes(u.status))continue;
-    if((u.status==='active'||u.status==='resolved')&&!eventEligible(st,e))continue;
+    if(u.status==='active'&&e.status!=='active'&&!eventStartable(st,e))continue;
+    if(u.status==='resolved'&&!eventEligible(st,e))continue;
     e.status=u.status;if(u.note)e.lastNote=String(u.note).slice(0,350);
   }
   addQueueEvents(st,r.queue_additions,4);
@@ -1974,11 +2130,13 @@ Keluarkan JSON:
  "queue_updates":[{"id":"id event","status":"pending|active|resolved|canceled|failed","note":"perubahan sebab-akibat berdasarkan narasi"}],
  "queue_additions":[{"id":"event_id","title":"judul privat","description":"rencana rahasia","min_elapsed_days":0,"min_elapsed_hours":3,"prerequisites":[],"location":"tempat","consequences":"akibat","foreshadowing":"petunjuk","status":"pending"}],
  "plot_updates":[{"id":"id node roadmap","status":"pending|active|completed|failed","note":"alasan singkat"}],
+ "scene_tension":"damai|investigasi|bahaya",
+ "conflict_status":"none|started|ongoing|resolved",
  "suggestions":["3-4 saran langkah berikutnya, masing-masing maks 8 kata, beragam: aman, berisiko, sosial, eksplorasi"]}
 
 TAHAP INI ADALAH SINKRONISASI PASCA-NARASI. Narasi sudah selesai ditulis; jangan mengubah prosa yang ditampilkan. Estimasikan durasi fiktif yang benar-benar berlalu HANYA dari narasi baru: dialog singkat 0-2 menit, percakapan/aktivitas pendek beberapa menit, perjalanan/latihan sesuai petunjuk eksplisit, tidur atau jeda panjang sesuai teks. Jangan hitung ulang kejadian lama. Berikan time_passed_minutes sebagai bilangan bulat 0-10080; bila durasi tidak jelas gunakan 0-1. new_time_of_day hanya diisi bila waktu dapat ditentukan secara masuk akal; jangan menebak jam spesifik dari label seperti "sore". Evaluasi NARASI BARU dengan membandingkannya terhadap input pemain, log mentah empat giliran terakhir, ringkasan jangka panjang, kartu, dan STATUS SAAT INI. Perbarui lokasi, waktu, angka, kondisi fisik, EXP, relasi, dan inventaris hanya jika perubahan benar-benar terjadi dalam narasi. Status adalah catatan permanen yang harus sesuai dengan kejadian; jangan memberikan hadiah, item, EXP, atau pemulihan yang tidak terjadi di narasi.
 ${CARD_RULES}
-Antrean event bersifat privat. Setelah memperhitungkan time_passed_minutes pada giliran ini, evaluasi event mana yang memenuhi gerbang waktu dan prasyarat; jangan aktifkan event yang belum memenuhi syarat. Event yang selesai karena narasi harus diberi resolved; akar masalah yang hilang boleh canceled/failed. Tambahkan event adaptif hanya bila perkembangan narasi secara kausal membuka konsekuensi baru; maksimal 2 tambahan per giliran. Gunakan queue_updates dan queue_additions sebagai perubahan, jangan menyalin seluruh antrean. ROADMAP plot makro bersifat privat: ubah status node lewat plot_updates ([] bila tidak ada perubahan). active hanya bila unlocked=true dan triggerCondition sudah terpenuhi di narasi; completed hanya bila hasil node benar-benar tercapai di narasi; failed hanya bila jelas gagal fatal. Jangan mengubah node yang terkunci.
+Antrean event bersifat privat. Setelah memperhitungkan time_passed_minutes pada giliran ini, evaluasi event mana yang memenuhi gerbang waktu dan prasyarat; jangan aktifkan event yang belum memenuhi syarat. Event yang selesai karena narasi harus diberi resolved; akar masalah yang hilang boleh canceled/failed. Tambahkan event adaptif hanya bila perkembangan narasi secara kausal membuka konsekuensi baru; maksimal 2 tambahan per giliran. Gunakan queue_updates dan queue_additions sebagai perubahan, jangan menyalin seluruh antrean. ROADMAP plot makro bersifat privat: ubah status node lewat plot_updates ([] bila tidak ada perubahan). active hanya bila unlocked=true dan triggerCondition sudah terpenuhi di narasi; completed hanya bila hasil node benar-benar tercapai di narasi; failed hanya bila jelas gagal fatal. Jangan mengubah node yang terkunci. "scene_tension" menilai ketegangan narasi yang baru ditulis: damai (keseharian, dialog, pemulihan), investigasi (misteri, kecemasan, ketegangan terkontrol), bahaya (ancaman langsung, pertarungan, pengejaran, bencana). "conflict_status": started = narasi ini memulai konflik atau krisis BARU yang berbeda dari sebelumnya; ongoing = konflik yang sama masih berlangsung di akhir narasi; resolved = konflik sebelumnya selesai atau mereda di narasi ini; none = tidak ada konflik berjalan di akhir narasi.
 Buat kartu baru hanya untuk entitas/fakta penting yang BARU muncul dan perlu diingat jangka panjang. Perbarui kartu lama hanya bila narasi mengubah faktanya. Untuk karakter: tentukan "fam" (tingkat dikenali) dan perbarui "rel" HANYA berdasarkan interaksi nyata di PERCAKAPAN dan NARASI BARU; naikkan paling banyak satu tingkat per giliran dan jangan melompat dari Belum Dikenali ke Sangat Dikenali. Perbarui "rel" bila hubungan berubah, "persona" bila kebiasaan atau sifat baru terlihat jelas, "look" bila ciri fisik baru muncul (luka, pakaian khas, dan sebagainya). Kartu janji: buat bila ada janji, kesepakatan, utang budi, ancaman, atau rahasia penting; ubah "status" saat ditepati (terpenuhi), dilanggar, atau terbongkar.
 "pov" dan "characters_involved" memakai nama karakter. Bila suatu informasi hanya diketahui sebagian karakter, tulis di "summary" siapa yang mengetahuinya. Jangan menulis ringkasan seolah semua karakter tahu semuanya. Ringkasan TIDAK BOLEH memuat isi rahasia yang belum terungkap; tulis netral (misalnya \"Miko menyembunyikan identitasnya\") dan simpan isinya sebagai rahasia bernomor pada kartu.
 ${OPS_RULES}
@@ -1990,7 +2148,8 @@ function applyPostAnalysisQueue(st,r,turn){
   d.queue=Array.isArray(d.queue)?d.queue:[];
   for(const u of (Array.isArray(r.queue_updates)?r.queue_updates:[])){
     const e=d.queue.find(x=>x.id===u.id);if(!e||!['pending','active','resolved','canceled','failed'].includes(u.status))continue;
-    if((u.status==='active'||u.status==='resolved')&&!eventEligible(st,e))continue;
+    if(u.status==='active'&&e.status!=='active'&&!eventStartable(st,e))continue;
+    if(u.status==='resolved'&&!eventEligible(st,e))continue;
     if(u.status==='active'&&e.status==='resolved')continue;
     e.status=u.status;if(u.note)e.lastNote=String(u.note).slice(0,350);
   }
@@ -2001,6 +2160,7 @@ function applyPostAnalysisQueue(st,r,turn){
 function applyAnalysis(st,r,turn){
   applyWorldClock(st,r,turn);
   applyPostAnalysisQueue(st,r,turn);
+  updatePacing(st,r,turn);
   if(r.new_location!=null&&String(r.new_location).trim())ensureWorldState(st).location=String(r.new_location).trim().slice(0,160);
   if(r.pov!=null&&String(r.pov).trim())st.pov=String(r.pov).trim().slice(0,60);
   else if(!st.pov)st.pov=(st.world&&st.world.mc)||'';
@@ -2107,6 +2267,7 @@ ATURAN DASAR:
   const rs=recentScene(st);if(rs)parts.push('[ADEGAN TERAKHIR]\n'+rs);
   if(!opening){const dr=directionText(plan.dir);if(dr)parts.push('[ARAHAN ADEGAN (panduan, bukan perintah mutlak)]\n'+dr)}
   if(plan.guidance)parts.push('[CATATAN EVALUASI INPUT (wajib dipertimbangkan)]\n'+plan.guidance);
+  {const pb=!opening?pacingBlock(st):'';if(pb)parts.push('[TEMPO CERITA DAN KETEGANGAN (aturan tempo)]\n'+pb)}
   if(st.director&&st.director.enabled&&st.director.guidance)parts.push('[PETUNJUK LATAR BELAKANG DUNIA (sisipkan secara halus bila relevan; jangan ungkap rahasia)]\n'+st.director.guidance);
   if(w.style)parts.push('[PENGINGAT GAYA]\n'+String(w.style).slice(0,400));
   parts.push('[INPUT PEMAIN]\n'+MODEPROMPT[m]+text);
@@ -2124,12 +2285,14 @@ ATURAN DASAR:
 const paras=t=>String(t).split(/\n{2,}/).filter(p=>p.trim()).map(p=>'<p>'+esc(p.trim()).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>')+'</p>').join('');
 const nearBottom=()=>{const l=$('#log');return l.scrollHeight-l.scrollTop-l.clientHeight<140};
 const toBottom=()=>{const l=$('#log');l.scrollTop=l.scrollHeight};
-function snap(st){return{logLen:st.log.length,data:JSON.stringify({summary:st.summary,cards:st.cards,inv:st.inv,suggestions:st.suggestions,turn:st.turn,pending:st.pending,active:st.active,worldState:st.worldState,director:st.director,season:st.season,pov:st.pov,moods:st.moods})}}
+function snap(st){return{logLen:st.log.length,data:JSON.stringify({summary:st.summary,cards:st.cards,inv:st.inv,suggestions:st.suggestions,turn:st.turn,pending:st.pending,active:st.active,worldState:st.worldState,director:st.director,season:st.season,pacing:st.pacing,pov:st.pov,moods:st.moods})}}
 /* Pulihkan snapshot, termasuk jam dunia dan antrean Hidden Director; pengaturan Director (aktif, model) tetap memakai yang sekarang */
 function restoreSnap(st,data){
   const o=JSON.parse(data),keep=st.director?{enabled:st.director.enabled,initModel:st.director.initModel,runtimeModel:st.director.runtimeModel}:null;
+  const keepP=st.pacing?{enabled:st.pacing.enabled,level:st.pacing.level}:null;
   Object.assign(st,o);
   if(keep&&st.director)Object.assign(st.director,keep);
+  if(keepP&&st.pacing)Object.assign(st.pacing,keepP);
   migrateV57(st);
 }
 
@@ -2164,7 +2327,7 @@ function renderSuggest(){
   el.innerHTML=h;el.hidden=!h;
 }
 function setBusy(b){
-  busy=b;$('#inp').disabled=b;$('#prog').hidden=!b;
+  busy=b;$('#inp').disabled=b;$('#prog').hidden=!b;setTimeout(updateJumpBottom,0);
   const s=$('#btnSend');s.textContent=b?'Batal':'Kirim';s.classList.toggle('warn',b);s.classList.toggle('pri',!b);
   if(!b){setStatus();stopWait()}
 }
@@ -2784,7 +2947,7 @@ function dirPanel(st){
 function tabWorld(){
   const st=cur,w=st.world;
   const f=(l,k,v,rows)=>`<label>${l}<textarea rows="${rows}" data-bind="world" data-f="${k}">${esc(v)}</textarea></label>`;
-  return dirPanel(st)+`<p class="hint">Perubahan di sini langsung dipakai mulai giliran berikutnya. Umur, ras, gender, dan sifat tokoh utama diubah di tab Kartu (kartu bertanda Pemain).</p>
+  return pacePanel(st)+dirPanel(st)+`<p class="hint">Perubahan di sini langsung dipakai mulai giliran berikutnya. Umur, ras, gender, dan sifat tokoh utama diubah di tab Kartu (kartu bertanda Pemain).</p>
   <details class="card" open><summary>Elemen kreatif cerita</summary><label>Judul<input data-bind="world" data-f="title" value="${esc(st.title)}"></label>
   <label>Nama tokoh utama<input data-bind="world" data-f="mc" value="${esc(w.mc)}"></label>
   ${f('Genre','genre',w.genre,3)}${f('Gaya bahasa','style',w.style,3)}${f('Dunia dan latar','text',w.text,6)}</details><details class="card"><summary>Aturan dan penekanan</summary>${f('Aturan dan penekanan','rules',w.rules,4)}</details><details class="card"><summary>Konfigurasi teknis dan model AI</summary>
@@ -2870,6 +3033,12 @@ function tabSet(){
   <label class="chk"><input type="checkbox" data-set="useDirection" ${S.useDirection?'checked':''}> Arahan adegan (nada, tempo, suasana hati tokoh, kejadian kecil). Berlaku bila Mode mendalam aktif. Matikan bila narasi terasa terlalu terarah atau bertele-tele.</label>
   <label class="chk"><input type="checkbox" data-set="varyLength" ${S.varyLength?'checked':''}> Izinkan analis menyesuaikan panjang narasi (50% sampai 140% dari minimum) menurut adegan</label>
   <label class="chk"><input type="checkbox" data-set="scanLast" ${S.scanLast?'checked':''}> Bila evaluasi awal gagal, cari kata kunci kartu juga di narasi terakhir</label></details>
+  <details class="card"><summary>Tentang aplikasi</summary>
+  <p><b>Penutur v7.3 — Tempo &amp; Ketegangan</b></p>
+  <p class="hint">Aplikasi web interaktif untuk cerita berbantuan Gemini, dengan memori berlapis, kartu dunia, pengelolaan status, serta pengaturan tempo dan ketegangan.</p>
+  <p class="hint">Status model di layar menunjukkan tahap permintaan terakhir: mengirim input, menunggu respons, menangkap hasil, atau masalah. Aplikasi tidak mempertahankan koneksi permanen ke Gemini; status berhasil berarti permintaan terakhir mendapat respons, bukan jaminan koneksi akan selalu tersedia.</p>
+  <p class="hint">Versi aplikasi: <b>7.3</b> · Kanal: HTML lokal/browser.</p>
+  </details>
   <details class="card"><summary>Google Drive</summary>
   <label>OAuth Client ID<input data-set="driveClientId" value="${esc(S.driveClientId)}" placeholder="xxxx.apps.googleusercontent.com"></label>
   ${n('Unggah otomatis tiap (menit, 0 = mati)','driveMinutes',0,120)}
@@ -2955,6 +3124,9 @@ const acts={
     catch(e){if(st.director)st.director.lastError={turn:st.turn,msg:friendly(e)};err(e,'Gagal menyusun ulang.')}
     finally{if(Tok.finish(st))touch();setBusy(false);if(view==='v-read'&&$('#drawer').classList.contains('on'))renderTab()}
   },
+  tension:()=>{if(!cur)return;const p=migratePacing(cur),ks=Object.keys(PACE_LEVELS);
+    if(!p.enabled){p.enabled=true}else{const i=ks.indexOf(p.level);p.level=ks[(i+1)%ks.length]}
+    touch();toast('Ketegangan: '+PACE_LEVELS[p.level].label+'. '+PACE_LEVELS[p.level].desc+'.',3600);if($('#drawer').classList.contains('on'))renderTab()},
   'fin-open':()=>renderFinale(true),
   'fin-close':()=>{finHidden=true;renderFinale();renderSuggest()},
   'fin-continue':()=>{if(cur&&cur.season){cur.season.status='crossroads';touch();renderFinale()}},
@@ -3152,6 +3324,8 @@ $('#dbody').addEventListener('change',e=>{
       else if(D.f==='directorRuntimeModel'){st.director=st.director||{queue:[],history:[]};st.director.runtimeModel=String(v).trim();renderQuota()}
       else if(D.f==='useCustomModels'){st.models=st.models||{};if(v){st.models.narrator=st.models.narrator||S.narratorModel;st.models.analyzer=st.models.analyzer||S.analyzerModel}else{delete st.models.narrator;delete st.models.main;delete st.models.analyzer}renderTab()}
       else if(D.f==='globalGenre'){st.director=st.director||{queue:[],history:[]};st.director.globalGenre=(v==='auto'||!GENRES_GLOBAL[v])?{key:guessGlobalGenre(st),source:'heuristic',reason:''}:{key:v,source:'manual',reason:''};renderTab()}
+      else if(D.f==='tensionLevel'){const p=migratePacing(st);if(PACE_LEVELS[v])p.level=v;renderTab();renderClock()}
+      else if(D.f==='pacingEnabled'){migratePacing(st).enabled=!!v;renderTab();renderClock()}
       else if(D.f==='directorEnabled'){st.director=st.director||{queue:[],history:[]};st.director.enabled=!!v;renderTab()}
       else if(D.f==='mc'){
         st.world.mc=String(v).trim();
