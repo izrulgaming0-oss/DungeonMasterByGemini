@@ -68,6 +68,8 @@ label.chk input{width:auto;margin:0}
 input[type=checkbox]{width:18px;height:18px}
 
 .chips{display:flex;flex-wrap:wrap;gap:8px}
+.hp{border:1px dashed var(--accent);color:var(--accent);padding:3px 10px;border-radius:999px;font-size:13px}
+#hashPrev:empty{display:none}#hashPrev{margin:6px 0 2px}
 .chip{border:1px solid var(--accent);background:transparent;color:var(--accent);padding:7px 13px;border-radius:999px;font-size:14px;line-height:1.3}
 .chip.on{background:var(--accent);color:var(--accent-ink)}
 .chip.warn{border-color:var(--warn);color:var(--warn)}
@@ -335,6 +337,12 @@ details.card[open]{padding-bottom:12px}
     <button class="btn sm pri" data-act="auto-gen" title="Generate otomatis isi dan tag berdasarkan judul">✨ Auto-Fill</button>
   </div>
 </label>
+
+<label>Elemen Spesifik & Hashtag (opsional)
+  <input id="nfHashtags" placeholder="mis. #bayi naga #pahlawan #penyihir kucing #dungeon bawah tanah" autocomplete="off">
+</label>
+<div class="chips" id="hashPrev" aria-live="polite"></div>
+<p class="hint">Awali tiap elemen dengan #; satu elemen boleh lebih dari satu kata. AI membacanya sebagai inti dunia saat Auto-Fill, analisis dunia, perencana makro, dan narasi. Judul boleh dikosongkan bila hashtag diisi; Auto-Fill akan mengusulkan judul.</p>
 
     <h3>Tokoh utama (kamu)</h3>
     <label>Nama<input id="nfMc" placeholder="Nama tokoh yang kamu mainkan"></label>
@@ -1140,9 +1148,10 @@ async function analyzeWorld(st){
 ${w.genre}
 [GAYA BAHASA] ${w.style||'-'}
 [ATURAN DUNIA] ${w.rules||'-'}
+[ELEMEN INTI DUNIA (hashtag pilihan pemain)] ${coreElementsText(w)||'-'}
 [DUNIA DAN LATAR]
 ${w.text}
-
+${coreElementsText(w)?'\nATURAN ELEMEN INTI: elemen inti adalah bagian sah dan wajib dari dunia ini. Buatkan kartu untuk entitas konkret yang dirujuk elemen inti (companion, ras, faksi, tempat, benda penting) bila belum ada, catat peran awalnya di rangkuman, dan jangan menambah fakta yang bertentangan dengan elemen itu.\n':''}
 Keluarkan JSON:
 {"summary":"rangkuman awal 1-5 kalimat",
  "cards":[{"keyword":"...","type":"tempat|karakter|mob|item|perlengkapan|skill|pengetahuan|janji","age":null,"race":null,"gender":null,"look":null,"persona":null,"rel":null,"fam":null,"secret_ops":null,"status":null,"text":"fakta penting, tanpa batas kalimat","parent":null,"pin":false}],
@@ -1424,7 +1433,7 @@ function genreInfo(st){
 }
 function genreBlock(st){
   const gi=genreInfo(st),n=st.season?st.season.number:1,t=seasonTier(n);
-  return `Genre global (induk): ${gi.label}\nTangga eskalasi: Mikro = ${gi.ladder[0]}; Mesokosm = ${gi.ladder[1]}; Makro = ${gi.ladder[2]}.\nTingkat Musim ${n}: mulai dari ${TIER_NAMES[t]}${t<2?', naik mendekati '+TIER_NAMES[t+1]+' menjelang finale':', tetap di Makro tetapi naikkan skala dan taruhan'}.\nKlimaks dan finale: ${gi.climax}`;
+  return `Genre global (induk): ${gi.label}\nTangga eskalasi: Mikro = ${gi.ladder[0]}; Mesokosm = ${gi.ladder[1]}; Makro = ${gi.ladder[2]}.\nTingkat Musim ${n}: mulai dari ${TIER_NAMES[t]}${t<2?', naik mendekati '+TIER_NAMES[t+1]+' menjelang finale':', tetap di Makro tetapi naikkan skala dan taruhan'}.\nKlimaks dan finale: ${gi.climax}${(()=>{const t=coreElementsText(st.world);return t?'\nElemen inti dunia (hashtag pilihan pemain; jaga tetap relevan sepanjang musim): '+t:''})()}`;
 }
 /* ----- node plot ----- */
 function cleanPlot(raw,seasonNo,fid,keep){
@@ -1576,6 +1585,7 @@ DUNIA: ${st.title}
 LATAR: ${w.text||''}
 GENRE LOKAL (pilihan pemain): ${(w.genreNames||[]).join(', ')||'(bebas)'}
 ATURAN DUNIA: ${String(w.rules||'(tidak ada)').slice(0,600)}
+ELEMEN INTI DUNIA (hashtag pilihan pemain): ${coreElementsText(w)||'(tidak ada)'}
 TOKOH UTAMA: ${w.mc||'(tanpa nama)'} ${[mp.race,mp.gender,mp.age,mp.trait].filter(Boolean).join(', ')}
 KARTU:\n${cards}
 RINGKASAN: ${summaryText(st)||'(belum ada)'}
@@ -1588,6 +1598,7 @@ ${table}
 TINGKAT MUSIM ${n}: node pertama berada di ${TIER_NAMES[tier]}; node terakhir (klimaks musim) mendekati ${TIER_NAMES[Math.min(2,tier+1)]}${tier>=2?' (sudah di Makro: naikkan skala dan taruhan, bukan jenis konfliknya)':''}. Isi field tier tiap node dengan 0 (Mikro), 1 (Mesokosm), atau 2 (Makro).
 
 ATURAN ROADMAP:
+- ELEMEN INTI: bila ELEMEN INTI DUNIA tidak kosong, perlakukan sebagai variabel inti dunia, bukan hiasan. Node awal dan event pertama harus melibatkannya secara organik (misalnya companion menjadi pemicu konflik awal, atau ras dan faksi itu menjadi pemain penting di babak awal), dan sepanjang musim minimal satu node di tiap tingkat harus menyentuhnya agar tidak terlupakan.
 - 4-6 node utama saling terhubung: dependsOn = node yang HARUS selesai lebih dulu; affects = node yang terdampak bila node ini sukses atau gagal. Minimal satu node tanpa dependsOn sebagai titik awal. Node terakhir adalah klimaks musim sesuai definisi genre.
 - tags.location = nama tempat yang ada atau wajar di dunia ini; tags.timePeriod = jendela waktu fiktif relatif (mis. "Minggu pertama", "Setelah festival panen"); tags.triggerCondition = syarat naratif konkret yang harus terjadi di lapangan sebelum node ini boleh dimulai.
 - Untuk 1-2 node terpenting tambahkan node CABANG: node terpisah dengan field branch_of berisi id node induknya, berisi jalur alternatif bila induk gagal (tanpa dependsOn). Node cabang tidak dihitung sebagai tujuan musim kecuali induknya gagal.
@@ -2211,6 +2222,7 @@ function buildNarration(st,text,m,plan){
   if(w.style)user.push('GAYA BAHASA (dari pemain, prioritas tertinggi, ikuti secara harfiah):\n'+w.style);
   if(w.genre)user.push('GENRE:\n'+w.genre);
   if(w.rules)user.push('ATURAN DUNIA DAN PENEKANAN (dari pemain, ikuti secara harfiah):\n'+w.rules);
+  {const core=coreElementsText(w);if(core)user.push('ELEMEN INTI DUNIA (pilihan pemain; bagian sah dunia ini, jaga tetap konsisten sepanjang cerita dan jangan dilupakan, tetapi jangan dipaksakan muncul di setiap adegan):\n'+core)}
   const system=`Kamu adalah narator game cerita teks interaktif. Pemain mengendalikan tokoh utama "${w.mc||'tokoh utama'}".
 URUTAN PRIORITAS: (1) aturan keselamatan dan kendali pemain; (2) STATUS dan fakta kartu yang tercatat; (3) ringkasan kronologis; (4) input pemain sebagai tindakan/arah adegan; (5) gaya dan genre untuk cara penyajian.
 Memori jangka pendek adalah log mentah empat giliran terakhir: pertahankan ritme dialog, implikasi, dan aksi yang sedang berlangsung. Ringkasan jangka panjang hanya latar sejarah; jangan biarkan ringkasan mengalahkan kejadian terbaru dalam log mentah.
@@ -2496,19 +2508,39 @@ function applyPreset(i){
 }
 function openNew(){
   newSel = new Set(); renderChips();
-  for(const id of ['nfTitle','nfMc','nfAge','nfRace','nfTrait','nfLook','nfRules','nfWorld']) {
+  for(const id of ['nfTitle','nfHashtags','nfMc','nfAge','nfRace','nfTrait','nfLook','nfRules','nfWorld']) {
     const el = $('#'+id); if(el) el.value = '';
   }
+  renderHashPreview();
   const genderEl = $('#nfGender'); if(genderEl) genderEl.value = '';
   const nfMain = $('#nfMain'); if(nfMain) nfMain.value = S.narratorModel;
   const nfAn = $('#nfAnalyzer'); if(nfAn) nfAn.value = S.analyzerModel;
   const msg = $('#createMsg'); if(msg) msg.textContent = '';
   show('v-new');
 }
+/* ---------- Hashtag kustom (elemen inti dunia) ---------- */
+function parseHashtags(str){
+  const raw=String(str==null?'':str).trim();if(!raw)return[];
+  const parts=raw.includes('#')?raw.split('#'):raw.split(/[,\n;]+/);
+  const out=[],seen=new Set();
+  for(let p of parts){
+    p=p.replace(/\s+/g,' ').replace(/^[,;\s]+|[,;\s]+$/g,'').slice(0,40).trim();
+    if(!p)continue;const k=p.toLowerCase();if(seen.has(k))continue;
+    seen.add(k);out.push(p);if(out.length>=12)break;
+  }
+  return out;
+}
+const hashtagsToStr=a=>(Array.isArray(a)?a:[]).map(x=>'#'+x).join(' ');
+const coreElementsText=w=>{const h=Array.isArray(w&&w.hashtags)?w.hashtags:[];return h.map(x=>'#'+x).join(', ')};
+function renderHashPreview(){
+  const el=$('#hashPrev'),inp=$('#nfHashtags');if(!el||!inp)return;
+  el.innerHTML=parseHashtags(inp.value).map(x=>`<span class="hp">#${esc(x)}</span>`).join('');
+}
 async function autoGenerateWorldFromTitle() {
   const title = $('#nfTitle').value.trim();
-  if (!title) {
-    toast('Masukkan judul cerita terlebih dahulu.');
+  const hashtags = parseHashtags(($('#nfHashtags')||{value:''}).value);
+  if (!title && !hashtags.length) {
+    toast('Masukkan judul cerita atau minimal satu hashtag terlebih dahulu.');
     return;
   }
   if (!S.apiKey) {
@@ -2520,13 +2552,25 @@ async function autoGenerateWorldFromTitle() {
   // Kirim daftar tag yang tersedia agar AI bisa memilih ID-nya
   const availableTags = lib.tags.map(t => ({ id: t.id, type: t.type, name: t.name }));
   
-  const prompt = `TUGAS: Berdasarkan judul cerita "${title}", buatkan rancangan dunia fiksi yang menarik, lengkap dengan profil tokoh utama dan pilih tag yang paling relevan dari daftar pustaka yang diberikan.
+  const hashLine = hashtags.length ? hashtags.map(x => '#' + x).join(' ') : '(tidak ada)';
+  const prompt = `TUGAS: Berdasarkan ${title ? 'judul cerita "' + title + '"' : 'ELEMEN KHUSUS/HASHTAG pengguna (judul belum ada, usulkan judul yang cocok)'}, genre yang cocok, dan ELEMEN KHUSUS/HASHTAG yang dimasukkan pengguna, buatkan rancangan dunia fiksi yang imersif, lengkap dengan profil tokoh utama dan pilih tag yang paling relevan dari daftar pustaka yang diberikan.
+
+HASHTAG / ELEMEN KHUSUS DARI PENGGUNA:
+${hashLine}
+
+ATURAN PERANCANGAN:
+1. Elemen dari hashtag WAJIB diintegrasikan secara organik ke dalam latar dunia, profil tokoh utama, atau konflik awal. Contoh: bila ada #bayi naga, jadikan bayi naga itu companion atau pemicu konflik awal bagi tokoh utama.
+2. Tiap hashtag adalah SATU elemen utuh (mis. "#penyihir kucing" adalah satu konsep, bukan "penyihir" dan "kucing" terpisah). Bila berupa peran, ras, makhluk, tempat, atau benda, wujudkan sebagai entitas konkret (tokoh utama, companion, faksi, tempat, atau benda penting). Jangan mengabaikan satu pun dan jangan hanya menyebutnya sekilas.
+3. Jangan mengubah makna hashtag dan jangan menambah elemen utama yang bertentangan dengannya.
+4. Tentukan konflik awal dan arah eskalasi yang selaras dengan elemen khusus ini, lalu pilih tag pustaka yang mendukungnya.
+5. "world_text" harus menyebut elemen hashtag secara eksplisit.
 
 DAFTAR PUSTAKA TAG YANG TERSEDIA:
 ${JSON.stringify(availableTags)}
 
 Keluarkan HANYA JSON valid tanpa markdown:
 {
+  "title": "judul cerita yang menarik (isi HANYA bila judul belum ada, selain itu null)",
   "mc": {
     "name": "nama tokoh",
     "age": "umur",
@@ -2543,7 +2587,7 @@ Keluarkan HANYA JSON valid tanpa markdown:
   const fastModel = S.autoGenerateModel || 'gemini-flash-lite-latest';
   
   try {
-    startWait(['AI sedang merancang dunia dari judul…', 'Memilih genre dan gaya bahasa yang cocok…']);
+    startWait([hashtags.length ? 'AI sedang merancang dunia dari judul dan hashtag…' : 'AI sedang merancang dunia dari judul…', 'Memilih genre dan gaya bahasa yang cocok…']);
     const resText = await gemini({
       chain: [fastModel, S.fallbackModel],
       system: 'Kamu adalah kreator dunia fiksi yang kreatif dan ringkas. Jawab HANYA dengan JSON valid.',
@@ -2555,6 +2599,7 @@ Keluarkan HANYA JSON valid tanpa markdown:
     const data = parseJSON(resText);
     
     // Terapkan hasil ke form UI
+    if (!title && data.title && !$('#nfTitle').value.trim()) $('#nfTitle').value = String(data.title).trim().slice(0, 80);
     if (data.mc) {
       $('#nfMc').value = data.mc.name || '';
       $('#nfAge').value = data.mc.age || '';
@@ -2589,7 +2634,7 @@ async function createWorld(){
   const customModels=$('#nfUseCustom')&&$('#nfUseCustom').checked;
   const st={
     v:4,id:uid(),title,created:Date.now(),updated:Date.now(),cloudAt:0,
-    world:{mc:mcName,mcProfile:prof,text:world,genreNames:pick('genre').map(x=>x.name),
+    world:{mc:mcName,mcProfile:prof,text:world,hashtags:parseHashtags(($('#nfHashtags')||{value:''}).value),genreNames:pick('genre').map(x=>x.name),
       genre:pick('genre').map(x=>x.text).join('\n'),style:pick('style').map(x=>x.text).join('\n'),
       rules:[...pick('rule').map(x=>x.text),$('#nfRules').value.trim()].filter(Boolean).join('\n')},
     models:customModels?{narrator:$('#nfMain').value.trim()||S.narratorModel,analyzer:$('#nfAnalyzer').value.trim()||S.analyzerModel}:{},
@@ -2950,6 +2995,7 @@ function tabWorld(){
   return pacePanel(st)+dirPanel(st)+`<p class="hint">Perubahan di sini langsung dipakai mulai giliran berikutnya. Umur, ras, gender, dan sifat tokoh utama diubah di tab Kartu (kartu bertanda Pemain).</p>
   <details class="card" open><summary>Elemen kreatif cerita</summary><label>Judul<input data-bind="world" data-f="title" value="${esc(st.title)}"></label>
   <label>Nama tokoh utama<input data-bind="world" data-f="mc" value="${esc(w.mc)}"></label>
+  <label>Elemen inti dan hashtag<input data-bind="world" data-f="hashtags" value="${esc(hashtagsToStr(w.hashtags))}" placeholder="#bayi naga #pahlawan"></label><p class="hint">Dibaca narator dan Hidden Director mulai giliran berikutnya. Plot makro yang sudah tersusun tidak berubah otomatis; gunakan Susun ulang plot makro bila ingin menyesuaikan.</p>
   ${f('Genre','genre',w.genre,3)}${f('Gaya bahasa','style',w.style,3)}${f('Dunia dan latar','text',w.text,6)}</details><details class="card"><summary>Aturan dan penekanan</summary>${f('Aturan dan penekanan','rules',w.rules,4)}</details><details class="card"><summary>Konfigurasi teknis dan model AI</summary>
   <label class="chk"><input type="checkbox" data-bind="world" data-f="useCustomModels" ${st.models&&(st.models.narrator||st.models.main)?'checked':''}> Sesuaikan model khusus untuk dunia ini</label>
   <div id="worldModelFields" ${st.models&&(st.models.narrator||st.models.main)?'':'hidden'}>
@@ -3327,6 +3373,7 @@ $('#dbody').addEventListener('change',e=>{
       else if(D.f==='tensionLevel'){const p=migratePacing(st);if(PACE_LEVELS[v])p.level=v;renderTab();renderClock()}
       else if(D.f==='pacingEnabled'){migratePacing(st).enabled=!!v;renderTab();renderClock()}
       else if(D.f==='directorEnabled'){st.director=st.director||{queue:[],history:[]};st.director.enabled=!!v;renderTab()}
+      else if(D.f==='hashtags'){st.world.hashtags=parseHashtags(String(v))}
       else if(D.f==='mc'){
         st.world.mc=String(v).trim();
         const pc=Object.values(st.cards).find(c=>c.isPlayer);
@@ -3341,6 +3388,7 @@ $('#dbody').addEventListener('change',e=>{
 /* ---------- Input, swipe, impor ---------- */
 function resizeInp(){const t=$('#inp');t.style.height='auto';t.style.height=Math.min(t.scrollHeight,140)+'px'}
 $('#inp').addEventListener('input',resizeInp);
+$('#nfHashtags').addEventListener('input',renderHashPreview);
 if($('#nfUseCustom')&&$('#nfCustomModels'))$('#nfUseCustom').addEventListener('change',e=>{$('#nfCustomModels').hidden=!e.target.checked});
 $('#inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();sendTurn($('#inp').value,mode)}});
 let tx=0,ty=0;
