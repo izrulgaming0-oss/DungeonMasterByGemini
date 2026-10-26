@@ -447,7 +447,7 @@ const store={
 /* ---------- pengaturan & pustaka tag ---------- */
 const DEF={apiKey:'',narratorModel:'gemini-flash-lite-latest',analyzerModel:'gemini-flash-lite-latest',preModel:'',autoGenerateModel:'gemini-flash-lite-latest',
   autoFallback:true,fallbackModel:'gemini-3.1-flash-lite',hiddenDirectorEnabled:false,directorModel:'gemini-3.6-flash',directorRuntimeModel:'gemini-3.1-flash-lite',limits:{},
-  minWords:250,temperature:1,compressEvery:30,maxCards:10,recentChars:1800,contextTurns:4,consistency:'warn',deepMode:false,varyLength:false,useDirection:false,cfgVer:2,scanLast:true,tapSend:false,
+  minWords:250,microParas:true,temperature:1,compressEvery:30,maxCards:10,recentChars:1800,contextTurns:4,consistency:'warn',deepMode:false,varyLength:false,useDirection:false,cfgVer:2,scanLast:true,tapSend:false,
   fontSize:18,driveClientId:'',driveMinutes:5};
 const savedSettings=store.get('penutur:settings',{});
 let S={...DEF,...savedSettings};
@@ -2231,6 +2231,14 @@ ${user.join('\n\n')||'(tidak ada)'}
 
 ATURAN DASAR:
 - Tulis hanya prosa narasi lanjutan. Tanpa judul, komentar meta, daftar pilihan, atau markdown.
+- PRINSIP GUNUNG ES: latar belakang dunia dan tokoh hanyalah kompas internal narator, bukan bahan untuk diceritakan kepada pembaca. Pembaca hanya melihat sekitar 10% di permukaan: apa yang dilihat, didengar, dicium, dirasakan, dan dilakukan tokoh saat ini juga. Sisa 90% (asal-usul, masa lalu, takdir, tujuan besar, aturan dunia) tetap tenggelam dan hanya mengatur logika dunia secara tak kasat mata. Bocorkan secuil hanya bila kejadian saat ini benar-benar memicunya, lewat tindakan atau benda, bukan lewat rangkuman.
+- TATA LETAK MIKRO-PARAGRAF (wajib): setiap paragraf berisi 1 sampai 3 kalimat pendek; tidak boleh ada paragraf gemuk. Pisahkan paragraf dengan baris kosong di setiap perpindahan antara aksi, deskripsi indrawi, dan dialog; dialog tidak boleh digabung dengan deskripsi dalam satu blok. Jangan menumpuk deskripsi: bila adegan perlu deskripsi (suasana ruangan, bentuk monster), pecah menjadi potongan kecil yang disebar saat tokoh bergerak, bukan ditaruh sekaligus di awal. Panjang dicapai dengan menambah jumlah paragraf pendek dan kejadian, bukan dengan memanjangkan paragraf. Contoh bentuk saja (jangan menyalin isinya):
+Pintu berderit pelan.
+
+Udara di baliknya dingin dan berbau lembap.
+
+"Siapa di sana?"
+Pengecualian hanya untuk blok khusus seperti jendela status, atau bila GAYA BAHASA dari pemain secara eksplisit menetapkan bentuk paragraf lain.
 - Narasikan hasil tindakan pemain, reaksi dunia, dan tokoh lain. Jangan menulis keputusan, ucapan, atau pikiran baru untuk tokoh utama di luar input pemain. Tokoh lain bertindak dan berbicara sesuai kepribadian dan tujuannya sendiri.
 - Ringkasan, kartu, dan status adalah catatan latar untuk menjaga konsistensi, BUKAN bahan untuk dijelaskan. Jangan menguraikan riwayat, asal-usul, penampilan, atau aturan dunia kecuali adegan membutuhkannya. Sebut seperlunya saat relevan.
 - RESOLUSI AKSI BERISIKO: untuk aksi yang hasilnya belum pasti, tentukan hasil berdasarkan kemampuan, persiapan, kondisi, tingkat kesulitan, dan konsekuensi yang masuk akal; jangan otomatis memberi keberhasilan. Jika dunia memakai mekanik RPG/DND atau dadu yang tercatat, ikuti mekanik dan angka yang benar-benar tersedia; jangan mengarang lemparan dadu atau bonus yang tidak tercatat.\n- STATUS ADALAH HUKUM MUTLAK. Jangan membuat tokoh memakai item/perlengkapan/skill yang tidak tercatat dimiliki, menggunakan kemampuan tanpa syarat, atau mengeluarkan HP/MP/stamina/uang melebihi nilai yang tersedia. Jika tindakan pemain melampaui status, narasikan kegagalan, keterbatasan, atau konsekuensi yang masuk akal; jangan diam-diam mengubah status.
@@ -2285,15 +2293,69 @@ ATURAN DASAR:
   parts.push('[INPUT PEMAIN]\n'+MODEPROMPT[m]+text);
   parts.push(opening
     ?`ADEGAN PEMBUKA. Pembaca belum tahu apa pun tentang dunia, tokoh, atau latar belakang mereka.
-- Mulai dari momen konkret: di mana, kapan, apa yang sedang terjadi, lewat apa yang terlihat, terdengar, dan dilakukan tokoh utama.
-- Perkenalkan paling banyak satu atau dua hal baru sekaligus. Jangan membeberkan riwayat, asal-usul, kekuatan, atau aturan dunia secara langsung; biarkan terungkap pelan lewat kejadian berikutnya.
+- PRINSIP GUNUNG ES: buka langsung pada tindakan fisik atau sensasi konkret yang sedang dialami tokoh utama detik ini (apa yang ia lakukan, lihat, dengar, cium, atau rasakan). DILARANG merangkum masa lalu, menjelaskan status dunia, atau menceritakan latar belakang, asal-usul, takdir, dan tujuan besar di paragraf pembuka.
+- Jangan menjelaskan siapa tokoh itu, dari mana asalnya, atau apa tujuan besar ceritanya. Biarkan semua itu tenggelam; pembaca mengetahuinya pelan lewat kejadian berikutnya.
+- Perkenalkan paling banyak satu atau dua hal baru sekaligus, lewat detail indrawi dan tindakan, bukan penjelasan.
+- Pakai mikro-paragraf: tiap paragraf 1-3 kalimat pendek, baris kosong di antara aksi, deskripsi, dan dialog; sebar deskripsi sedikit demi sedikit saat tokoh bergerak, jangan ditumpuk di awal.
 - Jangan membuka dengan dialog atau pikiran tokoh yang mengandaikan pembaca sudah tahu latar belakangnya. Dialog baru boleh muncul setelah pembaca tahu siapa yang bicara dan di mana.
 - Tahan rahasia. Akhiri pada situasi terbuka yang mengundang pemain bertindak. Minimal ${mw} kata.`
-    :`Lanjutkan ceritanya. Satu kejadian utama, fokus, tanpa penjelasan berlebih. Minimal ${mw} kata.\nSebelum menulis ucapan atau reaksi NPC, pastikan setiap hal yang ia sebut atau ia anggap benar berasal dari: apa yang ia saksikan atau dengar di adegan ini, pengetahuan umum dunia, atau yang tercatat ia ketahui. Bila tidak, ia tidak tahu dan tidak boleh menyinggungnya.`);
+    :`Lanjutkan ceritanya. Satu kejadian utama, fokus, tanpa penjelasan berlebih atau rangkuman latar belakang. Format mikro-paragraf: 1-3 kalimat per paragraf, dialog dipisah dari deskripsi. Minimal ${mw} kata.\nSebelum menulis ucapan atau reaksi NPC, pastikan setiap hal yang ia sebut atau ia anggap benar berasal dari: apa yang ia saksikan atau dengar di adegan ini, pengetahuan umum dunia, atau yang tercatat ia ketahui. Bila tidak, ia tidak tahu dan tidak boleh menyinggungnya.`);
   return{system,prompt:parts.join('\n\n')};
 }
 
 /* ---------- Alur giliran ---------- */
+/* ---------- v7.5: perapi mikro-paragraf (jaring pengaman bila model tetap menulis paragraf gemuk) ---------- */
+const MP_ABBR=new Set(['dr','tn','ny','nn','prof','mr','mrs','ms','st','no','dll','dsb','dst','yth','hlm','sdr','bpk','jl','ir','drs','hj']);
+const MP_BLOCK_LINE=/^\s*(?:[\[\]\u3010\u3011|\u2022\u00B7\u25AA\u25C6\u25C7\u25A0\u25A1\u2605\u2606>#]|[-*+]\s|\d+[.)]\s|[-=_*]{3,}\s*$)|[\u2502\u2503\u2551\u2550\u2500\u250C\u2510\u2514\u2518\u2554\u2557\u255A\u255D]/;
+const MP_KV_LINE=/^\s*[\p{L}][\p{L}\d _/'.-]{0,24}\s*[:\uFF1A]\s*\S/u;
+const MP_END='.!?\u2026';
+function mpSentences(p){
+  const out=[],n=p.length;let start=0,inQ=false,i=0;
+  const isWs=c=>c===undefined||/\s/.test(c);
+  const cut=(end)=>{out.push(p.slice(start,end));start=end;while(start<n&&/\s/.test(p[start]))start++;i=start};
+  while(i<n){
+    const ch=p[i];
+    if(ch==='"'||ch==='\u201D'){
+      inQ=(ch==='"')?!inQ:false;
+      if(!inQ&&i>start&&MP_END.includes(p[i-1])&&isWs(p[i+1])){cut(i+1);continue}
+      i++;continue;
+    }
+    if(ch==='\u201C'){inQ=true;i++;continue}
+    if(!inQ&&MP_END.includes(ch)){
+      let j=i;while(j+1<n&&MP_END.includes(p[j+1]))j++;
+      let k=j;while(k+1<n&&')]\u2019\''.includes(p[k+1]))k++;
+      if(isWs(p[k+1])){
+        const w=((p.slice(start,i).match(/(\p{L}+)$/u))||[])[1]||'';
+        if(!(ch==='.'&&j===i&&w.length<=4&&MP_ABBR.has(w.toLowerCase()))){cut(k+1);continue}
+      }
+      i=k+1;continue;
+    }
+    i++;
+  }
+  if(start<n)out.push(p.slice(start));
+  return out.map(x=>x.trim()).filter(Boolean);
+}
+function mpPack(sents){
+  const res=[];let cur=[],len=0;
+  const flush=()=>{if(cur.length){res.push(cur.join(' '));cur=[];len=0}};
+  for(const x of sents){
+    if(/["\u201C\u201D]/.test(x)){flush();res.push(x);continue}
+    if(cur.length>=3||(cur.length&&len+x.length>360))flush();
+    cur.push(x);len+=x.length;
+  }
+  flush();return res;
+}
+function microFormat(t){
+  const src=String(t==null?'':t).replace(/\r\n?/g,'\n'),out=[];
+  for(const b of src.split(/\n{2,}/)){
+    const lines=b.split('\n').map(x=>x.trimEnd()).filter(x=>x.trim());
+    if(!lines.length)continue;
+    if(lines.some(l=>MP_BLOCK_LINE.test(l))||(lines.length>1&&lines.some(l=>MP_KV_LINE.test(l)))){out.push(lines.join('\n'));continue}
+    for(const ln of lines)out.push(...mpPack(mpSentences(ln.trim())));
+  }
+  return out.join('\n\n');
+}
+const fmtNarr=t=>S.microParas!==false?microFormat(t):t;
 const paras=t=>String(t).split(/\n{2,}/).filter(p=>p.trim()).map(p=>'<p>'+esc(p.trim()).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>')+'</p>').join('');
 const nearBottom=()=>{const l=$('#log');return l.scrollHeight-l.scrollTop-l.clientHeight<140};
 const toBottom=()=>{const l=$('#log');l.scrollTop=l.scrollHeight};
@@ -2352,7 +2414,7 @@ let firstChunk=false;
 function updateLive(t){
   const el=$('#live');if(!el)return;
   if(!firstChunk){firstChunk=true;stopWait()}
-  const l=$('#log'),pos=l.scrollTop;el.innerHTML=paras(t);l.scrollTop=pos;updateJumpBottom();
+  const l=$('#log'),pos=l.scrollTop;el.innerHTML=paras(fmtNarr(t));l.scrollTop=pos;updateJumpBottom();
 }
 
 function renderCtx(){
@@ -2405,7 +2467,7 @@ async function sendTurn(text,m){
     const wt=$('#waitTxt');if(wt)wt.textContent=lab('2/3 Narator membaca ingatan dunia…');
     setStatus('2/3 Narator menulis…');
     Tok.stage='Narasi';
-    let narr=(await gemini({chain:chainMain(st),system,prompt,temperature:S.temperature,stream:true,onChunk:updateLive})).trim();
+    let narr=fmtNarr((await gemini({chain:chainMain(st),system,prompt,temperature:S.temperature,stream:true,onChunk:updateLive})).trim());
     let note=null;
     const leak=leakScan(st,text,plan,narr);
     if(S.consistency!=='off'){
@@ -2426,7 +2488,7 @@ async function sendTurn(text,m){
           firstChunk=false;startWait(['Menulis ulang untuk memperbaiki ketidakkonsistenan…','Merangkai ulang adegan…']);
           Tok.stage='Narasi ulang';
           const p2=prompt+'\n\n[KOREKSI WAJIB]\nDraf sebelumnya melanggar hal berikut. Tulis ulang adegan yang sama (jalan kejadian boleh serupa) TANPA pelanggaran ini:\n'+majors.map(v=>`- ${v.detail}${v.fix?' (perbaikan: '+v.fix+')':''}`).join('\n');
-          narr=(await gemini({chain:chainMain(st),system,prompt:p2,temperature:S.temperature,stream:true,onChunk:updateLive})).trim();
+          narr=fmtNarr((await gemini({chain:chainMain(st),system,prompt:p2,temperature:S.temperature,stream:true,onChunk:updateLive})).trim());
           note={fixed:true,items:majors.map(v=>v.detail)};
         }catch(e){
           if(e&&e.name==='AbortError')throw e;
@@ -3053,6 +3115,7 @@ function tabSet(){
   <details class="card" open><summary>Tampilan dan cerita</summary>
   ${n('Ukuran huruf cerita (px)','fontSize',14,28)}
   ${n('Panjang minimal narasi (kata)','minWords',20,1500,10)}
+  <label class="chk"><input type="checkbox" data-set="microParas" ${S.microParas!==false?'checked':''}> Rapikan paragraf narasi otomatis (maksimal 3 kalimat per paragraf, dialog dipisah dari deskripsi)</label>
   <label class="chk"><input type="checkbox" data-set="tapSend" ${S.tapSend?'checked':''}> Ketuk saran langsung mengirim</label></details>
   <details class="card" open><summary>Manajemen Model AI</summary>
   <label>Model Narator (penulis prosa)<input list="models" data-set="narratorModel" value="${esc(S.narratorModel)}"></label>
